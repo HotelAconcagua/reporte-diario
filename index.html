@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reporte Diario - Hotel</title>
+  <!-- Tailwind CSS (CDN para desarrollo) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#D48828'
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, collection, onSnapshot, addDoc, updateDoc, doc, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    // Tu configuración de Firebase (reemplázala)
+    const firebaseConfig = {
+      apiKey: "TU_API_KEY",
+      authDomain: "tu-proyecto.firebaseapp.com",
+      projectId: "tu-proyecto",
+      storageBucket: "tu-proyecto.appspot.com",
+      messagingSenderId: "123456789",
+      appId: "1:123456789:web:abcdef123456"
+    };
+
+    const appId = "hotel-reception-log-default";
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    window.firebaseApp = { app, auth, db, appId };
+  </script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .chart-container { height: 300px; }
+    textarea, input, select { text-transform: uppercase; }
+  </style>
+</head>
+<body class="bg-gray-50 p-4 font-sans">
+  <div id="app" class="max-w-6xl mx-auto">
+    <!-- Header -->
+    <header class="text-center mb-8">
+      <h1 class="text-3xl sm:text-4xl font-extrabold text-primary">Reporte Diario</h1>
+      <p class="text-gray-500 mt-2">Control y Entrega de Turno</p>
+      <p id="user-display" class="text-sm font-medium text-indigo-600 hidden">Usuario actual: <span id="current-user"></span></p>
+      <div id="nav-buttons" class="mt-6 flex justify-center space-x-4 hidden">
+        <button onclick="showView('report')" id="btn-report" class="py-2 px-4 rounded-lg font-semibold bg-indigo-600 text-white shadow-md">Novedades</button>
+        <button onclick="showView('charts')" id="btn-charts" class="py-2 px-4 rounded-lg font-semibold bg-white text-gray-700 shadow-md hover:bg-gray-100">Gráficos</button>
+      </div>
+    </header>
+
+    <!-- Login -->
+    <div id="login-screen" class="flex justify-center items-center h-[70vh]">
+      <form onsubmit="handleLogin(event)" class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-sm">
+        <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">Iniciar Sesión</h2>
+        <p id="login-error" class="bg-red-100 text-red-700 p-3 rounded-lg text-sm mb-4 text-center font-medium hidden"></p>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Usuario (Ej: FRONT)</label>
+          <input type="text" id="login-username" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="FRONT, HSKP..." required />
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+          <input type="password" id="login-password" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required />
+        </div>
+        <button type="submit" class="w-full py-3 mt-4 bg-indigo-600 text-white font-bold rounded-lg shadow-md hover:bg-indigo-700">Entrar</button>
+        <p class="text-center text-xs text-gray-500 mt-4">Credenciales: FRONT/0001, HSKP/0002, etc.</p>
+      </form>
+    </div>
+
+    <!-- Main Views -->
+    <main id="main-content" class="hidden">
+      <!-- Formulario -->
+      <section id="form-section" class="bg-gray-100 p-6 rounded-xl shadow-2xl mb-8">
+        <h2 id="form-title" class="text-xl font-semibold text-gray-800 mb-6 border-b pb-2">Registrar Nueva Novedad</h2>
+        <form id="entry-form" class="grid grid-cols-1 md:grid-cols-3 gap-x-6">
+          <!-- Campos... (abreviado por espacio, pero completos en lógica) -->
+          <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Turno</label>
+            <select name="turno" class="w-full p-3 border border-gray-300 rounded-lg" required>
+              <option value="">Seleccione...</option>
+              <option>Mañana</option><option>Tarde</option><option>Noche</option>
+            </select>
+          </div>
+          <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Fecha del Suceso</label>
+            <input type="date" name="fecha" class="w-full p-3 border border-gray-300 rounded-lg" required value="" />
+          </div>
+          <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Nº Reserva</label>
+            <input type="text" name="nReserva" class="w-full p-3 border border-gray-300 rounded-lg" placeholder="Ej: 25007-232019" />
+          </div>
+          <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Habitación</label>
+            <input type="text" name="habitacion" class="w-full p-3 border border-gray-300 rounded-lg" placeholder="Ej: 401" />
+          </div>
+          <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Área/Elemento</label>
+            <input type="text" name="areaElemento" class="w-full p-3 border border-gray-300 rounded-lg" placeholder="Ej: Queja Aire" required />
+          </div>
+          <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Notificar a</label>
+            <select name="notificaAQuien" class="w-full p-3 border border-gray-300 rounded-lg" required>
+              <option value="">Seleccione...</option>
+              <option>Mantenimiento</option><option>Comercial</option><option>Front</option><option>Housekeeping</option><option>Administración</option><option>Áreas Públicas</option><option>Seguridad</option><option>Parking</option><option>Jefe Recepción</option><option>Gerencia</option>
+            </select>
+          </div>
+          <div class="md:col-span-3 mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Novedad</label>
+            <textarea name="novedad" class="w-full p-3 border border-gray-300 rounded-lg" rows="3" placeholder="Describe el suceso..." required></textarea>
+          </div>
+          <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+            <select name="estado" class="w-full p-3 border-2 border-orange-500 bg-orange-50 rounded-lg" required>
+              <option>En curso</option><option>Completada</option><option>Pendiente</option><option>Cancelada</option>
+            </select>
+          </div>
+          <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Prioridad</label>
+            <select name="prioridad" class="w-full p-3 border-2 border-orange-500 bg-orange-50 rounded-lg" required>
+              <option>Baja</option><option>Media</option><option>Importante</option><option>Urgente</option>
+            </select>
+          </div>
+          <div class="flex items-end space-x-3 mt-4 md:mt-0 col-span-1 md:col-span-1">
+            <button type="submit" class="w-full py-3 px-4 bg-indigo-600 text-white font-bold rounded-lg shadow-md hover:bg-indigo-700">Registrar Novedad</button>
+            <button type="button" id="cancel-edit" class="w-full py-3 px-4 bg-gray-300 text-gray-800 font-bold rounded-lg hidden" onclick="cancelEdit()">Cancelar</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Log -->
+      <section id="log-section" class="bg-yellow-50 p-6 rounded-xl shadow-2xl">
+        <div class="flex flex-col sm:flex-row justify-between items-center mb-6 border-b pb-2">
+          <div class="flex items-center mb-4 sm:mb-0 space-x-4">
+            <h2 class="text-2xl font-semibold text-gray-800">Novedades (<span id="filtered-count">0</span> de <span id="total-count">0</span>)</h2>
+            <span class="text-sm font-medium text-gray-600" id="pending-count">0 pendientes</span>
+          </div>
+          <div class="flex space-x-4">
+            <button onclick="exportToCSV()" style="background-color: #199EE6" class="flex items-center space-x-1 py-2 px-4 text-white font-bold rounded-lg text-sm">
+              <span>Exportar</span>
+            </button>
+            <button onclick="copyForWhatsApp()" style="background-color: #59E619" class="flex items-center space-x-1 py-2 px-4 text-white font-bold rounded-lg text-sm">
+              <span>Copiar</span>
+            </button>
+          </div>
+        </div>
+        <p id="copy-message" class="mt-4 text-center p-3 rounded-lg font-medium hidden"></p>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 p-4 bg-white rounded-lg">
+          <input type="date" id="filter-fecha" class="p-2 border rounded" />
+          <input type="text" id="filter-habitacion" class="p-2 border rounded" placeholder="Habitación" />
+          <input type="text" id="filter-area" class="p-2 border rounded" placeholder="Área/Elemento" />
+        </div>
+        <div class="overflow-x-auto">
+          <table class="min-w-full bg-white shadow-md rounded-lg">
+            <thead class="bg-gray-200">
+              <tr>
+                <th class="p-3 text-xs">Sel.</th>
+                <th class="p-3 text-xs">Fecha</th>
+                <th class="p-3 text-xs">Turno</th>
+                <th class="p-3 text-xs">Novedad / Área</th>
+                <th class="p-3 text-xs">Notificado</th>
+                <th class="p-3 text-xs">Usuario</th>
+                <th class="p-3 text-xs">Estado</th>
+                <th class="p-3 text-xs">Prioridad</th>
+                <th class="p-3 text-xs">Acción</th>
+              </tr>
+            </thead>
+            <tbody id="log-rows"></tbody>
+          </table>
+          <p id="no-results" class="text-center py-6 text-gray-500 hidden">No hay novedades.</p>
+        </div>
+      </section>
+
+      <!-- Charts (initially hidden) -->
+      <div id="charts-section" class="p-6 bg-white rounded-xl shadow-2xl hidden">
+        <h2 class="text-3xl font-bold text-gray-800 mb-6">Análisis de Novedades</h2>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="chart-container"><canvas id="chart-area"></canvas></div>
+          <div class="chart-container"><canvas id="chart-priority"></canvas></div>
+          <div class="chart-container lg:col-span-2"><canvas id="chart-turno"></canvas></div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="text-center text-xs text-gray-400 mt-8">
+      App ID: <span id="app-id">hotel-reception-log-default</span>
+    </footer>
+  </div>
+
+  <script>
+    // === CONFIGURACIÓN ===
+    const USER_CREDENTIALS = {
+      'FRONT': '0001', 'HSKP': '0002', 'MANTE': '0003', 'PUBLIC': '0004',
+      'GERENCIA': '0005', 'OTRO': '0006', 'SEGURIDAD': '0007'
+    };
+
+    let currentUser = null;
+    let editingId = null;
+    let logEntries = [];
+    const MOCK_DATA = []; // puedes rellenar si quieres
+
+    // === FUNCIONES ===
+    function handleLogin(e) {
+      e.preventDefault();
+      const user = document.getElementById('login-username').value.trim().toUpperCase();
+      const pass = document.getElementById('login-password').value;
+      const errorEl = document.getElementById('login-error');
+      if (USER_CREDENTIALS[user] === pass) {
+        currentUser = user;
+        document.getElementById('current-user').textContent = user;
+        document.getElementById('login-screen').classList.add('hidden');
+        document.getElementById('main-content').classList.remove('hidden');
+        document.getElementById('user-display').classList.remove('hidden');
+        document.getElementById('nav-buttons').classList.remove('hidden');
+        initFirebase();
+      } else {
+        errorEl.textContent = 'Usuario o contraseña incorrectos';
+        errorEl.classList.remove('hidden');
+        setTimeout(() => errorEl.classList.add('hidden'), 3000);
+      }
+    }
+
+    function showView(view) {
+      document.getElementById('log-section').classList.toggle('hidden', view !== 'report');
+      document.getElementById('charts-section').classList.toggle('hidden', view !== 'charts');
+      document.querySelectorAll('#nav-buttons button').forEach(btn => btn.classList.remove('bg-indigo-600', 'text-white', 'bg-white', 'text-gray-700'));
+      if (view === 'report') {
+        document.getElementById('btn-report').classList.add('bg-indigo-600', 'text-white');
+        document.getElementById('btn-charts').classList.add('bg-white', 'text-gray-700');
+      } else {
+        document.getElementById('btn-charts').classList.add('bg-indigo-600', 'text-white');
+        document.getElementById('btn-report').classList.add('bg-white', 'text-gray-700');
+        renderCharts();
+      }
+    }
+
+    // === FIREBASE ===
+    async function initFirebase() {
+      const { auth, db, appId } = window.firebaseApp;
+      if (!auth || !db) return;
+
+      onAuthStateChanged(auth, async (user) => {
+        if (!user) await signInAnonymously(auth);
+      });
+
+      const q = collection(db, `artifacts/${appId}/public/data/reception_log`);
+      onSnapshot(q, (snapshot) => {
+        logEntries = [];
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          logEntries.push({
+            id: doc.id,
+            ...data,
+            fechaRegistro: data.fechaRegistro?.toDate?.() || new Date()
+          });
+        });
+        logEntries.sort((a, b) => b.fechaRegistro - a.fechaRegistro);
+        renderLog();
+      });
+    }
+
+    // === RENDER ===
+    function renderLog() {
+      const filters = {
+        fecha: document.getElementById('filter-fecha').value,
+        habitacion: document.getElementById('filter-habitacion').value.toLowerCase(),
+        area: document.getElementById('filter-area').value.toLowerCase()
+      };
+
+      let filtered = logEntries.filter(e => {
+        return (!filters.fecha || e.fecha === filters.fecha) &&
+               (!filters.habitacion || (e.habitacion && e.habitacion.toLowerCase().includes(filters.habitacion))) &&
+               (!filters.area || (e.areaElemento && e.areaElemento.toLowerCase().includes(filters.area)));
+      });
+
+      const tbody = document.getElementById('log-rows');
+      tbody.innerHTML = '';
+      filtered.forEach(e => {
+        const tr = document.createElement('tr');
+        tr.className = editingId === e.id ? 'bg-indigo-50' : 'hover:bg-gray-50';
+        tr.innerHTML = `
+          <td class="p-3"><input type="checkbox" data-id="${e.id}" /></td>
+          <td class="p-3 text-xs">${formatDate(e.fecha)}</td>
+          <td class="p-3 text-xs">${e.turno}</td>
+          <td class="p-3 text-xs max-w-xs break-words">${e.novedad.substring(0, 80)}${e.novedad.length > 80 ? '...' : ''} <br><span class="text-indigo-600 font-bold">[${e.areaElemento}]</span></td>
+          <td class="p-3 text-xs">${e.notificaAQuien}</td>
+          <td class="p-3 text-xs">${e.usuario || 'N/A'}</td>
+          <td class="p-3"><span class="px-2 py-1 text-xs rounded-full ${getStatusClass(e.estado)}">${e.estado}</span></td>
+          <td class="p-3"><span class="text-xs font-bold ${getPriorityClass(e.prioridad)}">${e.prioridad}</span></td>
+          <td class="p-3 text-right"><button onclick="editEntry('${e.id}')" class="text-indigo-600 font-bold">Editar</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('filtered-count').textContent = filtered.length;
+      document.getElementById('total-count').textContent = logEntries.length;
+      document.getElementById('no-results').classList.toggle('hidden', filtered.length &gt; 0);
+
+      const pending = logEntries.filter(e => ['En curso', 'Pendiente'].includes(e.estado)).length;
+      document.getElementById('pending-count').textContent = `${pending} pendientes`;
+    }
+
+    function formatDate(dateStr) {
+      const [y, m, d] = dateStr.split('-');
+      return `${d}/${m}`;
+    }
+
+    function getStatusClass(estado) {
+      if (estado === 'Completada') return 'bg-green-100 text-green-800';
+      if (['En curso', 'Pendiente'].includes(estado)) return 'bg-yellow-100 text-yellow-800';
+      return 'bg-red-100 text-red-800';
+    }
+
+    function getPriorityClass(p) {
+      if (p === 'Urgente') return 'text-red-600';
+      if (p === 'Importante') return 'text-orange-500';
+      return 'text-gray-500';
+    }
+
+    // === FUNCIONALIDADES ===
+    function editEntry(id) {
+      const entry = logEntries.find(e => e.id === id);
+      if (!entry) return;
+      editingId = id;
+      document.getElementById('form-title').textContent = 'Editar Novedad';
+      document.getElementById('cancel-edit').classList.remove('hidden');
+
+      const form = document.getElementById('entry-form');
+      form.turno.value = entry.turno;
+      form.fecha.value = entry.fecha;
+      form.nReserva.value = entry.nReserva || '';
+      form.habitacion.value = entry.habitacion || '';
+      form.areaElemento.value = entry.areaElemento;
+      form.notificaAQuien.value = entry.notificaAQuien;
+      form.novedad.value = entry.novedad;
+      form.estado.value = entry.estado;
+      form.prioridad.value = entry.prioridad;
+
+      document.getElementById('form-section').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function cancelEdit() {
+      editingId = null;
+      document.getElementById('form-title').textContent = 'Registrar Nueva Novedad';
+      document.getElementById('cancel-edit').classList.add('hidden');
+      document.getElementById('entry-form').reset();
+      const today = new Date().toISOString().substring(0, 10);
+      document.querySelector('[name="fecha"]').value = today;
+    }
+
+    document.getElementById('entry-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (editingId?.startsWith('mock')) {
+        showMessage('¡Advertencia! Entrada de prueba, no se guarda.', 'error');
+        cancelEdit();
+        return;
+      }
+
+      const formData = new FormData(e.target);
+      const entry = {
+        turno: formData.get('turno'),
+        fecha: formData.get('fecha'),
+        areaElemento: formData.get('areaElemento'),
+        nReserva: formData.get('nReserva'),
+        habitacion: formData.get('habitacion'),
+        novedad: formData.get('novedad'),
+        notificaAQuien: formData.get('notificaAQuien'),
+        estado: formData.get('estado'),
+        prioridad: formData.get('prioridad'),
+        usuario: currentUser,
+        fechaRegistro: Timestamp.now()
+      };
+
+      try {
+        const { db, appId } = window.firebaseApp;
+        if (editingId) {
+          await updateDoc(doc(db, `artifacts/${appId}/public/data/reception_log`, editingId), entry);
+          showMessage('Novedad actualizada con éxito!');
+        } else {
+          await addDoc(collection(db, `artifacts/${appId}/public/data/reception_log`), entry);
+          showMessage('Novedad registrada con éxito!');
+          e.target.reset();
+          document.querySelector('[name="fecha"]').value = new Date().toISOString().substring(0, 10);
+        }
+        cancelEdit();
+      } catch (err) {
+        showMessage('Error: ' + err.message, 'error');
+      }
+    });
+
+    function copyForWhatsApp() {
+      const selected = logEntries.filter(e => 
+        document.querySelector(`input[data-id="${e.id}"]`)?.checked
+      );
+      if (selected.length === 0) return showMessage('Selecciona al menos una novedad.', 'error');
+
+      const turno = selected[0].turno || 'DESCONOCIDO';
+      const date = new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      let text = `📋 *REPORTE DE NOVEDADES - TURNO ${turno.toUpperCase()}*\n(${date})\n`;
+      selected.forEach(e => {
+        let line = '';
+        if (e.nReserva || e.habitacion) {
+          line += e.nReserva || '';
+          if (e.habitacion) line += (e.nReserva ? ' ' : '') + `#${e.habitacion}`;
+        }
+        if (e.areaElemento) line += (line ? ' - ' : '') + e.areaElemento;
+        const detail = e.novedad.split('\n')[0];
+        line = line ? `${line} - ${detail}` : detail;
+        text += `* ${line}\n`;
+      });
+
+      navigator.clipboard.writeText(text).then(() => {
+        showMessage('¡Copiado para WhatsApp!');
+        document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+      }).catch(() => showMessage('Error al copiar.', 'error'));
+    }
+
+    function exportToCSV() {
+      if (logEntries.length === 0) return showMessage('No hay datos.', 'error');
+      const headers = ["Fecha", "Turno", "Usuario", "Área/Elemento", "Reserva", "Habitación", "Novedad", "Notificado", "Estado", "Prioridad"];
+      const rows = logEntries.map(e => [
+        e.fecha, e.turno, e.usuario || 'N/A', e.areaElemento, e.nReserva || '', e.habitacion || '', 
+        `"${e.novedad.replace(/"/g, '""')}"`, e.notificaAQuien, e.estado, e.prioridad
+      ]);
+      let csv = headers.join(';') + '\n' + rows.map(r => r.join(';')).join('\n');
+      const blob = new Blob(['\ufeff', csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `novedades_${new Date().toISOString().slice(0,10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showMessage('¡CSV exportado!');
+    }
+
+    function showMessage(msg, type = 'success') {
+      const el = document.getElementById('copy-message');
+      el.textContent = msg;
+      el.className = `mt-4 text-center p-3 rounded-lg font-medium ${type === 'error' ? 'bg-red-200 text-red-800' : 'bg-green-200 text-green-800'}`;
+      el.classList.remove('hidden');
+      setTimeout(() => el.classList.add('hidden'), 3000);
+    }
+
+    // Filtros en tiempo real
+    ['filter-fecha', 'filter-habitacion', 'filter-area'].forEach(id => {
+      document.getElementById(id).addEventListener('input', renderLog);
+    });
+
+    // === GRÁFICOS ===
+    function renderCharts() {
+      const ctx1 = document.getElementById('chart-area').getContext('2d');
+      const ctx2 = document.getElementById('chart-priority').getContext('2d');
+      const ctx3 = document.getElementById('chart-turno').getContext('2d');
+
+      // Limpiar gráficos anteriores
+      Chart.getChart('chart-area')?.destroy();
+      Chart.getChart('chart-priority')?.destroy();
+      Chart.getChart('chart-turno')?.destroy();
+
+      const countBy = (key) => {
+        const counts = {};
+        logEntries.forEach(e => {
+          const val = e[key] || 'Sin dato';
+          counts[val] = (counts[val] || 0) + 1;
+        });
+        return { labels: Object.keys(counts), data: Object.values(counts) };
+      };
+
+      const area = countBy('areaElemento');
+      const priority = countBy('prioridad');
+      const turno = countBy('turno');
+
+      new Chart(ctx1, {
+        type: 'pie',
+        data: {
+          labels: area.labels,
+          datasets: [{ data: area.data, backgroundColor: ['#004d40', '#ef6c00', '#c62828', '#fce3c7', '#8bc34a'] }]
+        },
+        options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+      });
+
+      new Chart(ctx2, {
+        type: 'bar',
+        data: {
+          labels: priority.labels,
+          datasets: [{ label: 'Novedades', data: priority.data, backgroundColor: '#c62828' }]
+        },
+        options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+      });
+
+      new Chart(ctx3, {
+        type: 'bar',
+        data: {
+          labels: turno.labels,
+          datasets: [{ label: 'Novedades', data: turno.data, backgroundColor: '#03a9f4' }]
+        },
+        options: { responsive: true, indexAxis: 'y', scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+      });
+    }
+  </script>
+</body>
+</html>
+
