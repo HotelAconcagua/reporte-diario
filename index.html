@@ -71,7 +71,27 @@
 </head>
 <body class="bg-gray-50 font-sans p-4 md:p-8">
 
-    <div class="max-w-7xl mx-auto">
+    <!-- NUEVO: Pantalla de Login -->
+    <div id="login-overlay" class="fixed inset-0 bg-gray-100 z-50 flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-xl shadow-custom w-full max-w-sm">
+            <h2 class="text-2xl font-bold text-indigo-700 text-center mb-6">Iniciar Sesión</h2>
+            <p class="text-sm text-gray-600 mb-4 text-center">Por favor, introduce la clave de acceso para continuar.</p>
+            <div class="space-y-4">
+                <div>
+                    <label for="login-password" class="block text-sm font-medium text-gray-700 sr-only">Clave</label>
+                    <input type="password" id="login-password" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border text-center" placeholder="••••••••">
+                </div>
+                <p id="login-error" class="text-red-600 text-sm text-center hidden">Clave incorrecta. Inténtalo de nuevo.</p>
+                <button id="login-button" class="w-full inline-flex justify-center py-3 px-6 border border-transparent shadow-md text-sm font-medium rounded-full text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
+                    Entrar
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- FIN: Pantalla de Login -->
+
+    <!-- Contenido Principal (Oculto por defecto) -->
+    <div id="main-content" class="max-w-7xl mx-auto hidden">
         
         <header class="mb-8">
             <!-- TÍTULO ACTUALIZADO (Responsive) -->
@@ -316,9 +336,11 @@
         let db, auth, userId = null;
         const COLLECTION_NAME = 'hotel_log'; 
         
+        // --- PARCHE 1: getCollectionPath ---
         function getCollectionPath() {
             if (isCanvasEnvironment) {
-                return `/artifacts/${appId}/public/data/${COLLECTION_NAME}`;
+                // Evitar slash inicial para Firestore collection() y rutas coherentes
+                return `artifacts/${appId}/public/data/${COLLECTION_NAME}`;
             } else {
                 return COLLECTION_NAME;
             }
@@ -328,7 +350,10 @@
         const form = document.getElementById('novedad-form');
         const submitButton = document.getElementById('submit-button');
         // const logStatus = document.getElementById('log-status'); // Ya no se usa
-        const novedadesLog = document.getElementById('novedades-log');
+        
+        // --- CORRECCIÓN: CAMBIAR A 'let' PARA PERMITIR REASIGNACIÓN ---
+        let novedadesLog = document.getElementById('novedades-log');
+        
         const currentShiftDisplay = document.getElementById('current-shift');
         const userInfoDisplay = document.getElementById('user-info');
         const loadingSpinner = document.getElementById('loading-spinner');
@@ -348,6 +373,14 @@
         const deleteAllPassword = document.getElementById('delete-all-password');
         const deleteAllError = document.getElementById('delete-all-error');
         // --- FIN: Referencias DOM Borrado ---
+
+        // --- NUEVO: Referencias DOM para Login ---
+        const loginOverlay = document.getElementById('login-overlay');
+        const mainContent = document.getElementById('main-content');
+        const loginButton = document.getElementById('login-button');
+        const loginPassword = document.getElementById('login-password');
+        const loginError = document.getElementById('login-error');
+        // --- FIN: Referencias DOM Login ---
 
         // --- Referencias del DOM para Multiselect ---
         const multiselectButton = document.getElementById('multiselect-button');
@@ -442,35 +475,40 @@
             updateWhatsappButton();
         }
 
-        // --- FUNCIÓN MODIFICADA ---
+        // --- PARCHE 2: setupTableListeners (Event Delegation) ---
+        // Reemplazar setupTableListeners por delegación para evitar listeners duplicados
         function setupTableListeners() {
-            // Checkboxes de selección
-            document.querySelectorAll('.novedad-checkbox').forEach(checkbox => {
-                checkbox.removeEventListener('change', handleSelectionChange); 
-                checkbox.addEventListener('change', (e) => handleSelectionChange(e.target.dataset.id, e.target.checked));
-            });
+            // Remover listeners previos en el contenedor (si los hubiera)
+            // Esto es clave para evitar listeners duplicados en cada re-render
+            novedadesLog.replaceWith(novedadesLog.cloneNode(true));
+            
+            // Re-asignar referencia a la variable 'let'
+            novedadesLog = document.getElementById('novedades-log');
 
-            // Dropdowns de estado
-            document.querySelectorAll('.estado-select').forEach(select => {
-                select.addEventListener('change', (e) => {
-                    const id = e.target.dataset.id;
-                    const nuevoEstado = e.target.value;
+            // Delegación de eventos
+            novedadesLog.addEventListener('change', (e) => {
+                const target = e.target;
+                if (target.classList.contains('novedad-checkbox')) {
+                    handleSelectionChange(target.dataset.id, target.checked);
+                } else if (target.classList.contains('estado-select')) {
+                    const id = target.dataset.id;
+                    const nuevoEstado = target.value;
                     updateEstado(id, nuevoEstado);
-                    e.target.className = `estado-select px-2 py-1 rounded-full text-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 ${getStatusClasses(nuevoEstado)}`;
-                });
+                    target.className = `estado-select px-2 py-1 rounded-full text-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 ${getStatusClasses(nuevoEstado)}`;
+                }
             });
 
-            // --- NUEVO: Listeners para botones de borrado individual ---
-            document.querySelectorAll('.delete-novedad-btn').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    const id = e.currentTarget.dataset.id;
-                    // Mostrar modal de confirmación
-                    confirmDeleteBtn.dataset.id = id; // Guardar el ID en el botón de confirmar
+            novedadesLog.addEventListener('click', (e) => {
+                const target = e.target.closest('button');
+                if (!target) return;
+                if (target.classList.contains('delete-novedad-btn')) {
+                    const id = target.dataset.id;
+                    confirmDeleteBtn.dataset.id = id;
                     confirmModal.classList.remove('hidden');
-                });
+                }
             });
-            // --- FIN NUEVO ---
 
+            // Actualizar estado del botón WhatsApp
             updateWhatsappButton();
         }
         
@@ -500,16 +538,20 @@
                     await signInAnonymously(auth); 
                 }
 
+                // --- 'onAuthStateChanged' MOVIDO AQUÍ ---
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
                         userId = user.uid;
-                        // --- CAMBIO SOLICITADO ---
                         userInfoDisplay.innerHTML = `<strong>Conectado</strong>`;
                         userInfoDisplay.classList.remove('bg-indigo-100', 'text-indigo-800', 'bg-red-100', 'text-red-800');
                         userInfoDisplay.classList.add('bg-green-100', 'text-green-800');
                         submitButton.disabled = false;
                         listenForNovedades(); 
                         console.log("Autenticación y DB listas.");
+                        
+                        // Iniciar componentes de la app aquí
+                        initializeAppComponents();
+
                     } else {
                         userId = null;
                         console.warn("DEBUG: Estado de autenticación: Desconectado.");
@@ -519,6 +561,7 @@
                         submitButton.disabled = true;
                     }
                 });
+                // --- FIN DE LA CORRECCIÓN ---
 
             } catch (error) {
                 console.error("Error al configurar Firebase:", error);
@@ -549,77 +592,133 @@
                 renderNovedadesLog(novedades);
 
                 if (novedades.length === 0) {
-                    // logStatus.innerHTML = 'Aún no hay novedades registradas.'; // ELIMINADO
-                    // logStatus.classList.replace('bg-yellow-100', 'bg-blue-100'); // ELIMINADO
-                    // logStatus.classList.replace('text-yellow-800', 'text-blue-800'); // ELIMINADO
-                    // logStatus.classList.remove('hidden'); // ELIMINADO
+                    // Mensaje de estado eliminado
                     exportButton.disabled = true; 
-                    deleteAllButton.disabled = true; // --- NUEVO ---
+                    deleteAllButton.disabled = true; 
                 } else {
-                    // logStatus.classList.add('hidden'); // ELIMINADO
+                    // Mensaje de estado eliminado
                     exportButton.disabled = false; 
-                    deleteAllButton.disabled = false; // --- NUEVO ---
+                    deleteAllButton.disabled = false;
                 }
             }, (error) => {
                 console.error("Error al escuchar novedades:", error);
-                // logStatus.innerHTML = `Error al cargar: ${error.message}`; // ELIMINADO
-                // logStatus.classList.replace('bg-yellow-100', 'bg-red-100'); // ELIMINADO
-                // logStatus.classList.replace('text-yellow-800', 'text-red-800'); // ELIMINADO
-                // logStatus.classList.remove('hidden'); // ELIMINADO
                 showMessageModal("Error al Cargar", `Error al cargar: ${error.message}. Intenta recargar la página.`);
             });
         }
         
-        // --- FUNCIÓN MODIFICADA ---
+        // --- PARCHE 3: renderNovedadesLog (Seguridad XSS) ---
+        // Reemplazar renderNovedadesLog para evitar innerHTML y escapar textContent
         function renderNovedadesLog(novedades) {
-            novedadesLog.innerHTML = ''; 
-            
+            novedadesLog.innerHTML = '';
+
             novedades.forEach(novedad => {
                 const row = document.createElement('tr');
                 row.className = 'hover:bg-gray-50';
 
-                const timestampDate = novedad.timestamp ? novedad.timestamp.toDate() : new Date();
+                const timestampDate = novedad.timestamp && typeof novedad.timestamp.toDate === 'function' ? novedad.timestamp.toDate() : new Date();
                 const fecha = formatDate(timestampDate);
                 const hora = timestampDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-                const isChecked = selectedNovedadIds.has(novedad.id) ? 'checked' : '';
 
-                // --- PLANTILLA DE FILA MODIFICADA ---
-                row.innerHTML = `
-                    <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-900">
-                        <input type="checkbox" data-id="${novedad.id}" class="novedad-checkbox h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" ${isChecked}>
-                    </td>
-                    <td class="px-3 py-3 whitespace-nowrap text-sm font-medium text-gray-900">${novedad.turno}</td>
-                    <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-600">${fecha}<br><span class="text-xs text-gray-500">${hora}</span></td>
-                    <td class="px-3 py-3 whitespace-nowrap">
-                        <span class="inline-flex items-center px-3 py-0.5 rounded-full text-xs ${getPriorityClasses(novedad.prioridad)}">
-                            ${novedad.prioridad}
-                        </span>
-                    </td>
-                    <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-600">${novedad.areaElemento || '-'}</td>
-                    <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-600">${novedad.nReserva || '-'}</td>
-                    <td class="px-3 py-3 whitespace-nowrap text-sm font-semibold text-gray-900">${novedad.habitacion || '-'}</td>
-                    <td class="px-3 py-3 text-sm text-gray-700 max-w-lg truncate hover:whitespace-normal hover:overflow-visible hover:bg-white hover:shadow-lg transition-all duration-300 cursor-pointer" title="${novedad.novedad}">${novedad.novedad}</td>
-                    <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-600">${novedad.notificadoA || '-'}</td>
-                    <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-600">
-                        <select data-id="${novedad.id}" class="estado-select px-2 py-1 rounded-full text-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 ${getStatusClasses(novedad.estado)}">
-                            <option value="En curso" ${novedad.estado === 'En curso' ? 'selected' : ''} class="bg-white text-yellow-700">En curso</option>
-                            <option value="Completado" ${novedad.estado === 'Completado' ? 'selected' : ''} class="bg-white text-green-700">Completado</option>
-                        </select>
-                    </td>
-                    <!-- Nueva celda de Borrar -->
-                    <td class="px-3 py-3 whitespace-nowrap text-sm text-center">
-                        <button data-id="${novedad.id}" class="delete-novedad-btn text-gray-400 hover:text-red-600 p-1 rounded-full hover:bg-red-100 transition-colors duration-200" title="Eliminar registro">
-                            <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75V4.5h8V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4.5A1.25 1.25 0 0111.25 3h2.5A1.25 1.25 0 0115 4.25V5.5h-5V4.25zM3.75 6A1.75 1.75 0 002 7.75v7.5A1.75 1.75 0 003.75 17h12.5A1.75 1.75 0 0018 15.25v-7.5A1.75 1.75 0 0016.25 6H3.75zM10 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 10zM13 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0113 10zM7 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 017 10z" clip-rule="evenodd" />
-                            </svg>
-                        </button>
-                    </td>
-                `;
+                // Celda Selección
+                const tdSel = document.createElement('td');
+                tdSel.className = 'px-3 py-3 whitespace-nowrap text-sm text-gray-900';
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.dataset.id = novedad.id;
+                checkbox.className = 'novedad-checkbox h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500';
+                checkbox.checked = selectedNovedadIds.has(novedad.id);
+                tdSel.appendChild(checkbox);
+                row.appendChild(tdSel);
+
+                // Turno
+                const tdTurno = document.createElement('td');
+                tdTurno.className = 'px-3 py-3 whitespace-nowrap text-sm font-medium text-gray-900';
+                tdTurno.textContent = novedad.turno || '';
+                row.appendChild(tdTurno);
+
+                // Fecha + Hora
+                const tdFecha = document.createElement('td');
+                tdFecha.className = 'px-3 py-3 whitespace-nowrap text-sm text-gray-600';
+                tdFecha.innerHTML = `${fecha}<br><span class="text-xs text-gray-500">${hora}</span>`;
+                row.appendChild(tdFecha);
+
+                // Prioridad (badge)
+                const tdPrior = document.createElement('td');
+                tdPrior.className = 'px-3 py-3 whitespace-nowrap';
+                const spanPrior = document.createElement('span');
+                spanPrior.className = `inline-flex items-center px-3 py-0.5 rounded-full text-xs ${getPriorityClasses(novedad.prioridad)}`;
+                spanPrior.textContent = novedad.prioridad || '';
+                tdPrior.appendChild(spanPrior);
+                row.appendChild(tdPrior);
+
+                // Área/Elemento
+                const tdArea = document.createElement('td');
+                tdArea.className = 'px-3 py-3 whitespace-nowrap text-sm text-gray-600';
+                tdArea.textContent = novedad.areaElemento || '-';
+                row.appendChild(tdArea);
+
+                // Nº Reserva
+                const tdReserva = document.createElement('td');
+                tdReserva.className = 'px-3 py-3 whitespace-nowrap text-sm text-gray-600';
+                tdReserva.textContent = novedad.nReserva || '-';
+                row.appendChild(tdReserva);
+
+                // Habitación
+                const tdHabit = document.createElement('td');
+                tdHabit.className = 'px-3 py-3 whitespace-nowrap text-sm font-semibold text-gray-900';
+                tdHabit.textContent = novedad.habitacion || '-';
+                row.appendChild(tdHabit);
+
+                // Novedad (usar textContent para escapar)
+                const tdNovedad = document.createElement('td');
+                tdNovedad.className = 'px-3 py-3 text-sm text-gray-700 max-w-lg truncate hover:whitespace-normal hover:overflow-visible hover:bg-white hover:shadow-lg transition-all duration-300 cursor-pointer';
+                tdNovedad.textContent = novedad.novedad || ''; // <- CORRECCIÓN XSS
+                tdNovedad.title = novedad.novedad || '';
+                row.appendChild(tdNovedad);
+
+                // Notificado a
+                const tdNot = document.createElement('td');
+                tdNot.className = 'px-3 py-3 whitespace-nowrap text-sm text-gray-600';
+                tdNot.textContent = novedad.notificadoA || '-';
+                row.appendChild(tdNot);
+
+                // Estado (select)
+                const tdEstado = document.createElement('td');
+                tdEstado.className = 'px-3 py-3 whitespace-nowrap text-sm text-gray-600';
+                const selectEstado = document.createElement('select');
+                selectEstado.dataset.id = novedad.id;
+                selectEstado.className = `estado-select px-2 py-1 rounded-full text-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 ${getStatusClasses(novedad.estado)}`;
+                const optEnCurso = document.createElement('option');
+                optEnCurso.value = 'En curso';
+                optEnCurso.textContent = 'En curso';
+                if (novedad.estado === 'En curso') optEnCurso.selected = true;
+                const optComp = document.createElement('option');
+                optComp.value = 'Completado';
+                optComp.textContent = 'Completado';
+                if (novedad.estado === 'Completado') optComp.selected = true;
+                selectEstado.appendChild(optEnCurso);
+                selectEstado.appendChild(optComp);
+                tdEstado.appendChild(selectEstado);
+                row.appendChild(tdEstado);
+
+                // Borrar (botón)
+                const tdDelete = document.createElement('td');
+                tdDelete.className = 'px-3 py-3 whitespace-nowrap text-sm text-center';
+                const delBtn = document.createElement('button');
+                delBtn.dataset.id = novedad.id;
+                delBtn.className = 'delete-novedad-btn text-gray-400 hover:text-red-600 p-1 rounded-full hover:bg-red-100 transition-colors duration-200';
+                delBtn.title = 'Eliminar registro';
+                delBtn.innerHTML = `<svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75V4.5h8V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4.5A1.25 1.25 0 0111.25 3h2.5A1.25 1.25 0 0115 4.25V5.5h-5V4.25zM3.75 6A1.75 1.75 0 002 7.75v7.5A1.75 1.75 0 003.75 17h12.5A1.75 1.75 0 0018 15.25v-7.5A1.75 1.75 0 0016.25 6H3.75zM10 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 10zM13 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0113 10zM7 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 017 10z" clip-rule="evenodd" /></svg>`;
+                tdDelete.appendChild(delBtn);
+                row.appendChild(tdDelete);
+
                 novedadesLog.appendChild(row);
             });
-            
-            setupTableListeners();
+
+            // Reemplazamos attach por delegación (evita duplicados)
+            setupTableListeners(); // ahora sólo configura el delegador
         }
+
 
         async function addNovedad(data) {
             if (!db || !userId) {
@@ -696,14 +795,14 @@
             }
         }
 
-        // --- NUEVA FUNCIÓN: Borrar Todas las Novedades ---
+        // --- PARCHE 4: deleteAllNovedades (Manejo de >500 docs) ---
+        // Mejorar deleteAllNovedades para manejar >500 docs (chunked batches)
         async function deleteAllNovedades() {
             if (!db) {
                 showMessageModal("Error", "La base de datos no está lista.");
                 return;
             }
-            
-            console.log("Iniciando borrado total...");
+
             confirmDeleteAllBtn.disabled = true;
             confirmDeleteAllBtn.innerText = "Eliminando...";
 
@@ -717,17 +816,17 @@
                     return;
                 }
 
-                // Usar un batch para eliminar eficientemente (límite de 500 por batch)
-                // Para más de 500, se necesitaría lógica de batches múltiples, pero para este caso es suficiente.
-                const batch = writeBatch(db);
-                snapshot.docs.forEach(doc => {
-                    batch.delete(doc.ref);
-                });
-                
-                await batch.commit();
+                const docs = snapshot.docs;
+                const CHUNK_SIZE = 450; // menos de 500 para margen
+                for (let i = 0; i < docs.length; i += CHUNK_SIZE) {
+                    const chunk = docs.slice(i, i + CHUNK_SIZE);
+                    const batch = writeBatch(db);
+                    chunk.forEach(d => batch.delete(d.ref));
+                    await batch.commit();
+                    console.log(`DEBUG: Eliminados ${chunk.length} documentos en batch ${Math.floor(i / CHUNK_SIZE) + 1}`);
+                }
 
-                console.log(`DEBUG: Se eliminaron ${snapshot.size} documentos.`);
-                showMessageModal("Éxito", `Se han eliminado todos los ${snapshot.size} registros.`);
+                showMessageModal("Éxito", `Se han eliminado todos los ${docs.length} registros.`);
                 selectedNovedadIds.clear();
                 updateWhatsappButton();
 
@@ -735,7 +834,6 @@
                 console.error("Error al eliminar todas las novedades:", error);
                 showMessageModal("Error de Borrado Total", `No se pudieron eliminar los registros. Detalles: ${error.message}`);
             } finally {
-                // Ocultar modal y resetear botón
                 deleteAllModal.classList.add('hidden');
                 confirmDeleteAllBtn.disabled = false;
                 confirmDeleteAllBtn.innerText = "Eliminar Todo";
@@ -747,17 +845,58 @@
         
         // --- Event Listeners e Inicialización ---
 
-        // 1. Inicialización de Firebase
-        setupAuthAndDB();
+        // --- LÓGICA DE INICIO MODIFICADA ---
 
-        // 2. Mostrar el turno actual
+        // 1. Verificar si el usuario ya inició sesión en esta sesión del navegador
+        if (sessionStorage.getItem('hotel_access_granted') === 'true') {
+            // Si ya tiene acceso, ocultar el login, mostrar el contenido e iniciar Firebase
+            loginOverlay.classList.add('hidden');
+            mainContent.classList.remove('hidden');
+            setupAuthAndDB();
+        } else {
+            // Si no, asegurarse de que el login esté visible y el contenido oculto
+            loginOverlay.classList.remove('hidden');
+            mainContent.classList.add('hidden');
+        }
+
+        // 2. Listener para el botón de login
+        loginButton.addEventListener('click', () => {
+            const pass = loginPassword.value;
+            if (pass === 'hotel545') {
+                // Clave correcta
+                sessionStorage.setItem('hotel_access_granted', 'true');
+                loginOverlay.classList.add('hidden');
+                mainContent.classList.remove('hidden');
+                // Iniciar la aplicación
+                setupAuthAndDB();
+            } else {
+                // Clave incorrecta
+                loginError.classList.remove('hidden');
+                loginPassword.value = '';
+            }
+        });
+        
+        // Permitir entrar con "Enter" en el campo de contraseña
+        loginPassword.addEventListener('keyup', (e) => {
+            loginError.classList.add('hidden'); // Ocultar error al escribir
+            if (e.key === 'Enter') {
+                loginButton.click();
+            }
+        });
+
+
+        // 3. Mostrar el turno actual (se llama después de setupAuthAndDB)
+        
         function updateShiftDisplay() {
             currentShiftDisplay.textContent = calcularTurno();
         }
-        updateShiftDisplay();
-        setInterval(updateShiftDisplay, 60000); 
 
-        // 3. Manejo del envío del formulario
+        function initializeAppComponents() {
+            updateShiftDisplay();
+            setInterval(updateShiftDisplay, 60000); 
+        }
+        
+        // 4. Manejo del envío del formulario
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             const formData = new FormData(form);
@@ -783,7 +922,7 @@
             addNovedad(data);
         });
 
-        // 4. Lógica del Botón de Copiar a WhatsApp
+        // 5. Lógica del Botón de Copiar a WhatsApp
         whatsappCopyButton.addEventListener('click', async () => {
             // ... (código de copiar a whatsapp sin cambios) ...
             if (selectedNovedadIds.size === 0) {
@@ -848,15 +987,16 @@
             }
         });
 
-        // 5. Lógica del Botón de Exportar
-        // ... (código de exportar sin cambios) ...
+        // 6. Lógica del Botón de Exportar
+        
+        // --- PARCHE 5: ensureXLSXLoaded (onerror) ---
         function ensureXLSXLoaded() {
             if (window.XLSX) return Promise.resolve();
             return new Promise((resolve, reject) => {
                 const s = document.createElement('script');
                 s.src = 'https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js';
                 s.onload = () => resolve();
-                s.onerror = (e) => reject(new Error('No se pudo cargar la librería XLSX: ' + e.message));
+                s.onerror = () => reject(new Error('No se pudo cargar la librería XLSX'));
                 document.head.appendChild(s);
             });
         }
@@ -958,31 +1098,49 @@
             }
         });
 
-        // Lógica del Dropdown Multiselect
-        // ... (código del multiselect sin cambios) ...
+
+        // --- Lógica del Dropdown Multiselect ---
+        
+        /**
+         * Pobla el dropdown con las opciones.
+         */
         function populateMultiselect() {
+            // Limpiar opciones existentes (excepto "Seleccionar todo")
             multiselectDropdown.querySelectorAll('.multiselect-option-container').forEach(el => el.remove());
+            
             multiselectOptions.forEach(option => {
                 const optionId = `ms-opt-${option.replace(/\s+/g, '-')}`;
                 const container = document.createElement('label');
                 container.className = 'multiselect-option-container flex items-center px-2 py-1 rounded-md hover:bg-gray-100 cursor-pointer';
                 container.setAttribute('for', optionId);
+                
                 container.innerHTML = `
                     <input type="checkbox" id="${optionId}" value="${option}" class="multiselect-option h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
                     <span class="ml-2 text-sm text-gray-700">${option}</span>
                 `;
                 multiselectDropdown.appendChild(container);
             });
+
+            // Añadir listeners a las nuevas opciones
             addOptionListeners();
         }
+
+        /**
+         * Añade listeners a los checkboxes de las opciones.
+         */
         function addOptionListeners() {
             multiselectDropdown.querySelectorAll('.multiselect-option').forEach(cb => {
                 cb.addEventListener('change', updateMultiselectLabelAndSelectAll);
             });
         }
+
+        /**
+         * Actualiza el texto del botón (label) y el estado del checkbox "Seleccionar todo".
+         */
         function updateMultiselectLabelAndSelectAll() {
             const checkedOptions = multiselectDropdown.querySelectorAll('.multiselect-option:checked');
             const totalOptions = multiselectDropdown.querySelectorAll('.multiselect-option').length;
+            
             if (checkedOptions.length === 0) {
                 multiselectLabel.textContent = 'Elige';
                 multiselectLabel.classList.add('text-gray-500');
@@ -996,11 +1154,14 @@
                  multiselectLabel.classList.remove('text-gray-500');
                 multiselectLabel.classList.add('text-gray-900', 'font-semibold');
             } else {
+                // Mostrar los primeros 2 seleccionados
                 const labels = Array.from(checkedOptions).map(cb => cb.value).join(', ');
                 multiselectLabel.textContent = labels;
                 multiselectLabel.classList.remove('text-gray-500');
                 multiselectLabel.classList.add('text-gray-900', 'font-semibold');
             }
+
+            // Actualizar el estado de "Seleccionar todo"
             if (checkedOptions.length === totalOptions) {
                 multiselectSelectAll.checked = true;
                 multiselectSelectAll.indeterminate = false;
@@ -1012,6 +1173,10 @@
                 multiselectSelectAll.indeterminate = false;
             }
         }
+
+        /**
+         * Resetea el multiselect a su estado inicial.
+         */
         function resetMultiselect() {
             multiselectDropdown.querySelectorAll('.multiselect-option:checked').forEach(cb => {
                 cb.checked = false;
@@ -1020,6 +1185,10 @@
             filterMultiselectOptions();
             updateMultiselectLabelAndSelectAll();
         }
+
+        /**
+         * Filtra las opciones basadas en el input de búsqueda.
+         */
         function filterMultiselectOptions() {
             const filter = multiselectSearch.value.toLowerCase();
             multiselectDropdown.querySelectorAll('.multiselect-option-container').forEach(container => {
@@ -1031,19 +1200,29 @@
                 }
             });
         }
+
+        // Listener para abrir/cerrar el dropdown
         multiselectButton.addEventListener('click', () => {
             multiselectDropdownContainer.classList.toggle('hidden');
             if (!multiselectDropdownContainer.classList.contains('hidden')) {
+                // Auto-focus en el buscador al abrir
                 multiselectSearch.focus();
             }
         });
+
+        // Listener para cerrar el dropdown si se hace clic fuera de él
         document.addEventListener('click', (e) => {
             if (!multiselectButton.contains(e.target) && !multiselectDropdownContainer.contains(e.target)) {
                 multiselectDropdownContainer.classList.add('hidden');
             }
         });
+
+        // Listener para el buscador
         multiselectSearch.addEventListener('input', filterMultiselectOptions);
+
+        // Listener para "Seleccionar todo"
         multiselectSelectAll.addEventListener('change', () => {
+            // Seleccionar solo los visibles (filtrados)
             multiselectDropdown.querySelectorAll('.multiselect-option-container').forEach(container => {
                 if (!container.classList.contains('hidden')) {
                     container.querySelector('.multiselect-option').checked = multiselectSelectAll.checked;
@@ -1051,7 +1230,11 @@
             });
             updateMultiselectLabelAndSelectAll();
         });
+
+        // Poblar el multiselect al inicio
         populateMultiselect();
+
+        // --- FIN: Lógica Multiselect ---
 
     </script>
 </body>
