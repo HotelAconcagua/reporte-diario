@@ -241,9 +241,9 @@
             }
         } else {
             // --- CORRECCIÓN FINAL ---
-            // Esta es la clave de tu imagen 'image_be2f49.png' y 'image_b0f105.png'
+            // Esta es la clave que me pasaste en el chat
             firebaseConfig = {
-                apiKey: "AIzaSyBVzV9DTbVpgVeymZTa-MYfTXDkdiW_g",
+                apiKey: "AIzaSyBvzV9DTb0VbpgVaymzTa-MYtfXDkdiW_g",
                 authDomain: "hotel-manager-system.firebaseapp.com",
                 projectId: "hotel-manager-system",
                 storageBucket: "hotel-manager-system.appspot.com",
@@ -414,10 +414,8 @@
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
                         userId = user.uid;
-                        // --- INICIO CONSOLE LOGS ---
-                        console.log(`DEBUG: Autenticación exitosa. UserID: ${userId}`);
-                        // --- FIN CONSOLE LOGS ---
-                        userInfoDisplay.innerHTML = `<strong>Conectado</strong>`;
+                        // --- CAMBIO SOLICITADO ---
+                        userInfoDisplay.innerHTML = `<strong>Conectado</strong> (${user.uid})`;
                         userInfoDisplay.classList.remove('bg-indigo-100', 'text-indigo-800', 'bg-red-100', 'text-red-800');
                         userInfoDisplay.classList.add('bg-green-100', 'text-green-800');
                         submitButton.disabled = false;
@@ -426,6 +424,7 @@
                     } else {
                         userId = null;
                         console.warn("DEBUG: Estado de autenticación: Desconectado.");
+                        // --- CAMBIO SOLICITADO (parcial) ---
                         userInfoDisplay.innerHTML = `<strong>Error</strong>`;
                         userInfoDisplay.classList.remove('bg-indigo-100', 'text-indigo-800', 'bg-green-100', 'text-green-800');
                         userInfoDisplay.classList.add('bg-red-100', 'text-red-800');
