@@ -62,6 +62,11 @@
         .multiselect-dropdown::-webkit-scrollbar-thumb:hover {
             background: #a8a8a8;
         }
+
+        /* Estilos para el modal de borrado (input) */
+        #delete-all-modal-input:invalid {
+            border-color: red;
+        }
     </style>
 </head>
 <body class="bg-gray-50 font-sans p-4 md:p-8">
@@ -153,8 +158,13 @@
                     <textarea id="novedad" name="novedad" rows="3" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border" placeholder="Ej: Problemas con la tarjeta de acceso a la habitación, la batería está suelta y hace falso contacto."></textarea>
                 </div>
 
-                <!-- Botón de Registro -->
-                <div class="md:col-span-3 flex justify-end">
+                <!-- Botones de Acción del Formulario -->
+                <div class="md:col-span-3 flex justify-end items-center gap-4">
+                    
+                    <!-- Botón Borrar Todo (Nuevo) -->
+                    <!-- ESTE BOTÓN FUE MOVIDO A LA SECCIÓN DE LA TABLA -->
+                    
+                    <!-- Botón de Registro -->
                     <button type="submit" id="submit-button" class="inline-flex justify-center py-3 px-6 border border-transparent shadow-md text-sm font-medium rounded-full text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out disabled:opacity-50" disabled>
                         <svg id="loading-spinner" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -172,9 +182,7 @@
             
             <!-- CONTROLES DE LOG Y BOTONES -->
             <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
-                <div id="log-status" class="p-4 bg-yellow-100 text-yellow-800 rounded-md text-center flex-grow w-full md:w-auto hidden">
-                    Cargando registros...
-                </div>
+                <!-- MENSAJE DE ESTADO ELIMINADO -->
                 <!-- Contenedor para botones (responsive) -->
                 <div class="flex flex-col sm:flex-row gap-3">
                     <button id="whatsapp-copy-button" class="inline-flex items-center justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-full text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out disabled:opacity-50" disabled>
@@ -190,6 +198,14 @@
                         </svg>
                         Exportar
                     </button>
+
+                    <!-- Botón Borrar Todo (MOVIDO AQUÍ) -->
+                    <button type="button" id="delete-all-btn" class="inline-flex items-center justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-full text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150 ease-in-out disabled:opacity-50" disabled title="Eliminar todo el historial">
+                        <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                           <path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75V4.5h8V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4.5A1.25 1.25 0 0111.25 3h2.5A1.25 1.25 0 0115 4.25V5.5h-5V4.25zM3.75 6A1.75 1.75 0 002 7.75v7.5A1.75 1.75 0 003.75 17h12.5A1.75 1.75 0 0018 15.25v-7.5A1.75 1.75 0 0016.25 6H3.75zM10 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 10zM13 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0113 10zM7 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 017 10z" clip-rule="evenodd" />
+                       </svg>
+                       Borrar Todo
+                   </button>
                 </div>
             </div>
 
@@ -207,7 +223,9 @@
                             <th class="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider w-20">Habit.</th>
                             <th class="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider min-w-80">Novedad</th>
                             <th class="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider w-40">Notificado a</th>
-                            <th class="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider w-32 rounded-tr-lg">Estado</th>
+                            <th class="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider w-32">Estado</th>
+                            <!-- Nueva columna de Borrar -->
+                            <th class="px-3 py-3 text-center text-xs font-medium uppercase tracking-wider w-20 rounded-tr-lg">Borrar</th>
                         </tr>
                     </thead>
                     <tbody id="novedades-log" class="bg-white divide-y divide-gray-100">
@@ -230,12 +248,44 @@
         </div>
     </div>
 
+    <!-- NUEVO: Modal de Confirmación de Borrado (Individual) -->
+    <div id="confirm-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 transition-opacity duration-300 p-4">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-11/12 max-w-sm transform transition-all">
+            <h3 class="text-lg font-bold text-red-700 mb-3">Confirmar Eliminación</h3>
+            <p class="text-sm text-gray-700 mb-6">¿Estás seguro de que deseas eliminar este registro? Esta acción no se puede deshacer.</p>
+            <div class="flex justify-end gap-3">
+                <button id="cancel-delete-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 text-sm">Cancelar</button>
+                <button id="confirm-delete-btn" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 text-sm" data-id="">Eliminar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NUEVO: Modal de Confirmación de Borrado (Total) -->
+    <div id="delete-all-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 transition-opacity duration-300 p-4">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-11/12 max-w-sm transform transition-all">
+            <h3 class="text-lg font-bold text-red-700 mb-3">Eliminar Todos los Registros</h3>
+            <p class="text-sm text-gray-700 mb-4">¡Atención! Esta acción eliminará **todos** los registros de la base de datos de forma permanente. Esto no se puede deshacer.</p>
+            <label for="delete-all-password" class="block text-sm font-medium text-gray-700">Para confirmar, escribe la clave: <code class="font-bold text-red-600">hotel545</code></label>
+            <input type="password" id="delete-all-password" class="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 p-2 border" placeholder="Clave de seguridad">
+            <p id="delete-all-error" class="text-red-600 text-sm mt-1 hidden">La clave es incorrecta.</p>
+            <div class="flex justify-end gap-3 mt-6">
+                <button id="cancel-delete-all-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 text-sm">Cancelar</button>
+                <button id="confirm-delete-all-btn" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 text-sm">Eliminar Todo</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Script de Firebase y Lógica de la Aplicación -->
     <script type="module">
         // Importaciones de Firebase (Usando la versión CDN)
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, collection, query, where, orderBy, serverTimestamp, updateDoc, addDoc, setLogLevel, getDocs } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+        // --- IMPORTACIONES ACTUALIZADAS ---
+        import { 
+            getFirestore, doc, setDoc, onSnapshot, collection, query, 
+            where, orderBy, serverTimestamp, updateDoc, addDoc, 
+            setLogLevel, getDocs, deleteDoc, writeBatch 
+        } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
         // --- Configuración DUAL de Firebase ---
         const isCanvasEnvironment = typeof __app_id !== 'undefined';
@@ -252,7 +302,6 @@
             }
         } else {
             // --- CORRECCIÓN FINAL ---
-            // Esta es la clave que me pasaste en el chat
             firebaseConfig = {
                 apiKey: "AIzaSyBvzV9DTb0VbpgVaymzTa-MYtfXDkdiW_g",
                 authDomain: "hotel-manager-system.firebaseapp.com",
@@ -278,7 +327,7 @@
         // --- Referencias del DOM y Estado Global ---
         const form = document.getElementById('novedad-form');
         const submitButton = document.getElementById('submit-button');
-        const logStatus = document.getElementById('log-status');
+        // const logStatus = document.getElementById('log-status'); // Ya no se usa
         const novedadesLog = document.getElementById('novedades-log');
         const currentShiftDisplay = document.getElementById('current-shift');
         const userInfoDisplay = document.getElementById('user-info');
@@ -286,7 +335,21 @@
         const whatsappCopyButton = document.getElementById('whatsapp-copy-button');
         const exportButton = document.getElementById('export-button');
         
-        // --- NUEVO: Referencias del DOM para Multiselect ---
+        // --- NUEVO: Referencias DOM para Borrado ---
+        const deleteAllButton = document.getElementById('delete-all-btn');
+        // Modal de confirmación individual
+        const confirmModal = document.getElementById('confirm-modal');
+        const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+        const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
+        // Modal de borrado total
+        const deleteAllModal = document.getElementById('delete-all-modal');
+        const confirmDeleteAllBtn = document.getElementById('confirm-delete-all-btn');
+        const cancelDeleteAllBtn = document.getElementById('cancel-delete-all-btn');
+        const deleteAllPassword = document.getElementById('delete-all-password');
+        const deleteAllError = document.getElementById('delete-all-error');
+        // --- FIN: Referencias DOM Borrado ---
+
+        // --- Referencias del DOM para Multiselect ---
         const multiselectButton = document.getElementById('multiselect-button');
         const multiselectDropdownContainer = document.getElementById('multiselect-dropdown-container');
         const multiselectSearch = document.getElementById('multiselect-search');
@@ -298,7 +361,6 @@
             'Mantenimiento', 'HSKP', 'ReservasHA', 'ReservasHE', 'Jefe Recepción', 
             'Seguridad', 'Parking', 'A.Públicas', 'Piscina', 'GerenciaO', 'GerenciaD'
         ];
-        // --- FIN: Referencias Multiselect ---
 
         let allNovedadesMap = new Map(); 
         let selectedNovedadIds = new Set(); 
@@ -315,6 +377,7 @@
             document.getElementById('message-modal').classList.add('hidden');
         });
 
+        // ... (funciones calcularTurno, formatDate, getPriorityClasses, getStatusClasses, etc. sin cambios) ...
         function calcularTurno() {
             const now = new Date();
             const hour = now.getHours();
@@ -379,12 +442,15 @@
             updateWhatsappButton();
         }
 
+        // --- FUNCIÓN MODIFICADA ---
         function setupTableListeners() {
+            // Checkboxes de selección
             document.querySelectorAll('.novedad-checkbox').forEach(checkbox => {
                 checkbox.removeEventListener('change', handleSelectionChange); 
                 checkbox.addEventListener('change', (e) => handleSelectionChange(e.target.dataset.id, e.target.checked));
             });
 
+            // Dropdowns de estado
             document.querySelectorAll('.estado-select').forEach(select => {
                 select.addEventListener('change', (e) => {
                     const id = e.target.dataset.id;
@@ -393,26 +459,34 @@
                     e.target.className = `estado-select px-2 py-1 rounded-full text-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 ${getStatusClasses(nuevoEstado)}`;
                 });
             });
+
+            // --- NUEVO: Listeners para botones de borrado individual ---
+            document.querySelectorAll('.delete-novedad-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const id = e.currentTarget.dataset.id;
+                    // Mostrar modal de confirmación
+                    confirmDeleteBtn.dataset.id = id; // Guardar el ID en el botón de confirmar
+                    confirmModal.classList.remove('hidden');
+                });
+            });
+            // --- FIN NUEVO ---
+
             updateWhatsappButton();
         }
         
         // --- Lógica de la Base de Datos y Autenticación ---
 
         async function setupAuthAndDB() {
-            // --- INICIO CONSOLE LOGS ---
             console.log("--- DEBUG: Iniciando setupAuthAndDB ---");
             console.log(`DEBUG: Entorno Canvas detectado: ${isCanvasEnvironment}`);
             if (isCanvasEnvironment) {
                 console.log("DEBUG: Usando configuración de Firebase de Canvas.");
             } else {
                 console.log("DEBUG: Usando configuración de Firebase 'hotel-manager-system' (externa).");
-                console.log("DEBUG: Config a usar (Proyecto):", firebaseConfig.projectId);
-                console.log("DEBUG: Config a usar (API Key):", firebaseConfig.apiKey);
             }
-            // --- FIN CONSOLE LOGS ---
 
             try {
-                setLogLevel('debug'); // Habilitar logs detallados de Firebase
+                setLogLevel('debug'); 
                 const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
@@ -439,7 +513,6 @@
                     } else {
                         userId = null;
                         console.warn("DEBUG: Estado de autenticación: Desconectado.");
-                        // --- CAMBIO SOLICITADO ---
                         userInfoDisplay.innerHTML = `<strong>Error de conexión</strong>`;
                         userInfoDisplay.classList.remove('bg-indigo-100', 'text-indigo-800', 'bg-green-100', 'text-green-800');
                         userInfoDisplay.classList.add('bg-red-100', 'text-red-800');
@@ -448,10 +521,7 @@
                 });
 
             } catch (error) {
-                // --- INICIO CONSOLE LOGS ---
                 console.error("Error al configurar Firebase:", error);
-                // --- FIN CONSOLE LOGS ---
-                // --- CAMBIO SOLICITADO ---
                 userInfoDisplay.innerHTML = `<strong>Error de conexión</strong>`;
                 userInfoDisplay.classList.remove('bg-indigo-100', 'text-indigo-800', 'bg-green-100', 'text-green-800');
                 userInfoDisplay.classList.add('bg-red-100', 'text-red-800');
@@ -459,11 +529,10 @@
             }
         }
 
+        // --- FUNCIÓN MODIFICADA ---
         function listenForNovedades() {
             const collectionPath = getCollectionPath();
-            // --- INICIO CONSOLE LOGS ---
             console.log(`DEBUG: Escuchando novedades en la colección: ${collectionPath}`);
-            // --- FIN CONSOLE LOGS ---
             const novedadesRef = collection(db, collectionPath);
             
             onSnapshot(novedadesRef, (snapshot) => {
@@ -474,32 +543,34 @@
                     novedades.push(data);
                     allNovedadesMap.set(doc.id, data); 
                 });
-                // --- INICIO CONSOLE LOGS ---
                 console.log(`DEBUG: Snapshot recibido, ${snapshot.size} documentos cargados.`);
-                // --- FIN CONSOLE LOGS ---
 
                 novedades.sort((a, b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0));
                 renderNovedadesLog(novedades);
 
                 if (novedades.length === 0) {
-                    logStatus.innerHTML = 'Aún no hay novedades registradas.';
-                    logStatus.classList.replace('bg-yellow-100', 'bg-blue-100');
-                    logStatus.classList.replace('text-yellow-800', 'text-blue-800');
-                    logStatus.classList.remove('hidden');
-                    exportButton.disabled = true; // Deshabilitar exportar
+                    // logStatus.innerHTML = 'Aún no hay novedades registradas.'; // ELIMINADO
+                    // logStatus.classList.replace('bg-yellow-100', 'bg-blue-100'); // ELIMINADO
+                    // logStatus.classList.replace('text-yellow-800', 'text-blue-800'); // ELIMINADO
+                    // logStatus.classList.remove('hidden'); // ELIMINADO
+                    exportButton.disabled = true; 
+                    deleteAllButton.disabled = true; // --- NUEVO ---
                 } else {
-                    logStatus.classList.add('hidden');
-                    exportButton.disabled = false; // Habilitar exportar
+                    // logStatus.classList.add('hidden'); // ELIMINADO
+                    exportButton.disabled = false; 
+                    deleteAllButton.disabled = false; // --- NUEVO ---
                 }
             }, (error) => {
                 console.error("Error al escuchar novedades:", error);
-                logStatus.innerHTML = `Error al cargar: ${error.message}`;
-                logStatus.classList.replace('bg-yellow-100', 'bg-red-100');
-                logStatus.classList.replace('text-yellow-800', 'text-red-800');
-                logStatus.classList.remove('hidden');
+                // logStatus.innerHTML = `Error al cargar: ${error.message}`; // ELIMINADO
+                // logStatus.classList.replace('bg-yellow-100', 'bg-red-100'); // ELIMINADO
+                // logStatus.classList.replace('text-yellow-800', 'text-red-800'); // ELIMINADO
+                // logStatus.classList.remove('hidden'); // ELIMINADO
+                showMessageModal("Error al Cargar", `Error al cargar: ${error.message}. Intenta recargar la página.`);
             });
         }
         
+        // --- FUNCIÓN MODIFICADA ---
         function renderNovedadesLog(novedades) {
             novedadesLog.innerHTML = ''; 
             
@@ -512,6 +583,7 @@
                 const hora = timestampDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
                 const isChecked = selectedNovedadIds.has(novedad.id) ? 'checked' : '';
 
+                // --- PLANTILLA DE FILA MODIFICADA ---
                 row.innerHTML = `
                     <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-900">
                         <input type="checkbox" data-id="${novedad.id}" class="novedad-checkbox h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" ${isChecked}>
@@ -534,6 +606,14 @@
                             <option value="Completado" ${novedad.estado === 'Completado' ? 'selected' : ''} class="bg-white text-green-700">Completado</option>
                         </select>
                     </td>
+                    <!-- Nueva celda de Borrar -->
+                    <td class="px-3 py-3 whitespace-nowrap text-sm text-center">
+                        <button data-id="${novedad.id}" class="delete-novedad-btn text-gray-400 hover:text-red-600 p-1 rounded-full hover:bg-red-100 transition-colors duration-200" title="Eliminar registro">
+                            <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75V4.5h8V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4.5A1.25 1.25 0 0111.25 3h2.5A1.25 1.25 0 0115 4.25V5.5h-5V4.25zM3.75 6A1.75 1.75 0 002 7.75v7.5A1.75 1.75 0 003.75 17h12.5A1.75 1.75 0 0018 15.25v-7.5A1.75 1.75 0 0016.25 6H3.75zM10 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 10zM13 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0113 10zM7 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 017 10z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </td>
                 `;
                 novedadesLog.appendChild(row);
             });
@@ -552,9 +632,7 @@
 
             try {
                 const collectionPath = getCollectionPath();
-                // --- INICIO CONSOLE LOGS ---
                 console.log(`DEBUG: Añadiendo documento a: ${collectionPath}`);
-                // --- FIN CONSOLE LOGS ---
                 const novedadesRef = collection(db, collectionPath);
 
                 const newNovedad = {
@@ -564,18 +642,11 @@
                     estado: 'En curso' 
                 };
                 
-                // --- INICIO CONSOLE LOGS ---
                 console.log("DEBUG: Documento a guardar:", newNovedad);
-                // --- FIN CONSOLE LOGS ---
-
                 await addDoc(novedadesRef, newNovedad);
-                
                 console.log("DEBUG: Documento guardado exitosamente.");
-                
                 form.reset(); 
-                // --- NUEVO: Resetear el multiselect ---
                 resetMultiselect();
-                // --- FIN: Resetear multiselect ---
 
             } catch (error) {
                 console.error("Error al añadir la novedad:", error);
@@ -583,7 +654,6 @@
             } finally {
                 submitButton.disabled = false;
                 loadingSpinner.classList.add('hidden');
-
             }
         }
         
@@ -592,21 +662,88 @@
                 console.error("DEBUG: updateEstado abortado. DB no está lista.");
                 return;
             }
-
             try {
                 const collectionPath = getCollectionPath();
                 const docRef = doc(db, collectionPath, id);
-                
-                await updateDoc(docRef, {
-                    estado: estado
-                });
-                
+                await updateDoc(docRef, { estado: estado });
                 console.log(`DEBUG: Estado de novedad ${id} actualizado a ${estado}`);
             } catch (error) {
                 console.error("Error al actualizar el estado:", error);
                 showMessageModal("Error de Actualización", `No se pudo cambiar el estado. Detalles: ${error.message}`);
             }
         }
+
+        // --- NUEVA FUNCIÓN: Borrar Novedad Individual ---
+        async function deleteNovedad(id) {
+            if (!db) {
+                console.error("DEBUG: deleteNovedad abortado. DB no está lista.");
+                return;
+            }
+            try {
+                const collectionPath = getCollectionPath();
+                const docRef = doc(db, collectionPath, id);
+                await deleteDoc(docRef);
+                console.log(`DEBUG: Novedad ${id} eliminada.`);
+                showMessageModal("Éxito", "El registro ha sido eliminado.");
+                // Si estaba seleccionado, quitarlo de la lista de whatsapp
+                if (selectedNovedadIds.has(id)) {
+                    selectedNovedadIds.delete(id);
+                    updateWhatsappButton();
+                }
+            } catch (error) {
+                console.error("Error al eliminar la novedad:", error);
+                showMessageModal("Error de Eliminación", `No se pudo eliminar el registro. Detalles: ${error.message}`);
+            }
+        }
+
+        // --- NUEVA FUNCIÓN: Borrar Todas las Novedades ---
+        async function deleteAllNovedades() {
+            if (!db) {
+                showMessageModal("Error", "La base de datos no está lista.");
+                return;
+            }
+            
+            console.log("Iniciando borrado total...");
+            confirmDeleteAllBtn.disabled = true;
+            confirmDeleteAllBtn.innerText = "Eliminando...";
+
+            try {
+                const collectionPath = getCollectionPath();
+                const colRef = collection(db, collectionPath);
+                const snapshot = await getDocs(colRef);
+
+                if (snapshot.empty) {
+                    showMessageModal("Información", "No hay registros para eliminar.");
+                    return;
+                }
+
+                // Usar un batch para eliminar eficientemente (límite de 500 por batch)
+                // Para más de 500, se necesitaría lógica de batches múltiples, pero para este caso es suficiente.
+                const batch = writeBatch(db);
+                snapshot.docs.forEach(doc => {
+                    batch.delete(doc.ref);
+                });
+                
+                await batch.commit();
+
+                console.log(`DEBUG: Se eliminaron ${snapshot.size} documentos.`);
+                showMessageModal("Éxito", `Se han eliminado todos los ${snapshot.size} registros.`);
+                selectedNovedadIds.clear();
+                updateWhatsappButton();
+
+            } catch (error) {
+                console.error("Error al eliminar todas las novedades:", error);
+                showMessageModal("Error de Borrado Total", `No se pudieron eliminar los registros. Detalles: ${error.message}`);
+            } finally {
+                // Ocultar modal y resetear botón
+                deleteAllModal.classList.add('hidden');
+                confirmDeleteAllBtn.disabled = false;
+                confirmDeleteAllBtn.innerText = "Eliminar Todo";
+                deleteAllPassword.value = "";
+                deleteAllError.classList.add('hidden');
+            }
+        }
+
         
         // --- Event Listeners e Inicialización ---
 
@@ -623,15 +760,11 @@
         // 3. Manejo del envío del formulario
         form.addEventListener('submit', (e) => {
             e.preventDefault();
-
             const formData = new FormData(form);
-            
-            // --- NUEVO: Obtener valores del multiselect ---
             const selectedNotificadoA = [];
             multiselectDropdown.querySelectorAll('.multiselect-option:checked').forEach(cb => {
                 selectedNotificadoA.push(cb.value);
             });
-            // --- FIN: Obtener valores ---
             
             const data = {
                 prioridad: formData.get('prioridad').trim(),
@@ -639,11 +772,7 @@
                 novedad: formData.get('novedad').trim(),
                 nReserva: formData.get('nReserva').trim() || null,
                 habitacion: formData.get('habitacion').trim() || null,
-                
-                // --- NUEVO: Guardar valores ---
-                notificadoA: selectedNotificadoA.join(', ') || null, // Unir con comas
-                // --- FIN: Guardar valores ---
-                
+                notificadoA: selectedNotificadoA.join(', ') || null, 
                 turno: calcularTurno() 
             };
             
@@ -651,17 +780,16 @@
                 showMessageModal("Error de Formulario", "Los campos 'Área/Elemento' y 'Detalles de la Novedad' son requeridos.");
                 return;
             }
-
             addNovedad(data);
         });
 
         // 4. Lógica del Botón de Copiar a WhatsApp
         whatsappCopyButton.addEventListener('click', async () => {
+            // ... (código de copiar a whatsapp sin cambios) ...
             if (selectedNovedadIds.size === 0) {
                 showMessageModal("Atención", "Por favor, selecciona al menos una novedad para copiar.");
                 return;
             }
-
             const novedadesByTurno = {};
             const allDisplayedIds = Array.from(novedadesLog.querySelectorAll('.novedad-checkbox')).map(cb => cb.dataset.id);
 
@@ -695,13 +823,8 @@
                     totalNovedadesCopied++;
                 }
             }
-
             const textToCopy = finalMessageParts.join('\n').trim();
-            
-            // --- INICIO CONSOLE LOGS ---
             console.log("DEBUG: Texto a copiar a WhatsApp:", textToCopy);
-            // --- FIN CONSOLE LOGS ---
-            
             try {
                 const textArea = document.createElement("textarea");
                 textArea.value = textToCopy;
@@ -725,7 +848,8 @@
             }
         });
 
-        // --- NUEVO: Exportar TODO el historial a XLSX ordenado por fecha (timestamp desc) ---
+        // 5. Lógica del Botón de Exportar
+        // ... (código de exportar sin cambios) ...
         function ensureXLSXLoaded() {
             if (window.XLSX) return Promise.resolve();
             return new Promise((resolve, reject) => {
@@ -736,7 +860,6 @@
                 document.head.appendChild(s);
             });
         }
-
         async function exportAllToXLSX() {
             if (!db) {
                 showMessageModal("Error", "La base de datos no está lista. Espera a que la app se conecte.");
@@ -749,84 +872,50 @@
                 const colRef = collection(db, collectionPath);
                 const qRef = query(colRef, orderBy('timestamp', 'desc'));
                 const snapshot = await getDocs(qRef);
-
                 const rows = [];
                 const headers = ['Turno', 'Fecha', 'Hora', 'Prioridad', 'Área/Elemento', 'Nº Reserva', 'Habitación', 'Novedad', 'Notificado a', 'Estado', 'UserId', 'Timestamp'];
                 rows.push(headers);
-
                 snapshot.forEach(docSnap => {
                     const d = docSnap.data();
                     const ts = d.timestamp && d.timestamp.toDate ? d.timestamp.toDate() : (d.timestamp ? new Date(d.timestamp) : new Date());
                     const fecha = formatDate(ts);
                     const hora = ts.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-
                     rows.push([
-                        d.turno || '',
-                        fecha,
-                        hora,
-                        d.prioridad || '',
-                        d.areaElemento || '',
-                        d.nReserva || '',
-                        d.habitacion || '',
-                        (d.novedad || '').replace(/\r?\n/g, ' '),
-                        d.notificadoA || '',
-                        d.estado || '',
-                        d.userId || '',
-                        ts.toISOString()
+                        d.turno || '', fecha, hora, d.prioridad || '', d.areaElemento || '',
+                        d.nReserva || '', d.habitacion || '', (d.novedad || '').replace(/\r?\n/g, ' '),
+                        d.notificadoA || '', d.estado || '', d.userId || '', ts.toISOString()
                     ]);
                 });
-
                 await ensureXLSXLoaded();
                 const ws = XLSX.utils.aoa_to_sheet(rows);
-                
-                // --- AJUSTE DE ANCHO DE COLUMNAS (Aprox) ---
                 const colWidths = [
-                    { wch: 10 }, // Turno
-                    { wch: 12 }, // Fecha
-                    { wch: 8 },  // Hora
-                    { wch: 10 }, // Prioridad
-                    { wch: 25 }, // Área/Elemento
-                    { wch: 20 }, // Nº Reserva
-                    { wch: 10 }, // Habitación
-                    { wch: 80 }, // Novedad (más ancha)
-                    { wch: 25 }, // Notificado a
-                    { wch: 12 }, // Estado
-                    { wch: 28 }, // UserId
-                    { wch: 25 }  // Timestamp
+                    { wch: 10 }, { wch: 12 }, { wch: 8 }, { wch: 10 }, { wch: 25 },
+                    { wch: 20 }, { wch: 10 }, { wch: 80 }, { wch: 25 }, { wch: 12 },
+                    { wch: 28 }, { wch: 25 }
                 ];
                 ws['!cols'] = colWidths;
-                // --- FIN AJUSTE ---
-                
                 const wb = { Sheets: { 'Novedades': ws }, SheetNames: ['Novedades'] };
                 const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-
                 const blob = new Blob([wbout], { type: 'application/octet-stream' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
-                
-                // --- CAMBIO DE NOMBRE DE ARCHIVO ---
                 const now = new Date();
                 const day = String(now.getDate()).padStart(2, '0');
-                const month = String(now.getMonth() + 1).padStart(2, '0'); // +1 porque los meses son 0-indexados
+                const month = String(now.getMonth() + 1).padStart(2, '0');
                 const year = now.getFullYear();
                 const fechaParaNombre = `${day}-${month}-${year}`;
-                
                 a.href = url;
-                a.download = `${fechaParaNombre} - Registro Diario.xlsx`; // <-- FORMATO SOLICITADO
-                // --- FIN CAMBIO ---
-                
+                a.download = `${fechaParaNombre} - Registro Diario.xlsx`;
                 document.body.appendChild(a);
                 a.click();
                 a.remove();
                 URL.revokeObjectURL(url);
-
                 showMessageModal("Exportado", `Se exportaron ${rows.length - 1} registros a XLSX. Archivo descargado.`);
             } catch (err) {
                 console.error("Error al exportar a XLSX:", err);
                 showMessageModal("Error de Exportación", `No se pudo exportar. Detalles: ${err.message}`);
             } finally {
                 exportButton.disabled = false;
-                // Restaurar el texto y el icono del botón
                 exportButton.innerHTML = `
                     <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                         <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V7.414A2 2 0 0016.586 6L13 2.414A2 2 0 0011.586 2H4zM12 3.5L15.5 7H13a1 1 0 01-1-1V3.5zM7 9h6v2H7V9zm0 4h6v2H7v-2z"></path>
@@ -835,52 +924,65 @@
                 `;
             }
         }
-
         exportButton.addEventListener('click', exportAllToXLSX);
 
+        // --- NUEVO: Listeners para Modales de Borrado ---
+        
+        // Modal Individual
+        cancelDeleteBtn.addEventListener('click', () => {
+            confirmModal.classList.add('hidden');
+        });
+        confirmDeleteBtn.addEventListener('click', () => {
+            const id = confirmDeleteBtn.dataset.id;
+            deleteNovedad(id);
+            confirmModal.classList.add('hidden');
+        });
 
-        // --- NUEVO: Lógica del Dropdown Multiselect ---
+        // Modal Borrar Todo
+        deleteAllButton.addEventListener('click', () => {
+            deleteAllPassword.value = '';
+            deleteAllError.classList.add('hidden');
+            deleteAllModal.classList.remove('hidden');
+            deleteAllPassword.focus();
+        });
+        cancelDeleteAllBtn.addEventListener('click', () => {
+            deleteAllModal.classList.add('hidden');
+        });
+        confirmDeleteAllBtn.addEventListener('click', () => {
+            const pass = deleteAllPassword.value;
+            if (pass === 'hotel545') {
+                deleteAllNovedades();
+            } else {
+                deleteAllError.classList.remove('hidden');
+                deleteAllPassword.focus();
+            }
+        });
 
-        /**
-         * Pobla el dropdown con las opciones.
-         */
+        // Lógica del Dropdown Multiselect
+        // ... (código del multiselect sin cambios) ...
         function populateMultiselect() {
-            // Limpiar opciones existentes (excepto "Seleccionar todo")
             multiselectDropdown.querySelectorAll('.multiselect-option-container').forEach(el => el.remove());
-            
             multiselectOptions.forEach(option => {
                 const optionId = `ms-opt-${option.replace(/\s+/g, '-')}`;
                 const container = document.createElement('label');
                 container.className = 'multiselect-option-container flex items-center px-2 py-1 rounded-md hover:bg-gray-100 cursor-pointer';
                 container.setAttribute('for', optionId);
-                
                 container.innerHTML = `
                     <input type="checkbox" id="${optionId}" value="${option}" class="multiselect-option h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
                     <span class="ml-2 text-sm text-gray-700">${option}</span>
                 `;
                 multiselectDropdown.appendChild(container);
             });
-
-            // Añadir listeners a las nuevas opciones
             addOptionListeners();
         }
-
-        /**
-         * Añade listeners a los checkboxes de las opciones.
-         */
         function addOptionListeners() {
             multiselectDropdown.querySelectorAll('.multiselect-option').forEach(cb => {
                 cb.addEventListener('change', updateMultiselectLabelAndSelectAll);
             });
         }
-
-        /**
-         * Actualiza el texto del botón (label) y el estado del checkbox "Seleccionar todo".
-         */
         function updateMultiselectLabelAndSelectAll() {
             const checkedOptions = multiselectDropdown.querySelectorAll('.multiselect-option:checked');
             const totalOptions = multiselectDropdown.querySelectorAll('.multiselect-option').length;
-            
             if (checkedOptions.length === 0) {
                 multiselectLabel.textContent = 'Elige';
                 multiselectLabel.classList.add('text-gray-500');
@@ -894,14 +996,11 @@
                  multiselectLabel.classList.remove('text-gray-500');
                 multiselectLabel.classList.add('text-gray-900', 'font-semibold');
             } else {
-                // Mostrar los primeros 2 seleccionados
                 const labels = Array.from(checkedOptions).map(cb => cb.value).join(', ');
                 multiselectLabel.textContent = labels;
                 multiselectLabel.classList.remove('text-gray-500');
                 multiselectLabel.classList.add('text-gray-900', 'font-semibold');
             }
-
-            // Actualizar el estado de "Seleccionar todo"
             if (checkedOptions.length === totalOptions) {
                 multiselectSelectAll.checked = true;
                 multiselectSelectAll.indeterminate = false;
@@ -913,10 +1012,6 @@
                 multiselectSelectAll.indeterminate = false;
             }
         }
-
-        /**
-         * Resetea el multiselect a su estado inicial.
-         */
         function resetMultiselect() {
             multiselectDropdown.querySelectorAll('.multiselect-option:checked').forEach(cb => {
                 cb.checked = false;
@@ -925,10 +1020,6 @@
             filterMultiselectOptions();
             updateMultiselectLabelAndSelectAll();
         }
-
-        /**
-         * Filtra las opciones basadas en el input de búsqueda.
-         */
         function filterMultiselectOptions() {
             const filter = multiselectSearch.value.toLowerCase();
             multiselectDropdown.querySelectorAll('.multiselect-option-container').forEach(container => {
@@ -940,29 +1031,19 @@
                 }
             });
         }
-
-        // Listener para abrir/cerrar el dropdown
         multiselectButton.addEventListener('click', () => {
             multiselectDropdownContainer.classList.toggle('hidden');
             if (!multiselectDropdownContainer.classList.contains('hidden')) {
-                // Auto-focus en el buscador al abrir
                 multiselectSearch.focus();
             }
         });
-
-        // Listener para cerrar el dropdown si se hace clic fuera de él
         document.addEventListener('click', (e) => {
             if (!multiselectButton.contains(e.target) && !multiselectDropdownContainer.contains(e.target)) {
                 multiselectDropdownContainer.classList.add('hidden');
             }
         });
-
-        // Listener para el buscador
         multiselectSearch.addEventListener('input', filterMultiselectOptions);
-
-        // Listener para "Seleccionar todo"
         multiselectSelectAll.addEventListener('change', () => {
-            // Seleccionar solo los visibles (filtrados)
             multiselectDropdown.querySelectorAll('.multiselect-option-container').forEach(container => {
                 if (!container.classList.contains('hidden')) {
                     container.querySelector('.multiselect-option').checked = multiselectSelectAll.checked;
@@ -970,11 +1051,7 @@
             });
             updateMultiselectLabelAndSelectAll();
         });
-
-        // Poblar el multiselect al inicio
         populateMultiselect();
-
-        // --- FIN: Lógica Multiselect ---
 
     </script>
 </body>
