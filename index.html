@@ -1,692 +1,802 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Reporte Diario - Hotel</title>
-    <!-- Tailwind CSS (CDN) -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro Diario</title>
+    <!-- Carga de Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Configuración de la fuente Inter -->
     <script>
-        // Configuración de colores de Tailwind
         tailwind.config = {
             theme: {
                 extend: {
-                    colors: {
-                        primary: '#D48828'
-                    }
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
                 }
             }
         }
     </script>
-    <!-- Firebase SDK (Actualizado a v11.6.1 y con todos los módulos necesarios) -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, addDoc, updateDoc, doc, Timestamp, query, where, getDocs, setDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // Usando variables de entorno obligatorias para inicializar Firebase
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'hotel-reporte-diario';
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        
-        setLogLevel('Debug'); // Para ver logs en la consola
-        
-        window.firebaseApp = { app, auth, db, appId, query, where, collection, getDocs, setDoc, doc, Timestamp };
-
-        // 1. Inicialización de Autenticación (con token del Canvas)
-        async function initializeAuth() {
-            try {
-                if (typeof __initial_auth_token !== 'undefined') {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-                // 2. Después de autenticar, configurar las credenciales de usuario si no existen
-                setupInitialCredentials();
-            } catch (error) {
-                console.error("Error al inicializar la autenticación:", error);
-            }
-        }
-        
-        // 3. Crear credenciales por defecto si la colección está vacía
-        async function setupInitialCredentials() {
-            const defaultCredentials = [
-                { username: 'FRONT', password: '0001', role: 'FRONT' },
-                { username: 'HSKP', password: '0002', role: 'HSKP' },
-                { username: 'MANTE', password: '0003', role: 'MANTE' },
-                { username: 'GERENCIA', password: '0005', role: 'GERENCIA' },
-            ];
-
-            const credsColRef = collection(db, `artifacts/${appId}/public/data/user_credentials`);
-            const snapshot = await getDocs(credsColRef);
-            
-            if (snapshot.empty) {
-                console.log("Creando credenciales iniciales en Firestore...");
-                for (const cred of defaultCredentials) {
-                    // Usar el username como ID de documento para una mejor gestión
-                    await setDoc(doc(credsColRef, cred.username), cred);
-                }
-            }
-        }
-
-        initializeAuth();
-    </script>
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Estilos personalizados -->
     <style>
-        .chart-container { height: 300px; }
-        textarea, input, select { text-transform: uppercase; }
-        .max-w-6xl { max-width: 1200px; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        
+        .shadow-custom {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.05);
+        }
+
+        .scrollable-table-container {
+            max-height: 70vh; /* Altura máxima para la tabla */
+            overflow-y: auto;
+        }
+
+        /* Estilos para que la cabecera de la tabla se mantenga fija */
+        .sticky-header th {
+            position: sticky;
+            top: 0;
+            background-color: #4f46e5; /* Color de fondo del encabezado */
+            color: white;
+            z-index: 10;
+        }
+
+        /* Estilos para el dropdown multiselect personalizado */
+        .multiselect-dropdown {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        /* Ocultar scrollbar estándar */
+        .multiselect-dropdown::-webkit-scrollbar {
+            width: 8px;
+        }
+        /* Estilo del track */
+        .multiselect-dropdown::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        /* Estilo del thumb */
+        .multiselect-dropdown::-webkit-scrollbar-thumb {
+            background: #c5c5c5;
+            border-radius: 10px;
+        }
+        .multiselect-dropdown::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
     </style>
 </head>
-<body class="bg-gray-50 p-4 font-sans min-h-screen">
-    <div id="app" class="max-w-6xl mx-auto pb-10">
-        <!-- Header -->
-        <header class="text-center mb-8 bg-white p-6 rounded-xl shadow-lg">
-            <h1 class="text-3xl sm:text-4xl font-extrabold text-primary">Reporte Diario de Operaciones</h1>
-            <p class="text-gray-500 mt-2">Control y Entrega de Turno</p>
-            <p id="user-display" class="text-sm font-medium text-indigo-600 hidden mt-1">Usuario actual: <span id="current-user" class="font-bold"></span></p>
-            <div id="nav-buttons" class="mt-6 flex justify-center space-x-4 hidden">
-                <button onclick="showView('report')" id="btn-report" class="py-2 px-4 rounded-lg font-semibold bg-indigo-600 text-white shadow-md transition duration-150 ease-in-out">Novedades</button>
-                <button onclick="showView('charts')" id="btn-charts" class="py-2 px-4 rounded-lg font-semibold bg-white text-gray-700 shadow-md hover:bg-gray-100 transition duration-150 ease-in-out">Gráficos</button>
+<body class="bg-gray-50 font-sans p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto">
+        
+        <header class="mb-8">
+            <!-- TÍTULO ACTUALIZADO -->
+            <h1 class="text-4xl font-extrabold text-indigo-700 mb-2">Registro Diario</h1>
+             <div id="user-info" class="text-sm mt-2 p-2 bg-indigo-100 text-indigo-800 rounded-md font-semibold">
+                Cargando usuario...
             </div>
         </header>
 
-        <!-- Login -->
-        <div id="login-screen" class="flex justify-center items-center h-[70vh]">
-            <form onsubmit="handleLogin(event)" class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-sm border-t-4 border-primary">
-                <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">Acceso de Personal</h2>
-                <p id="login-error" class="bg-red-100 text-red-700 p-3 rounded-lg text-sm mb-4 text-center font-medium hidden"></p>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Usuario (Ej: FRONT)</label>
-                    <input type="text" id="login-username" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary uppercase" placeholder="FRONT, HSKP..." required />
+        <!-- Formulario de Registro de Novedades -->
+        <div class="bg-white p-6 rounded-xl shadow-custom mb-10">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">Nueva Novedad</h2>
+            <form id="novedad-form" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                <!-- Campo de Prioridad -->
+                <div>
+                    <label for="prioridad" class="block text-sm font-medium text-gray-700">Prioridad</label>
+                    <select id="prioridad" name="prioridad" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border">
+                        <option value="Urgente" class="text-red-700 font-bold">Urgente</option>
+                        <option value="Alta" class="text-yellow-600 font-semibold">Alta</option>
+                        <option value="Media" selected>Media</option>
+                        <option value="Baja">Baja</option>
+                    </select>
                 </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
-                    <input type="password" id="login-password" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary" required />
+
+                <!-- Campo Nº de Reserva -->
+                <div>
+                    <label for="nReserva" class="block text-sm font-medium text-gray-700">Nº de Reserva</label>
+                    <input type="text" id="nReserva" name="nReserva" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border" placeholder="Ej: 25016-171152">
                 </div>
-                <button type="submit" class="w-full py-3 mt-4 bg-primary text-white font-bold rounded-lg shadow-md hover:bg-orange-700 transition duration-150 ease-in-out">Entrar</button>
-                <p class="text-center text-xs text-gray-500 mt-4">Credenciales iniciales: FRONT/0001, HSKP/0002, etc. (Almacenadas en Firestore)</p>
+
+                <!-- Campo Habitación -->
+                <div>
+                    <label for="habitacion" class="block text-sm font-medium text-gray-700">Habitación</label>
+                    <input type="text" id="habitacion" name="habitacion" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border" placeholder="Ej: 319">
+                </div>
+
+                <!-- Campo Área/Elemento -->
+                <div>
+                    <label for="areaElemento" class="block text-sm font-medium text-gray-700">Área/Elemento (Requerido)</label>
+                    <input type="text" id="areaElemento" name="areaElemento" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border" placeholder="Ej: Puerta - Mantenimiento">
+                </div>
+
+                <!-- CAMPO ASIGNADO / NOTIFICADO A (NUEVO DROPDOWN) -->
+                <div class="relative">
+                    <label for="multiselect-button" class="block text-sm font-medium text-gray-700">Asignado / Notificado a</label>
+                    <button type="button" id="multiselect-button" class="mt-1 bg-white relative w-full border border-gray-300 rounded-md shadow-sm p-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                        <span id="multiselect-label" class="block truncate text-gray-500">Elige</span>
+                        <span class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                            <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M10 3a1 1 0 01.707.293l3 3a1 1 0 01-1.414 1.414L10 5.414 7.707 7.707a1 1 0 01-1.414-1.414l3-3A1 1 0 0110 3zm-3.707 9.293a1 1 0 011.414 0L10 14.586l2.293-2.293a1 1 0 011.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </span>
+                    </button>
+                    <!-- Contenedor del Dropdown -->
+                    <div id="multiselect-dropdown-container" class="hidden absolute z-20 mt-1 w-full bg-white shadow-lg rounded-md border border-gray-200">
+                        <!-- Buscador -->
+                        <div class="p-2">
+                            <input type="text" id="multiselect-search" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500" placeholder="Buscar...">
+                        </div>
+                        <!-- Opciones -->
+                        <div class="multiselect-dropdown p-2 space-y-1">
+                            <!-- Opción "Seleccionar todo" -->
+                            <label class="flex items-center px-2 py-1 rounded-md hover:bg-gray-100 cursor-pointer">
+                                <input type="checkbox" id="multiselect-select-all" class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                                <span class="ml-2 text-sm font-semibold text-gray-900">(Seleccionar todo)</span>
+                            </label>
+                            <!-- Opciones dinámicas se insertarán aquí -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Campo Turno (Automático) -->
+                <div class="col-span-1">
+                    <label class="block text-sm font-medium text-gray-700">Turno Actual (Automático)</label>
+                    <div id="current-shift" class="mt-1 p-2 bg-indigo-50 border border-indigo-200 rounded-md font-semibold text-indigo-700">
+                        --:--
+                    </div>
+                </div>
+
+                <!-- Campo Novedad (Detalles) -->
+                <div class="md:col-span-3">
+                    <label for="novedad" class="block text-sm font-medium text-gray-700">Detalles de la Novedad (Requerido)</label>
+                    <textarea id="novedad" name="novedad" rows="3" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border" placeholder="Ej: Problemas con la tarjeta de acceso a la habitación, la batería está suelta y hace falso contacto."></textarea>
+                </div>
+
+                <!-- Botón de Registro -->
+                <div class="md:col-span-3 flex justify-end">
+                    <button type="submit" id="submit-button" class="inline-flex justify-center py-3 px-6 border border-transparent shadow-md text-sm font-medium rounded-full text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out disabled:opacity-50" disabled>
+                        <svg id="loading-spinner" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Registrar Novedad
+                    </button>
+                </div>
             </form>
         </div>
 
-        <!-- Main Views -->
-        <main id="main-content" class="hidden">
-            <!-- Formulario -->
-            <section id="form-section" class="bg-gray-100 p-6 rounded-xl shadow-2xl mb-8 border border-gray-200">
-                <h2 id="form-title" class="text-xl font-semibold text-gray-800 mb-6 border-b pb-2">Registrar Nueva Novedad</h2>
-                <form id="entry-form" class="grid grid-cols-1 md:grid-cols-3 gap-x-6">
-                    <!-- Campos... -->
-                    <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Turno</label>
-                        <select name="turno" class="w-full p-3 border border-gray-300 rounded-lg" required>
-                            <option value="">Seleccione...</option>
-                            <option>Mañana</option><option>Tarde</option><option>Noche</option>
-                        </select>
-                    </div>
-                    <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Fecha del Suceso</label>
-                        <input type="date" name="fecha" class="w-full p-3 border border-gray-300 rounded-lg" required value="" />
-                    </div>
-                    <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Nº Reserva</label>
-                        <input type="text" name="nReserva" class="w-full p-3 border border-gray-300 rounded-lg" placeholder="Ej: 25007-232019" />
-                    </div>
-                    <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Habitación</label>
-                        <input type="text" name="habitacion" class="w-full p-3 border border-gray-300 rounded-lg" placeholder="Ej: 401" />
-                    </div>
-                    <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Área/Elemento</label>
-                        <input type="text" name="areaElemento" class="w-full p-3 border border-gray-300 rounded-lg" placeholder="Ej: Queja Aire" required />
-                    </div>
-                    <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Notificar a</label>
-                        <select name="notificaAQuien" class="w-full p-3 border border-gray-300 rounded-lg" required>
-                            <option value="">Seleccione...</option>
-                            <option>Mantenimiento</option><option>Comercial</option><option>Front</option><option>Housekeeping</option><option>Administración</option><option>Áreas Públicas</option><option>Seguridad</option><option>Parking</option><option>Jefe Recepción</option><option>Gerencia</option>
-                        </select>
-                    </div>
-                    <div class="md:col-span-3 mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Novedad</label>
-                        <textarea name="novedad" class="w-full p-3 border border-gray-300 rounded-lg" rows="3" placeholder="Describe el suceso..." required></textarea>
-                    </div>
-                    <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
-                        <select name="estado" class="w-full p-3 border-2 border-orange-500 bg-orange-50 rounded-lg" required>
-                            <option>En curso</option><option>Completada</option><option>Pendiente</option><option>Cancelada</option>
-                        </select>
-                    </div>
-                    <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Prioridad</label>
-                        <select name="prioridad" class="w-full p-3 border-2 border-orange-500 bg-orange-50 rounded-lg" required>
-                            <option>Baja</option><option>Media</option><option>Importante</option><option>Urgente</option>
-                        </select>
-                    </div>
-                    <div class="flex items-end space-x-3 mt-4 md:mt-0 col-span-1 md:col-span-1">
-                        <button type="submit" class="w-full py-3 px-4 bg-indigo-600 text-white font-bold rounded-lg shadow-md hover:bg-indigo-700 transition duration-150 ease-in-out">Registrar Novedad</button>
-                        <button type="button" id="cancel-edit" class="w-full py-3 px-4 bg-gray-300 text-gray-800 font-bold rounded-lg hidden hover:bg-gray-400 transition duration-150 ease-in-out" onclick="cancelEdit()">Cancelar</button>
-                    </div>
-                </form>
-            </section>
-
-            <!-- Log -->
-            <section id="log-section" class="bg-white p-6 rounded-xl shadow-2xl border border-yellow-300">
-                <div class="flex flex-col sm:flex-row justify-between items-center mb-6 border-b pb-2">
-                    <div class="flex items-center mb-4 sm:mb-0 space-x-4">
-                        <h2 class="text-2xl font-semibold text-gray-800">Novedades (<span id="filtered-count">0</span> de <span id="total-count">0</span>)</h2>
-                        <span class="text-sm font-medium text-red-600" id="pending-count">0 pendientes</span>
-                    </div>
-                    <div class="flex space-x-4">
-                        <button onclick="exportToCSV()" style="background-color: #199EE6" class="flex items-center space-x-1 py-2 px-4 text-white font-bold rounded-lg text-sm shadow-lg hover:opacity-90 transition duration-150 ease-in-out">
-                            <span>Exportar CSV</span>
-                        </button>
-                        <button onclick="copyForWhatsApp()" style="background-color: #59E619" class="flex items-center space-x-1 py-2 px-4 text-white font-bold rounded-lg text-sm shadow-lg hover:opacity-90 transition duration-150 ease-in-out">
-                            <span>Copiar WhatsApp</span>
-                        </button>
-                    </div>
+        <!-- Tabla de Novedades Registradas -->
+        <div class="bg-white p-6 rounded-xl shadow-custom">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">Novedades Registradas</h2>
+            
+            <!-- CONTROLES DE LOG Y BOTÓN WHATSAPP -->
+            <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
+                <div id="log-status" class="p-4 bg-yellow-100 text-yellow-800 rounded-md text-center flex-grow w-full md:w-auto hidden">
+                    Cargando registros...
                 </div>
-                <p id="copy-message" class="mt-4 text-center p-3 rounded-lg font-medium hidden"></p>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 p-4 bg-gray-50 rounded-lg border">
-                    <input type="date" id="filter-fecha" class="p-2 border rounded" />
-                    <input type="text" id="filter-habitacion" class="p-2 border rounded uppercase" placeholder="Habitación" />
-                    <input type="text" id="filter-area" class="p-2 border rounded uppercase" placeholder="Área/Elemento" />
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full bg-white shadow-md rounded-lg">
-                        <thead class="bg-gray-200">
-                            <tr>
-                                <th class="p-3 text-xs text-left">Sel.</th>
-                                <th class="p-3 text-xs text-left">Fecha</th>
-                                <th class="p-3 text-xs text-left">Turno</th>
-                                <th class="p-3 text-xs text-left">Novedad / Área</th>
-                                <th class="p-3 text-xs text-left">Notificado</th>
-                                <th class="p-3 text-xs text-left">Usuario</th>
-                                <th class="p-3 text-xs text-left">Estado</th>
-                                <th class="p-3 text-xs text-left">Prioridad</th>
-                                <th class="p-3 text-xs text-left">Acción</th>
-                            </tr>
-                        </thead>
-                        <tbody id="log-rows"></tbody>
-                    </table>
-                    <p id="no-results" class="text-center py-6 text-gray-500 hidden">No hay novedades registradas.</p>
-                </div>
-            </section>
-
-            <!-- Charts (initially hidden) -->
-            <div id="charts-section" class="p-6 bg-white rounded-xl shadow-2xl hidden mt-8 border">
-                <h2 class="text-3xl font-bold text-gray-800 mb-6">Análisis de Novedades</h2>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="chart-container"><canvas id="chart-area"></canvas></div>
-                    <div class="chart-container"><canvas id="chart-priority"></canvas></div>
-                    <div class="chart-container lg:col-span-2"><canvas id="chart-turno"></canvas></div>
-                </div>
+                <button id="whatsapp-copy-button" class="inline-flex items-center justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-full text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out disabled:opacity-50" disabled>
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7.973 1.127l-2.76-2.76a1 1 0 00-1.53.136l-.37.986 1.83 4.956 4.956 1.83.986-.37a1 1 0 00.136-1.53l-2.76-2.76z" clip-rule="evenodd"></path>
+                    </svg>
+                    Whatsapp (0 seleccionadas)
+                </button>
             </div>
-        </main>
 
-        <footer class="text-center text-xs text-gray-400 mt-8">
-            App ID: <span id="app-id" class="font-mono"></span>
-        </footer>
+            <div class="overflow-x-auto scrollable-table-container rounded-lg border border-gray-200">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="sticky-header">
+                        <tr>
+                            <th class="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider rounded-tl-lg w-10">Sel.</th>
+                            <th class="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider w-20">Turno</th>
+                            <th class="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider w-24">Fecha</th>
+                            <th class="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider w-36">Prioridad</th>
+                            <th class="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider w-40">Área/Elemento</th>
+                            <th class="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider w-32">Nº Reserva</th>
+                            <th class="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider w-20">Habit.</th>
+                            <th class="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider min-w-80">Novedad</th>
+                            <th class="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider w-40">Notificado a</th>
+                            <th class="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider w-32 rounded-tr-lg">Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="novedades-log" class="bg-white divide-y divide-gray-100">
+                        <!-- Las filas de novedades se insertarán aquí por JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
     </div>
 
-    <script>
-        // === CONFIGURACIÓN Y ESTADO GLOBAL ===
-        let currentUser = null;
-        let userRole = null;
-        let editingId = null;
-        let logEntries = [];
-        let chartInstances = {};
+    <!-- Modal de Mensajes (Reemplazo de alert()) -->
+    <div id="message-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 transition-opacity duration-300">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-96 max-w-sm transform transition-all">
+            <h3 id="modal-title" class="text-lg font-bold text-gray-900 mb-3">Mensaje</h3>
+            <p id="modal-content" class="text-sm text-gray-700 mb-4">Contenido del mensaje.</p>
+            <div class="flex justify-end">
+                <button id="modal-close" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-sm">Cerrar</button>
+            </div>
+        </div>
+    </div>
 
-        // Función para mostrar la vista (Novedades o Gráficos)
-        function showView(view) {
-            document.getElementById('form-section').classList.toggle('hidden', view !== 'report');
-            document.getElementById('log-section').classList.toggle('hidden', view !== 'report');
-            document.getElementById('charts-section').classList.toggle('hidden', view !== 'charts');
-            
-            document.querySelectorAll('#nav-buttons button').forEach(btn => btn.classList.remove('bg-indigo-600', 'text-white', 'bg-white', 'text-gray-700'));
-            
-            if (view === 'report') {
-                document.getElementById('btn-report').classList.add('bg-indigo-600', 'text-white');
-                document.getElementById('btn-charts').classList.add('bg-white', 'text-gray-700');
-            } else {
-                document.getElementById('btn-charts').classList.add('bg-indigo-600', 'text-white');
-                document.getElementById('btn-report').classList.add('bg-white', 'text-gray-700');
-                renderCharts();
-            }
-        }
+    <!-- Script de Firebase y Lógica de la Aplicación -->
+    <script type="module">
+        // Importaciones de Firebase (Usando la versión CDN)
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, query, where, orderBy, serverTimestamp, updateDoc, addDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
-        // === FIREBASE LOGIN DINÁMICO (SOLUCIÓN AL HARDCODED) ===
-        async function handleLogin(e) {
-            e.preventDefault();
-            const user = document.getElementById('login-username').value.trim().toUpperCase();
-            const pass = document.getElementById('login-password').value;
-            const errorEl = document.getElementById('login-error');
-
-            errorEl.classList.add('hidden');
-            errorEl.textContent = '';
-            
-            const { db, appId, query, where, collection, getDocs } = window.firebaseApp;
-            if (!db) {
-                errorEl.textContent = 'Error: No se pudo conectar a la base de datos. Intente recargar.';
-                errorEl.classList.remove('hidden');
-                return;
-            }
-            
-            try {
-                // Consultar Firestore para el usuario
-                const userRef = collection(db, `artifacts/${appId}/public/data/user_credentials`);
-                const q = query(userRef, where("username", "==", user));
-                const snapshot = await getDocs(q);
-                
-                let validUser = null;
-
-                if (!snapshot.empty) {
-                    snapshot.forEach(doc => {
-                        const data = doc.data();
-                        if (data.password === pass) {
-                            validUser = data;
-                        }
-                    });
-                }
-                
-                if (validUser) {
-                    // Login Exitoso
-                    currentUser = validUser.username;
-                    userRole = validUser.role; 
-                    
-                    document.getElementById('current-user').textContent = currentUser;
-                    document.getElementById('login-screen').classList.add('hidden');
-                    document.getElementById('main-content').classList.remove('hidden');
-                    document.getElementById('user-display').classList.remove('hidden');
-                    document.getElementById('nav-buttons').classList.remove('hidden');
-                    document.getElementById('app-id').textContent = appId;
-                    
-                    // Iniciar el listener de novedades
-                    initLogListener();
-                    
-                    // Asegurar que se muestre la vista de novedades al ingresar
-                    showView('report'); 
-
-                } else {
-                    errorEl.textContent = 'Usuario o contraseña incorrectos.';
-                    errorEl.classList.remove('hidden');
-                    setTimeout(() => errorEl.classList.add('hidden'), 3000);
-                }
-
-            } catch (err) {
-                console.error("Error en el login:", err);
-                errorEl.textContent = 'Error al verificar credenciales: ' + err.message;
-                errorEl.classList.remove('hidden');
-            }
-        }
-
-        // Listener para las novedades
-        function initLogListener() {
-            const { db, appId, collection, onSnapshot } = window.firebaseApp;
-            if (!db) return;
-
-            const q = collection(db, `artifacts/${appId}/public/data/reception_log`);
-            onSnapshot(q, (snapshot) => {
-                logEntries = [];
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    logEntries.push({
-                        id: doc.id,
-                        ...data,
-                        // Convertir el Timestamp a Date, si es un objeto Timestamp
-                        fechaRegistro: data.fechaRegistro?.toDate?.() || new Date(data.fechaRegistro)
-                    });
-                });
-                // Ordenar por fecha de registro descendente
-                logEntries.sort((a, b) => b.fechaRegistro.getTime() - a.fechaRegistro.getTime());
-                renderLog();
-                if (!document.getElementById('charts-section').classList.contains('hidden')) {
-                    renderCharts(); // Actualizar gráficos si están visibles
-                }
-            });
-        }
-
-        // Establecer la fecha de hoy por defecto en el formulario
-        document.querySelector('[name="fecha"]').value = new Date().toISOString().substring(0, 10);
+        // --- Configuración DUAL de Firebase ---
+        const isCanvasEnvironment = typeof __app_id !== 'undefined';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-hotel-app'; 
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null; 
         
-        // === RENDER Y LÓGICA DE TABLA ===
-        function renderLog() {
-            const filters = {
-                fecha: document.getElementById('filter-fecha').value,
-                habitacion: document.getElementById('filter-habitacion').value.toLowerCase(),
-                area: document.getElementById('filter-area').value.toLowerCase()
+        let firebaseConfig;
+        if (isCanvasEnvironment) {
+            if (typeof __firebase_config !== 'undefined') {
+                firebaseConfig = JSON.parse(__firebase_config);
+            } else {
+                console.error("Error: Entorno Canvas detectado pero __firebase_config no está definida.");
+                firebaseConfig = {}; 
+            }
+        } else {
+            firebaseConfig = {
+                apiKey: "AIzaSyBVzV9DTbVpgVeymZTa-MYfTXDkdiW_g",
+                authDomain: "hotel-manager-system.firebaseapp.com",
+                projectId: "hotel-manager-system",
+                storageBucket: "hotel-manager-system.appspot.com",
+                messagingSenderId: "963620457167",
+                appId: "1:963620457167:web:f39693f502e7b75cb745ba"
             };
+        }
+        // --- Fin Configuración DUAL ---
 
-            let filtered = logEntries.filter(e => {
-                return (!filters.fecha || e.fecha === filters.fecha) &&
-                    (!filters.habitacion || (e.habitacion && e.habitacion.toLowerCase().includes(filters.habitacion))) &&
-                    (!filters.area || (e.areaElemento && e.areaElemento.toLowerCase().includes(filters.area)));
+        let db, auth, userId = null;
+        const COLLECTION_NAME = 'hotel_log'; 
+        
+        function getCollectionPath() {
+            if (isCanvasEnvironment) {
+                return `/artifacts/${appId}/public/data/${COLLECTION_NAME}`;
+            } else {
+                return COLLECTION_NAME;
+            }
+        }
+
+        // --- Referencias del DOM y Estado Global ---
+        const form = document.getElementById('novedad-form');
+        const submitButton = document.getElementById('submit-button');
+        const logStatus = document.getElementById('log-status');
+        const novedadesLog = document.getElementById('novedades-log');
+        const currentShiftDisplay = document.getElementById('current-shift');
+        const userInfoDisplay = document.getElementById('user-info');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const whatsappCopyButton = document.getElementById('whatsapp-copy-button');
+        
+        // --- NUEVO: Referencias del DOM para Multiselect ---
+        const multiselectButton = document.getElementById('multiselect-button');
+        const multiselectDropdownContainer = document.getElementById('multiselect-dropdown-container');
+        const multiselectSearch = document.getElementById('multiselect-search');
+        const multiselectDropdown = multiselectDropdownContainer.querySelector('.multiselect-dropdown');
+        const multiselectSelectAll = document.getElementById('multiselect-select-all');
+        const multiselectLabel = document.getElementById('multiselect-label');
+
+        const multiselectOptions = [
+            'Mantenimiento', 'HSKP', 'ReservasHA', 'ReservasHE', 'Jefe Recepción', 
+            'Seguridad', 'Parking', 'A.Públicas', 'Piscina', 'GerenciaO', 'GerenciaD'
+        ];
+        // --- FIN: Referencias Multiselect ---
+
+        let allNovedadesMap = new Map(); 
+        let selectedNovedadIds = new Set(); 
+        
+        // --- Funciones de Utilidad ---
+
+        function showMessageModal(title, content) {
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-content').textContent = content;
+            document.getElementById('message-modal').classList.remove('hidden');
+        }
+
+        document.getElementById('modal-close').addEventListener('click', () => {
+            document.getElementById('message-modal').classList.add('hidden');
+        });
+
+        function calcularTurno() {
+            const now = new Date();
+            const hour = now.getHours();
+            const minute = now.getMinutes();
+            const totalMinutes = hour * 60 + minute;
+            const MANANA_START = 6 * 60 + 30; // 390
+            const MANANA_END = 14 * 60 + 30; // 870
+            const TARDE_START = 14 * 60 + 31; // 871
+            const TARDE_END = 22 * 60 + 30; // 1350
+
+            if (totalMinutes >= MANANA_START && totalMinutes <= MANANA_END) {
+                return 'Mañana';
+            } else if (totalMinutes >= TARDE_START && totalMinutes <= TARDE_END) {
+                return 'Tarde';
+            } else {
+                return 'Noche';
+            }
+        }
+        
+        function formatDate(date) {
+            return date.toLocaleDateString('es-ES', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+        }
+
+        function getPriorityClasses(prioridad) {
+            switch (prioridad) {
+                case 'Urgente': return 'bg-red-200 text-red-800 font-bold';
+                case 'Alta': return 'bg-yellow-200 text-yellow-800 font-semibold';
+                case 'Media': return 'bg-blue-100 text-blue-800';
+                default: return 'bg-gray-100 text-gray-700';
+            }
+        }
+
+        function getStatusClasses(estado) {
+            switch (estado) {
+                case 'Completado': return 'bg-green-100 text-green-800 font-medium';
+                default: return 'bg-yellow-100 text-yellow-800 font-medium';
+            }
+        }
+
+        function updateWhatsappButton() {
+            const count = selectedNovedadIds.size;
+            whatsappCopyButton.innerHTML = `
+                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7.973 1.127l-2.76-2.76a1 1 0 00-1.53.136l-.37.986 1.83 4.956 4.956 1.83.986-.37a1 1 0 00.136-1.53l-2.76-2.76z" clip-rule="evenodd"></path></svg>
+                Whatsapp (${count} seleccionada${count !== 1 ? 's' : ''})
+            `;
+            whatsappCopyButton.disabled = count === 0;
+        }
+
+        function handleSelectionChange(id, isChecked) {
+            if (isChecked) {
+                selectedNovedadIds.add(id);
+            } else {
+                selectedNovedadIds.delete(id);
+            }
+            updateWhatsappButton();
+        }
+
+        function setupTableListeners() {
+            document.querySelectorAll('.novedad-checkbox').forEach(checkbox => {
+                checkbox.removeEventListener('change', handleSelectionChange); 
+                checkbox.addEventListener('change', (e) => handleSelectionChange(e.target.dataset.id, e.target.checked));
             });
 
-            const tbody = document.getElementById('log-rows');
-            tbody.innerHTML = '';
-            filtered.forEach(e => {
-                const tr = document.createElement('tr');
-                tr.className = editingId === e.id ? 'bg-indigo-50 border-l-4 border-indigo-600' : 'hover:bg-gray-50 transition duration-100 ease-in-out';
-                tr.innerHTML = `
-                    <td class="p-3"><input type="checkbox" data-id="${e.id}" class="form-checkbox h-4 w-4 text-indigo-600 rounded" /></td>
-                    <td class="p-3 text-xs">${formatDate(e.fecha)}</td>
-                    <td class="p-3 text-xs">${e.turno}</td>
-                    <td class="p-3 text-xs max-w-xs break-words font-medium">
-                        ${e.novedad.substring(0, 80)}${e.novedad.length > 80 ? '...' : ''} 
-                        <br><span class="text-gray-500 font-normal">[${e.areaElemento}]</span>
+            document.querySelectorAll('.estado-select').forEach(select => {
+                select.addEventListener('change', (e) => {
+                    const id = e.target.dataset.id;
+                    const nuevoEstado = e.target.value;
+                    updateEstado(id, nuevoEstado);
+                    e.target.className = `estado-select px-2 py-1 rounded-full text-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 ${getStatusClasses(nuevoEstado)}`;
+                });
+            });
+            updateWhatsappButton();
+        }
+        
+        // --- Lógica de la Base de Datos y Autenticación ---
+
+        async function setupAuthAndDB() {
+            try {
+                setLogLevel('debug'); 
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                await setPersistence(auth, browserSessionPersistence);
+                
+                if (initialAuthToken) { 
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth); 
+                }
+
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        userInfoDisplay.innerHTML = `<strong>Conectado</strong>`;
+                        userInfoDisplay.classList.remove('bg-indigo-100', 'text-indigo-800', 'bg-red-100', 'text-red-800');
+                        userInfoDisplay.classList.add('bg-green-100', 'text-green-800');
+                        submitButton.disabled = false;
+                        listenForNovedades(); 
+                        console.log("Autenticación y DB listas.");
+                    } else {
+                        userId = null;
+                        userInfoDisplay.innerHTML = `<strong>Error</strong>`;
+                        userInfoDisplay.classList.remove('bg-indigo-100', 'text-indigo-800', 'bg-green-100', 'text-green-800');
+                        userInfoDisplay.classList.add('bg-red-100', 'text-red-800');
+                        submitButton.disabled = true;
+                    }
+                });
+
+            } catch (error) {
+                console.error("Error al configurar Firebase:", error);
+                userInfoDisplay.innerHTML = `<strong>Error de Conexión</strong>`;
+                userInfoDisplay.classList.remove('bg-indigo-100', 'text-indigo-800', 'bg-green-100', 'text-green-800');
+                userInfoDisplay.classList.add('bg-red-100', 'text-red-800');
+                showMessageModal("Error de Conexión", "No se pudo conectar a la base de datos. Verifique la consola para más detalles.");
+            }
+        }
+
+        function listenForNovedades() {
+            const collectionPath = getCollectionPath();
+            const novedadesRef = collection(db, collectionPath);
+            
+            onSnapshot(novedadesRef, (snapshot) => {
+                const novedades = [];
+                allNovedadesMap.clear(); 
+                snapshot.forEach(doc => {
+                    const data = { id: doc.id, ...doc.data() };
+                    novedades.push(data);
+                    allNovedadesMap.set(doc.id, data); 
+                });
+
+                novedades.sort((a, b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0));
+                renderNovedadesLog(novedades);
+
+                if (novedades.length === 0) {
+                    logStatus.innerHTML = 'Aún no hay novedades registradas.';
+                    logStatus.classList.replace('bg-yellow-100', 'bg-blue-100');
+                    logStatus.classList.replace('text-yellow-800', 'text-blue-800');
+                    logStatus.classList.remove('hidden');
+                } else {
+                    logStatus.classList.add('hidden');
+                }
+            }, (error) => {
+                console.error("Error al escuchar novedades:", error);
+                logStatus.innerHTML = `Error al cargar: ${error.message}`;
+                logStatus.classList.replace('bg-yellow-100', 'bg-red-100');
+                logStatus.classList.replace('text-yellow-800', 'text-red-800');
+                logStatus.classList.remove('hidden');
+            });
+        }
+        
+        function renderNovedadesLog(novedades) {
+            novedadesLog.innerHTML = ''; 
+            
+            novedades.forEach(novedad => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+
+                const timestampDate = novedad.timestamp ? novedad.timestamp.toDate() : new Date();
+                const fecha = formatDate(timestampDate);
+                const hora = timestampDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                const isChecked = selectedNovedadIds.has(novedad.id) ? 'checked' : '';
+
+                row.innerHTML = `
+                    <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-900">
+                        <input type="checkbox" data-id="${novedad.id}" class="novedad-checkbox h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" ${isChecked}>
                     </td>
-                    <td class="p-3 text-xs">${e.notificaAQuien}</td>
-                    <td class="p-3 text-xs font-semibold">${e.usuario || 'N/A'}</td>
-                    <td class="p-3"><span class="px-2 py-1 text-xs font-medium rounded-full ${getStatusClass(e.estado)}">${e.estado}</span></td>
-                    <td class="p-3"><span class="text-xs font-bold ${getPriorityClass(e.prioridad)}">${e.prioridad}</span></td>
-                    <td class="p-3 text-right">
-                        <button onclick="editEntry('${e.id}')" class="text-indigo-600 hover:text-indigo-800 font-bold text-sm">Editar</button>
+                    <td class="px-3 py-3 whitespace-nowrap text-sm font-medium text-gray-900">${novedad.turno}</td>
+                    <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-600">${fecha}<br><span class="text-xs text-gray-500">${hora}</span></td>
+                    <td class="px-3 py-3 whitespace-nowrap">
+                        <span class="inline-flex items-center px-3 py-0.5 rounded-full text-xs ${getPriorityClasses(novedad.prioridad)}">
+                            ${novedad.prioridad}
+                        </span>
+                    </td>
+                    <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-600">${novedad.areaElemento || '-'}</td>
+                    <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-600">${novedad.nReserva || '-'}</td>
+                    <td class="px-3 py-3 whitespace-nowrap text-sm font-semibold text-gray-900">${novedad.habitacion || '-'}</td>
+                    <td class="px-3 py-3 text-sm text-gray-700 max-w-lg truncate hover:whitespace-normal hover:overflow-visible hover:bg-white hover:shadow-lg transition-all duration-300 cursor-pointer" title="${novedad.novedad}">${novedad.novedad}</td>
+                    <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-600">${novedad.notificadoA || '-'}</td>
+                    <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-600">
+                        <select data-id="${novedad.id}" class="estado-select px-2 py-1 rounded-full text-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 ${getStatusClasses(novedad.estado)}">
+                            <option value="En curso" ${novedad.estado === 'En curso' ? 'selected' : ''} class="bg-white text-yellow-700">En curso</option>
+                            <option value="Completado" ${novedad.estado === 'Completado' ? 'selected' : ''} class="bg-white text-green-700">Completado</option>
+                        </select>
                     </td>
                 `;
-                tbody.appendChild(tr);
+                novedadesLog.appendChild(row);
             });
-
-            document.getElementById('filtered-count').textContent = filtered.length;
-            document.getElementById('total-count').textContent = logEntries.length;
-            document.getElementById('no-results').classList.toggle('hidden', filtered.length > 0);
-
-            const pending = logEntries.filter(e => ['En curso', 'Pendiente'].includes(e.estado)).length;
-            document.getElementById('pending-count').textContent = `${pending} pendientes`;
+            
+            setupTableListeners();
         }
 
-        function formatDate(dateStr) {
-            const [y, m, d] = dateStr.split('-');
-            return `${d}/${m}`;
+        async function addNovedad(data) {
+            if (!db || !userId) return;
+
+            submitButton.disabled = true;
+            loadingSpinner.classList.remove('hidden');
+
+            try {
+                const collectionPath = getCollectionPath();
+                const novedadesRef = collection(db, collectionPath);
+
+                const newNovedad = {
+                    ...data,
+                    timestamp: serverTimestamp(),
+                    userId: userId, 
+                    estado: 'En curso' 
+                };
+
+                await addDoc(novedadesRef, newNovedad);
+                
+                form.reset(); 
+                // --- NUEVO: Resetear el multiselect ---
+                resetMultiselect();
+                // --- FIN: Resetear multiselect ---
+
+            } catch (error) {
+                console.error("Error al añadir la novedad:", error);
+                showMessageModal("Error", `No se pudo registrar la novedad. Detalles: ${error.message}`);
+            } finally {
+                submitButton.disabled = false;
+                loadingSpinner.classList.add('hidden');
+            }
         }
+        
+        async function updateEstado(id, estado) {
+            if (!db) return;
 
-        function getStatusClass(estado) {
-            if (estado === 'Completada') return 'bg-green-100 text-green-800';
-            if (['En curso', 'Pendiente'].includes(estado)) return 'bg-yellow-100 text-yellow-800';
-            return 'bg-red-100 text-red-800';
+            try {
+                const collectionPath = getCollectionPath();
+                const docRef = doc(db, collectionPath, id);
+                
+                await updateDoc(docRef, {
+                    estado: estado
+                });
+                
+                console.log(`Estado de novedad ${id} actualizado a ${estado}`);
+            } catch (error) {
+                console.error("Error al actualizar el estado:", error);
+                showMessageModal("Error de Actualización", `No se pudo cambiar el estado. Detalles: ${error.message}`);
+            }
         }
+        
+        // --- Event Listeners e Inicialización ---
 
-        function getPriorityClass(p) {
-            if (p === 'Urgente') return 'text-red-600 animate-pulse';
-            if (p === 'Importante') return 'text-orange-500';
-            return 'text-gray-500';
+        // 1. Inicialización de Firebase
+        setupAuthAndDB();
+
+        // 2. Mostrar el turno actual
+        function updateShiftDisplay() {
+            currentShiftDisplay.textContent = calcularTurno();
         }
+        updateShiftDisplay();
+        setInterval(updateShiftDisplay, 60000); 
 
-        // === FUNCIONALIDADES CRUD ===
-        function editEntry(id) {
-            const entry = logEntries.find(e => e.id === id);
-            if (!entry) return;
-            editingId = id;
-            document.getElementById('form-title').textContent = 'Editar Novedad (ID: ' + id.substring(0, 8) + '...)';
-            document.getElementById('cancel-edit').classList.remove('hidden');
-
-            const form = document.getElementById('entry-form');
-            // Cargar datos en el formulario
-            form.turno.value = entry.turno;
-            form.fecha.value = entry.fecha;
-            form.nReserva.value = entry.nReserva || '';
-            form.habitacion.value = entry.habitacion || '';
-            form.areaElemento.value = entry.areaElemento;
-            form.notificaAQuien.value = entry.notificaAQuien;
-            form.novedad.value = entry.novedad;
-            form.estado.value = entry.estado;
-            form.prioridad.value = entry.prioridad;
-
-            document.getElementById('form-section').scrollIntoView({ behavior: 'smooth' });
-        }
-
-        function cancelEdit() {
-            editingId = null;
-            document.getElementById('form-title').textContent = 'Registrar Nueva Novedad';
-            document.getElementById('cancel-edit').classList.add('hidden');
-            document.getElementById('entry-form').reset();
-            document.querySelector('[name="fecha"]').value = new Date().toISOString().substring(0, 10);
-            renderLog(); // Volver a renderizar para quitar el resaltado
-        }
-
-        document.getElementById('entry-form').addEventListener('submit', async (e) => {
+        // 3. Manejo del envío del formulario
+        form.addEventListener('submit', (e) => {
             e.preventDefault();
 
-            const formData = new FormData(e.target);
-            const entry = {
-                turno: formData.get('turno'),
-                fecha: formData.get('fecha'),
-                areaElemento: formData.get('areaElemento').toUpperCase(),
-                nReserva: formData.get('nReserva').toUpperCase(),
-                habitacion: formData.get('habitacion').toUpperCase(),
-                novedad: formData.get('novedad').toUpperCase(),
-                notificaAQuien: formData.get('notificaAQuien'),
-                estado: formData.get('estado'),
-                prioridad: formData.get('prioridad'),
-                usuario: currentUser,
-                fechaRegistro: window.firebaseApp.Timestamp.now()
-            };
-
-            try {
-                const { db, appId, doc, collection, addDoc, updateDoc } = window.firebaseApp;
-                const logCollectionRef = collection(db, `artifacts/${appId}/public/data/reception_log`);
+            const formData = new FormData(form);
+            
+            // --- NUEVO: Obtener valores del multiselect ---
+            const selectedNotificadoA = [];
+            multiselectDropdown.querySelectorAll('.multiselect-option:checked').forEach(cb => {
+                selectedNotificadoA.push(cb.value);
+            });
+            // --- FIN: Obtener valores ---
+            
+            const data = {
+                prioridad: formData.get('prioridad').trim(),
+                areaElemento: formData.get('areaElemento').trim(),
+                novedad: formData.get('novedad').trim(),
+                nReserva: formData.get('nReserva').trim() || null,
+                habitacion: formData.get('habitacion').trim() || null,
                 
-                if (editingId) {
-                    // Actualizar
-                    await updateDoc(doc(logCollectionRef, editingId), entry);
-                    showMessage('Novedad actualizada con éxito!', 'success');
+                // --- NUEVO: Guardar valores ---
+                notificadoA: selectedNotificadoA.join(', ') || null, // Unir con comas
+                // --- FIN: Guardar valores ---
+                
+                turno: calcularTurno() 
+            };
+            
+            if (!data.areaElemento || !data.novedad) {
+                showMessageModal("Error de Formulario", "Los campos 'Área/Elemento' y 'Detalles de la Novedad' son requeridos.");
+                return;
+            }
+
+            addNovedad(data);
+        });
+
+        // 4. Lógica del Botón de Copiar a WhatsApp
+        whatsappCopyButton.addEventListener('click', async () => {
+            if (selectedNovedadIds.size === 0) {
+                showMessageModal("Atención", "Por favor, selecciona al menos una novedad para copiar.");
+                return;
+            }
+
+            const novedadesByTurno = {};
+            const allDisplayedIds = Array.from(novedadesLog.querySelectorAll('.novedad-checkbox')).map(cb => cb.dataset.id);
+
+            for (const id of allDisplayedIds) {
+                if (selectedNovedadIds.has(id)) {
+                    const data = allNovedadesMap.get(id);
+                    const turno = data.turno || 'Sin Turno';
+                    if (!novedadesByTurno[turno]) {
+                        novedadesByTurno[turno] = [];
+                    }
+                    novedadesByTurno[turno].push(data);
+                }
+            }
+            
+            const finalMessageParts = [];
+            const sortedTurnos = ['Mañana', 'Tarde', 'Noche', 'Sin Turno'].filter(turno => novedadesByTurno[turno]);
+            let totalNovedadesCopied = 0;
+
+            for (const turno of sortedTurnos) {
+                const novedades = novedadesByTurno[turno];
+                finalMessageParts.push(`\n*Novedades Turno ${turno}*\n`); 
+                
+                for (const data of novedades) {
+                    const area = data.areaElemento || 'N/A';
+                    const reserva = data.nReserva || 'S/R';
+                    const habitacion = data.habitacion || 'S/H';
+                    const novedad = data.novedad || 'Sin descripción';
+                    
+                    const line = `. ${area} - ${reserva} - ${habitacion} - ${novedad}`;
+                    finalMessageParts.push(line);
+                    totalNovedadesCopied++;
+                }
+            }
+
+            const textToCopy = finalMessageParts.join('\n').trim();
+            
+            try {
+                const textArea = document.createElement("textarea");
+                textArea.value = textToCopy;
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                const successful = document.execCommand('copy');
+                document.body.removeChild(textArea);
+
+                if (successful) {
+                    selectedNovedadIds.clear();
+                    document.querySelectorAll('.novedad-checkbox').forEach(cb => cb.checked = false);
+                    updateWhatsappButton();
+                    showMessageModal("Copiado Exitoso", `Se copiaron ${totalNovedadesCopied} novedades con títulos de turno. ¡Listo para pegar en WhatsApp!`);
                 } else {
-                    // Crear nuevo
-                    await addDoc(logCollectionRef, entry);
-                    showMessage('Novedad registrada con éxito!', 'success');
-                    e.target.reset();
-                    document.querySelector('[name="fecha"]').value = new Date().toISOString().substring(0, 10);
+                    throw new Error('Error de copia por fallback.');
                 }
-                cancelEdit();
             } catch (err) {
-                console.error("Error al guardar:", err);
-                showMessage('Error al guardar: ' + err.message, 'error');
+                console.error('Error al copiar al portapeles:', err);
+                showMessageModal("Error al Copiar", `No se pudo copiar automáticamente. Por favor, copia el siguiente texto manualmente:\n\n${textToCopy}`);
             }
         });
 
-        // === FUNCIONALIDADES DE EXPORTACIÓN ===
-        function copyForWhatsApp() {
-            const selected = logEntries.filter(e => 
-                document.querySelector(`input[data-id="${e.id}"]:checked`)
-            );
-            if (selected.length === 0) return showMessage('Selecciona al menos una novedad.', 'error');
+        // --- NUEVO: Lógica del Dropdown Multiselect ---
 
-            const date = new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            let text = `📋 *REPORTE DE NOVEDADES - ${selected[0].turno.toUpperCase()}*\nFecha: ${date}\n\n`;
+        /**
+         * Pobla el dropdown con las opciones.
+         */
+        function populateMultiselect() {
+            // Limpiar opciones existentes (excepto "Seleccionar todo")
+            multiselectDropdown.querySelectorAll('.multiselect-option-container').forEach(el => el.remove());
             
-            selected.forEach((e, index) => {
-                let line = `* ${index + 1}. `;
+            multiselectOptions.forEach(option => {
+                const optionId = `ms-opt-${option.replace(/\s+/g, '-')}`;
+                const container = document.createElement('label');
+                container.className = 'multiselect-option-container flex items-center px-2 py-1 rounded-md hover:bg-gray-100 cursor-pointer';
+                container.setAttribute('for', optionId);
                 
-                // Info de Habitación/Reserva
-                if (e.nReserva || e.habitacion) {
-                    if (e.nReserva) line += `Reserva: ${e.nReserva} `;
-                    if (e.habitacion) line += `Habitación: ${e.habitacion} `;
-                    line += '- ';
-                }
-                
-                // Detalle y Area
-                const detail = e.novedad.split('\n')[0];
-                line += `${detail} [${e.areaElemento}]`;
-                
-                // Estado y Prioridad
-                line += `\n  - Estado: ${e.estado} / Prioridad: ${e.prioridad}`;
-                line += `\n  - Registrado por: ${e.usuario}`;
-                line += `\n  - Notificar a: ${e.notificaAQuien}\n`;
-
-                text += line;
+                container.innerHTML = `
+                    <input type="checkbox" id="${optionId}" value="${option}" class="multiselect-option h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                    <span class="ml-2 text-sm text-gray-700">${option}</span>
+                `;
+                multiselectDropdown.appendChild(container);
             });
 
-            // Usamos document.execCommand('copy') como alternativa robusta en iframes
-            const tempTextArea = document.createElement('textarea');
-            tempTextArea.value = text;
-            document.body.appendChild(tempTextArea);
-            tempTextArea.select();
+            // Añadir listeners a las nuevas opciones
+            addOptionListeners();
+        }
+
+        /**
+         * Añade listeners a los checkboxes de las opciones.
+         */
+        function addOptionListeners() {
+            multiselectDropdown.querySelectorAll('.multiselect-option').forEach(cb => {
+                cb.addEventListener('change', updateMultiselectLabelAndSelectAll);
+            });
+        }
+
+        /**
+         * Actualiza el texto del botón (label) y el estado del checkbox "Seleccionar todo".
+         */
+        function updateMultiselectLabelAndSelectAll() {
+            const checkedOptions = multiselectDropdown.querySelectorAll('.multiselect-option:checked');
+            const totalOptions = multiselectDropdown.querySelectorAll('.multiselect-option').length;
             
-            try {
-                document.execCommand('copy');
-                showMessage('¡Copiado para WhatsApp! Puedes pegarlo ahora.', 'success');
-                document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
-            } catch (err) {
-                showMessage('Error al copiar. Tu navegador no lo permite.', 'error');
-            } finally {
-                document.body.removeChild(tempTextArea);
+            if (checkedOptions.length === 0) {
+                multiselectLabel.textContent = 'Elige';
+                multiselectLabel.classList.add('text-gray-500');
+                multiselectLabel.classList.remove('text-gray-900', 'font-semibold');
+            } else if (checkedOptions.length === totalOptions) {
+                multiselectLabel.textContent = 'Todos seleccionados';
+                multiselectLabel.classList.remove('text-gray-500');
+                multiselectLabel.classList.add('text-gray-900', 'font-semibold');
+            } else if (checkedOptions.length > 2) {
+                 multiselectLabel.textContent = `${checkedOptions.length} seleccionados`;
+                 multiselectLabel.classList.remove('text-gray-500');
+                multiselectLabel.classList.add('text-gray-900', 'font-semibold');
+            } else {
+                // Mostrar los primeros 2 seleccionados
+                const labels = Array.from(checkedOptions).map(cb => cb.value).join(', ');
+                multiselectLabel.textContent = labels;
+                multiselectLabel.classList.remove('text-gray-500');
+                multiselectLabel.classList.add('text-gray-900', 'font-semibold');
+            }
+
+            // Actualizar el estado de "Seleccionar todo"
+            if (checkedOptions.length === totalOptions) {
+                multiselectSelectAll.checked = true;
+                multiselectSelectAll.indeterminate = false;
+            } else if (checkedOptions.length > 0) {
+                multiselectSelectAll.checked = false;
+                multiselectSelectAll.indeterminate = true;
+            } else {
+                multiselectSelectAll.checked = false;
+                multiselectSelectAll.indeterminate = false;
             }
         }
 
-        function exportToCSV() {
-            if (logEntries.length === 0) return showMessage('No hay datos para exportar.', 'error');
-            const headers = ["Fecha Suceso", "Turno", "Usuario Registro", "Área/Elemento", "Reserva", "Habitación", "Novedad", "Notificado A", "Estado", "Prioridad", "Fecha Registro"];
-            
-            const rows = logEntries.map(e => [
-                e.fecha, 
-                e.turno, 
-                e.usuario || 'N/A', 
-                e.areaElemento, 
-                e.nReserva || '', 
-                e.habitacion || '', 
-                // Asegurar que la novedad va entre comillas y escapa las comillas internas para CSV
-                `"${e.novedad.replace(/"/g, '""')}"`, 
-                e.notificaAQuien, 
-                e.estado, 
-                e.prioridad,
-                e.fechaRegistro.toISOString()
-            ]);
-            
-            let csv = headers.join(';') + '\n' + rows.map(r => r.join(';')).join('\n');
-            const blob = new Blob(['\ufeff', csv], { type: 'text/csv;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `novedades_${new Date().toISOString().slice(0,10)}.csv`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            showMessage('¡CSV exportado con éxito!', 'success');
+        /**
+         * Resetea el multiselect a su estado inicial.
+         */
+        function resetMultiselect() {
+            multiselectDropdown.querySelectorAll('.multiselect-option:checked').forEach(cb => {
+                cb.checked = false;
+            });
+            multiselectSearch.value = '';
+            filterMultiselectOptions();
+            updateMultiselectLabelAndSelectAll();
         }
 
-        function showMessage(msg, type = 'success') {
-            const el = document.getElementById('copy-message');
-            el.textContent = msg;
-            el.className = `mt-4 text-center p-3 rounded-lg font-medium shadow-md ${type === 'error' ? 'bg-red-200 text-red-800' : 'bg-green-200 text-green-800'}`;
-            el.classList.remove('hidden');
-            setTimeout(() => el.classList.add('hidden'), 5000);
+        /**
+         * Filtra las opciones basadas en el input de búsqueda.
+         */
+        function filterMultiselectOptions() {
+            const filter = multiselectSearch.value.toLowerCase();
+            multiselectDropdown.querySelectorAll('.multiselect-option-container').forEach(container => {
+                const label = container.querySelector('span').textContent.toLowerCase();
+                if (label.includes(filter)) {
+                    container.classList.remove('hidden');
+                } else {
+                    container.classList.add('hidden');
+                }
+            });
         }
 
-        // Filtros en tiempo real
-        ['filter-fecha', 'filter-habitacion', 'filter-area'].forEach(id => {
-            document.getElementById(id).addEventListener('input', renderLog);
+        // Listener para abrir/cerrar el dropdown
+        multiselectButton.addEventListener('click', () => {
+            multiselectDropdownContainer.classList.toggle('hidden');
+            if (!multiselectDropdownContainer.classList.contains('hidden')) {
+                // Auto-focus en el buscador al abrir
+                multiselectSearch.focus();
+            }
         });
 
-        // === GRÁFICOS ===
-        function renderCharts() {
-            const chartData = {
-                area: { labels: [], data: [], colors: ['#D48828', '#1e88e5', '#43a047', '#ffb300', '#f4511e', '#8e24aa'] },
-                priority: { labels: [], data: [], colors: ['#c62828', '#ef6c00', '#fb8c00', '#8bc34a'] },
-                turno: { labels: [], data: [], colors: ['#03a9f4', '#4db6ac', '#7986cb'] }
-            };
+        // Listener para cerrar el dropdown si se hace clic fuera de él
+        document.addEventListener('click', (e) => {
+            if (!multiselectButton.contains(e.target) && !multiselectDropdownContainer.contains(e.target)) {
+                multiselectDropdownContainer.classList.add('hidden');
+            }
+        });
 
-            const countBy = (key) => {
-                const counts = {};
-                logEntries.forEach(e => {
-                    const val = e[key] || 'Sin dato';
-                    counts[val] = (counts[val] || 0) + 1;
-                });
-                return counts;
-            };
+        // Listener para el buscador
+        multiselectSearch.addEventListener('input', filterMultiselectOptions);
 
-            const areaCounts = countBy('areaElemento');
-            chartData.area.labels = Object.keys(areaCounts);
-            chartData.area.data = Object.values(areaCounts);
-            
-            const priorityOrder = ['Urgente', 'Importante', 'Media', 'Baja'];
-            const priorityCounts = countBy('prioridad');
-            chartData.priority.labels = priorityOrder.filter(p => priorityCounts[p]);
-            chartData.priority.data = chartData.priority.labels.map(p => priorityCounts[p]);
-
-            const turnoCounts = countBy('turno');
-            chartData.turno.labels = Object.keys(turnoCounts);
-            chartData.turno.data = Object.values(turnoCounts);
-
-            // Destruir instancias anteriores
-            Object.values(chartInstances).forEach(chart => chart.destroy());
-            
-            // Gráfico 1: Área
-            const ctx1 = document.getElementById('chart-area').getContext('2d');
-            chartInstances.area = new Chart(ctx1, {
-                type: 'doughnut',
-                data: {
-                    labels: chartData.area.labels,
-                    datasets: [{ 
-                        data: chartData.area.data, 
-                        backgroundColor: chartData.area.labels.map((_, i) => chartData.area.colors[i % chartData.area.colors.length]),
-                        hoverOffset: 8
-                    }]
-                },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false,
-                    plugins: { 
-                        title: { display: true, text: 'Novedades por Área/Elemento', font: { size: 16 } },
-                        legend: { position: 'bottom' } 
-                    } 
+        // Listener para "Seleccionar todo"
+        multiselectSelectAll.addEventListener('change', () => {
+            // Seleccionar solo los visibles (filtrados)
+            multiselectDropdown.querySelectorAll('.multiselect-option-container').forEach(container => {
+                if (!container.classList.contains('hidden')) {
+                    container.querySelector('.multiselect-option').checked = multiselectSelectAll.checked;
                 }
             });
+            updateMultiselectLabelAndSelectAll();
+        });
 
-            // Gráfico 2: Prioridad (Barra Vertical)
-            const ctx2 = document.getElementById('chart-priority').getContext('2d');
-            chartInstances.priority = new Chart(ctx2, {
-                type: 'bar',
-                data: {
-                    labels: chartData.priority.labels,
-                    datasets: [{ 
-                        label: 'Número de Novedades', 
-                        data: chartData.priority.data, 
-                        backgroundColor: chartData.priority.labels.map((label, i) => {
-                            if (label === 'Urgente') return chartData.priority.colors[0];
-                            if (label === 'Importante') return chartData.priority.colors[1];
-                            return chartData.priority.colors[3];
-                        }),
-                        borderRadius: 4
-                    }]
-                },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false,
-                    plugins: { 
-                        title: { display: true, text: 'Novedades por Prioridad', font: { size: 16 } },
-                        legend: { display: false }
-                    },
-                    scales: { 
-                        y: { beginAtZero: true, ticks: { stepSize: 1 } }
-                    } 
-                }
-            });
+        // Poblar el multiselect al inicio
+        populateMultiselect();
 
-            // Gráfico 3: Turno (Barra Horizontal)
-            const ctx3 = document.getElementById('chart-turno').getContext('2d');
-            chartInstances.turno = new Chart(ctx3, {
-                type: 'bar',
-                data: {
-                    labels: chartData.turno.labels,
-                    datasets: [{ 
-                        label: 'Novedades Registradas', 
-                        data: chartData.turno.data, 
-                        backgroundColor: chartData.turno.labels.map((_, i) => chartData.turno.colors[i % chartData.turno.colors.length]),
-                        borderRadius: 4
-                    }]
-                },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false,
-                    plugins: { 
-                        title: { display: true, text: 'Novedades por Turno', font: { size: 16 } },
-                        legend: { display: false }
-                    },
-                    indexAxis: 'y', // Barra horizontal
-                    scales: { 
-                        x: { beginAtZero: true, ticks: { stepSize: 1 } } 
-                    } 
-                }
-            });
-        }
+        // --- FIN: Lógica Multiselect ---
+
     </script>
 </body>
 </html>
-
