@@ -430,7 +430,7 @@
                     if (user) {
                         userId = user.uid;
                         // --- CAMBIO SOLICITADO ---
-                        userInfoDisplay.innerHTML = `<strong>Conectado</strong> (${user.uid})`;
+                        userInfoDisplay.innerHTML = `<strong>Conectado</strong>`;
                         userInfoDisplay.classList.remove('bg-indigo-100', 'text-indigo-800', 'bg-red-100', 'text-red-800');
                         userInfoDisplay.classList.add('bg-green-100', 'text-green-800');
                         submitButton.disabled = false;
@@ -439,8 +439,8 @@
                     } else {
                         userId = null;
                         console.warn("DEBUG: Estado de autenticación: Desconectado.");
-                        // --- CAMBIO SOLICITADO (parcial) ---
-                        userInfoDisplay.innerHTML = `<strong>Error</strong>`;
+                        // --- CAMBIO SOLICITADO ---
+                        userInfoDisplay.innerHTML = `<strong>Error de conexión</strong>`;
                         userInfoDisplay.classList.remove('bg-indigo-100', 'text-indigo-800', 'bg-green-100', 'text-green-800');
                         userInfoDisplay.classList.add('bg-red-100', 'text-red-800');
                         submitButton.disabled = true;
@@ -451,7 +451,8 @@
                 // --- INICIO CONSOLE LOGS ---
                 console.error("Error al configurar Firebase:", error);
                 // --- FIN CONSOLE LOGS ---
-                userInfoDisplay.innerHTML = `<strong>Error de Conexión</strong>`;
+                // --- CAMBIO SOLICITADO ---
+                userInfoDisplay.innerHTML = `<strong>Error de conexión</strong>`;
                 userInfoDisplay.classList.remove('bg-indigo-100', 'text-indigo-800', 'bg-green-100', 'text-green-800');
                 userInfoDisplay.classList.add('bg-red-100', 'text-red-800');
                 showMessageModal("Error de Conexión", "No se pudo conectar a la base de datos. Verifique la consola para más detalles.");
