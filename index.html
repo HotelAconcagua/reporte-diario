@@ -170,17 +170,27 @@
         <div class="bg-white p-6 rounded-xl shadow-custom">
             <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">Novedades Registradas</h2>
             
-            <!-- CONTROLES DE LOG Y BOTÓN WHATSAPP -->
+            <!-- CONTROLES DE LOG Y BOTONES -->
             <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
                 <div id="log-status" class="p-4 bg-yellow-100 text-yellow-800 rounded-md text-center flex-grow w-full md:w-auto hidden">
                     Cargando registros...
                 </div>
-                <button id="whatsapp-copy-button" class="inline-flex items-center justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-full text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out disabled:opacity-50" disabled>
-                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7.973 1.127l-2.76-2.76a1 1 0 00-1.53.136l-.37.986 1.83 4.956 4.956 1.83.986-.37a1 1 0 00.136-1.53l-2.76-2.76z" clip-rule="evenodd"></path>
-                    </svg>
-                    Whatsapp (0 seleccionadas)
-                </button>
+                <!-- Contenedor para botones -->
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button id="whatsapp-copy-button" class="inline-flex items-center justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-full text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out disabled:opacity-50" disabled>
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7.973 1.127l-2.76-2.76a1 1 0 00-1.53.136l-.37.986 1.83 4.956 4.956 1.83.986-.37a1 1 0 00.136-1.53l-2.76-2.76z" clip-rule="evenodd"></path>
+                        </svg>
+                        Whatsapp (0 seleccionadas)
+                    </button>
+                    <!-- Botón Exportar (naranja pastel) -->
+                    <button id="export-button" class="inline-flex items-center justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-full text-orange-800 bg-orange-200 hover:bg-orange-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-400 transition duration-150 ease-in-out disabled:opacity-50" title="Exportar todo el historial a XLSX" disabled>
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V7.414A2 2 0 0016.586 6L13 2.414A2 2 0 0011.586 2H4zM12 3.5L15.5 7H13a1 1 0 01-1-1V3.5zM7 9h6v2H7V9zm0 4h6v2H7v-2z"></path>
+                        </svg>
+                        Exportar
+                    </button>
+                </div>
             </div>
 
             <div class="overflow-x-auto scrollable-table-container rounded-lg border border-gray-200">
@@ -224,7 +234,7 @@
         // Importaciones de Firebase (Usando la versión CDN)
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, collection, query, where, orderBy, serverTimestamp, updateDoc, addDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, query, where, orderBy, serverTimestamp, updateDoc, addDoc, setLogLevel, getDocs } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
         // --- Configuración DUAL de Firebase ---
         const isCanvasEnvironment = typeof __app_id !== 'undefined';
@@ -273,6 +283,7 @@
         const userInfoDisplay = document.getElementById('user-info');
         const loadingSpinner = document.getElementById('loading-spinner');
         const whatsappCopyButton = document.getElementById('whatsapp-copy-button');
+        const exportButton = document.getElementById('export-button');
         
         // --- NUEVO: Referencias del DOM para Multiselect ---
         const multiselectButton = document.getElementById('multiselect-button');
@@ -323,6 +334,9 @@
         }
         
         function formatDate(date) {
+            if (!date || typeof date.toLocaleDateString !== 'function') {
+                return 'Fecha Inválida';
+            }
             return date.toLocaleDateString('es-ES', {
                 day: '2-digit',
                 month: '2-digit',
@@ -470,8 +484,10 @@
                     logStatus.classList.replace('bg-yellow-100', 'bg-blue-100');
                     logStatus.classList.replace('text-yellow-800', 'text-blue-800');
                     logStatus.classList.remove('hidden');
+                    exportButton.disabled = true; // Deshabilitar exportar
                 } else {
                     logStatus.classList.add('hidden');
+                    exportButton.disabled = false; // Habilitar exportar
                 }
             }, (error) => {
                 console.error("Error al escuchar novedades:", error);
@@ -706,6 +722,112 @@
                 showMessageModal("Error al Copiar", `No se pudo copiar automáticamente. Por favor, copia el siguiente texto manualmente:\n\n${textToCopy}`);
             }
         });
+
+        // --- NUEVO: Exportar TODO el historial a XLSX ordenado por fecha (timestamp desc) ---
+        function ensureXLSXLoaded() {
+            if (window.XLSX) return Promise.resolve();
+            return new Promise((resolve, reject) => {
+                const s = document.createElement('script');
+                s.src = 'https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js';
+                s.onload = () => resolve();
+                s.onerror = (e) => reject(new Error('No se pudo cargar la librería XLSX: ' + e.message));
+                document.head.appendChild(s);
+            });
+        }
+
+        async function exportAllToXLSX() {
+            if (!db) {
+                showMessageModal("Error", "La base de datos no está lista. Espera a que la app se conecte.");
+                return;
+            }
+            exportButton.disabled = true;
+            exportButton.innerText = 'Exportando...';
+            try {
+                const collectionPath = getCollectionPath();
+                const colRef = collection(db, collectionPath);
+                const qRef = query(colRef, orderBy('timestamp', 'desc'));
+                const snapshot = await getDocs(qRef);
+
+                const rows = [];
+                const headers = ['Turno', 'Fecha', 'Hora', 'Prioridad', 'Área/Elemento', 'Nº Reserva', 'Habitación', 'Novedad', 'Notificado a', 'Estado', 'UserId', 'Timestamp'];
+                rows.push(headers);
+
+                snapshot.forEach(docSnap => {
+                    const d = docSnap.data();
+                    const ts = d.timestamp && d.timestamp.toDate ? d.timestamp.toDate() : (d.timestamp ? new Date(d.timestamp) : new Date());
+                    const fecha = formatDate(ts);
+                    const hora = ts.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+
+                    rows.push([
+                        d.turno || '',
+                        fecha,
+                        hora,
+                        d.prioridad || '',
+                        d.areaElemento || '',
+                        d.nReserva || '',
+                        d.habitacion || '',
+                        (d.novedad || '').replace(/\r?\n/g, ' '),
+                        d.notificadoA || '',
+                        d.estado || '',
+                        d.userId || '',
+                        ts.toISOString()
+                    ]);
+                });
+
+                await ensureXLSXLoaded();
+                const ws = XLSX.utils.aoa_to_sheet(rows);
+                
+                // --- AJUSTE DE ANCHO DE COLUMNAS (Aprox) ---
+                const colWidths = [
+                    { wch: 10 }, // Turno
+                    { wch: 12 }, // Fecha
+                    { wch: 8 },  // Hora
+                    { wch: 10 }, // Prioridad
+                    { wch: 25 }, // Área/Elemento
+                    { wch: 20 }, // Nº Reserva
+                    { wch: 10 }, // Habitación
+                    { wch: 80 }, // Novedad (más ancha)
+                    { wch: 25 }, // Notificado a
+                    { wch: 12 }, // Estado
+                    { wch: 28 }, // UserId
+                    { wch: 25 }  // Timestamp
+                ];
+                ws['!cols'] = colWidths;
+                // --- FIN AJUSTE ---
+                
+                const wb = { Sheets: { 'Novedades': ws }, SheetNames: ['Novedades'] };
+                const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+
+                const blob = new Blob([wbout], { type: 'application/octet-stream' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                const now = new Date();
+                const timestampName = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+                a.href = url;
+                a.download = `novedades_${collectionPath.replace(/\W/g,'_')}_${timestampName}.xlsx`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+
+                showMessageModal("Exportado", `Se exportaron ${rows.length - 1} registros a XLSX. Archivo descargado.`);
+            } catch (err) {
+                console.error("Error al exportar a XLSX:", err);
+                showMessageModal("Error de Exportación", `No se pudo exportar. Detalles: ${err.message}`);
+            } finally {
+                exportButton.disabled = false;
+                // Restaurar el texto y el icono del botón
+                exportButton.innerHTML = `
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V7.414A2 2 0 0016.586 6L13 2.414A2 2 0 0011.586 2H4zM12 3.5L15.5 7H13a1 1 0 01-1-1V3.5zM7 9h6v2H7V9zm0 4h6v2H7v-2z"></path>
+                    </svg>
+                    Exportar
+                `;
+            }
+        }
+
+        exportButton.addEventListener('click', exportAllToXLSX);
+
 
         // --- NUEVO: Lógica del Dropdown Multiselect ---
 
