@@ -71,17 +71,21 @@
 </head>
 <body class="bg-gray-50 font-sans p-4 md:p-8">
 
-    <!-- NUEVO: Pantalla de Login -->
+    <!-- NUEVO: Pantalla de Login Segura -->
     <div id="login-overlay" class="fixed inset-0 bg-gray-100 z-50 flex items-center justify-center p-4">
         <div class="bg-white p-8 rounded-xl shadow-custom w-full max-w-sm">
             <h2 class="text-2xl font-bold text-indigo-700 text-center mb-6">Iniciar Sesión</h2>
-            <p class="text-sm text-gray-600 mb-4 text-center">Por favor, introduce la clave de acceso para continuar.</p>
+            <p class="text-sm text-gray-600 mb-4 text-center">Acceso al registro de novedades.</p>
             <div class="space-y-4">
                 <div>
-                    <label for="login-password" class="block text-sm font-medium text-gray-700 sr-only">Clave</label>
-                    <input type="password" id="login-password" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border text-center" placeholder="••••••••">
+                    <label for="login-email" class="block text-sm font-medium text-gray-700">Email</label>
+                    <input type="email" id="login-email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border" placeholder="usuario@hotel.com">
                 </div>
-                <p id="login-error" class="text-red-600 text-sm text-center hidden">Clave incorrecta. Inténtalo de nuevo.</p>
+                <div>
+                    <label for="login-password" class="block text-sm font-medium text-gray-700">Clave</label>
+                    <input type="password" id="login-password" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border" placeholder="••••••••">
+                </div>
+                <p id="login-error" class="text-red-600 text-sm text-center hidden">Email o clave incorrecta.</p>
                 <button id="login-button" class="w-full inline-flex justify-center py-3 px-6 border border-transparent shadow-md text-sm font-medium rounded-full text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
                     Entrar
                 </button>
@@ -94,8 +98,13 @@
     <div id="main-content" class="max-w-7xl mx-auto hidden">
         
         <header class="mb-8">
-            <!-- TÍTULO ACTUALIZADO (Responsive) -->
-            <h1 class="text-3xl md:text-4xl font-extrabold text-indigo-700 mb-2">Registro Diario</h1>
+            <div class="flex justify-between items-center">
+                <h1 class="text-3xl md:text-4xl font-extrabold text-indigo-700 mb-2">Registro Diario</h1>
+                <!-- Botón de Cerrar Sesión -->
+                <button id="logout-button" class="text-sm font-medium text-indigo-600 hover:text-indigo-800">
+                    Cerrar Sesión
+                </button>
+            </div>
              <div id="user-info" class="text-sm mt-2 p-2 bg-indigo-100 text-indigo-800 rounded-md font-semibold">
                 Cargando usuario...
             </div>
@@ -181,9 +190,6 @@
                 <!-- Botones de Acción del Formulario -->
                 <div class="md:col-span-3 flex justify-end items-center gap-4">
                     
-                    <!-- Botón Borrar Todo (Nuevo) -->
-                    <!-- ESTE BOTÓN FUE MOVIDO A LA SECCIÓN DE LA TABLA -->
-                    
                     <!-- Botón de Registro -->
                     <button type="submit" id="submit-button" class="inline-flex justify-center py-3 px-6 border border-transparent shadow-md text-sm font-medium rounded-full text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out disabled:opacity-50" disabled>
                         <svg id="loading-spinner" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -202,7 +208,6 @@
             
             <!-- CONTROLES DE LOG Y BOTONES -->
             <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
-                <!-- MENSAJE DE ESTADO ELIMINADO -->
                 <!-- Contenedor para botones (responsive) -->
                 <div class="flex flex-col sm:flex-row gap-3">
                     <button id="whatsapp-copy-button" class="inline-flex items-center justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-full text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out disabled:opacity-50" disabled>
@@ -268,7 +273,7 @@
         </div>
     </div>
 
-    <!-- NUEVO: Modal de Confirmación de Borrado (Individual) -->
+    <!-- Modal de Confirmación de Borrado (Individual) -->
     <div id="confirm-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 transition-opacity duration-300 p-4">
         <div class="bg-white rounded-lg shadow-xl p-6 w-11/12 max-w-sm transform transition-all">
             <h3 class="text-lg font-bold text-red-700 mb-3">Confirmar Eliminación</h3>
@@ -280,7 +285,7 @@
         </div>
     </div>
 
-    <!-- NUEVO: Modal de Confirmación de Borrado (Total) -->
+    <!-- Modal de Confirmación de Borrado (Total) -->
     <div id="delete-all-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 transition-opacity duration-300 p-4">
         <div class="bg-white rounded-lg shadow-xl p-6 w-11/12 max-w-sm transform transition-all">
             <h3 class="text-lg font-bold text-red-700 mb-3">Eliminar Todos los Registros</h3>
@@ -299,8 +304,13 @@
     <script type="module">
         // Importaciones de Firebase (Usando la versión CDN)
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
         // --- IMPORTACIONES ACTUALIZADAS ---
+        import { 
+            getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, 
+            setPersistence, browserSessionPersistence, 
+            signInWithEmailAndPassword, // <-- NUEVO
+            signOut // <-- NUEVO
+        } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
         import { 
             getFirestore, doc, setDoc, onSnapshot, collection, query, 
             where, orderBy, serverTimestamp, updateDoc, addDoc, 
@@ -321,7 +331,7 @@
                 firebaseConfig = {}; 
             }
         } else {
-            // --- CORRECCIÓN FINAL ---
+            // Configuración externa
             firebaseConfig = {
                 apiKey: "AIzaSyBvzV9DTb0VbpgVaymzTa-MYtfXDkdiW_g",
                 authDomain: "hotel-manager-system.firebaseapp.com",
@@ -349,7 +359,6 @@
         // --- Referencias del DOM y Estado Global ---
         const form = document.getElementById('novedad-form');
         const submitButton = document.getElementById('submit-button');
-        // const logStatus = document.getElementById('log-status'); // Ya no se usa
         
         // --- CORRECCIÓN: CAMBIAR A 'let' PARA PERMITIR REASIGNACIÓN ---
         let novedadesLog = document.getElementById('novedades-log');
@@ -360,27 +369,25 @@
         const whatsappCopyButton = document.getElementById('whatsapp-copy-button');
         const exportButton = document.getElementById('export-button');
         
-        // --- NUEVO: Referencias DOM para Borrado ---
+        // --- Referencias DOM para Borrado ---
         const deleteAllButton = document.getElementById('delete-all-btn');
-        // Modal de confirmación individual
         const confirmModal = document.getElementById('confirm-modal');
         const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
         const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
-        // Modal de borrado total
         const deleteAllModal = document.getElementById('delete-all-modal');
         const confirmDeleteAllBtn = document.getElementById('confirm-delete-all-btn');
         const cancelDeleteAllBtn = document.getElementById('cancel-delete-all-btn');
         const deleteAllPassword = document.getElementById('delete-all-password');
         const deleteAllError = document.getElementById('delete-all-error');
-        // --- FIN: Referencias DOM Borrado ---
 
-        // --- NUEVO: Referencias DOM para Login ---
+        // --- Referencias DOM para Login ---
         const loginOverlay = document.getElementById('login-overlay');
         const mainContent = document.getElementById('main-content');
         const loginButton = document.getElementById('login-button');
+        const loginEmail = document.getElementById('login-email'); // <-- NUEVO
         const loginPassword = document.getElementById('login-password');
         const loginError = document.getElementById('login-error');
-        // --- FIN: Referencias DOM Login ---
+        const logoutButton = document.getElementById('logout-button'); // <-- NUEVO
 
         // --- Referencias del DOM para Multiselect ---
         const multiselectButton = document.getElementById('multiselect-button');
@@ -410,7 +417,6 @@
             document.getElementById('message-modal').classList.add('hidden');
         });
 
-        // ... (funciones calcularTurno, formatDate, getPriorityClasses, getStatusClasses, etc. sin cambios) ...
         function calcularTurno() {
             const now = new Date();
             const hour = now.getHours();
@@ -476,16 +482,10 @@
         }
 
         // --- PARCHE 2: setupTableListeners (Event Delegation) ---
-        // Reemplazar setupTableListeners por delegación para evitar listeners duplicados
         function setupTableListeners() {
-            // Remover listeners previos en el contenedor (si los hubiera)
-            // Esto es clave para evitar listeners duplicados en cada re-render
             novedadesLog.replaceWith(novedadesLog.cloneNode(true));
-            
-            // Re-asignar referencia a la variable 'let'
             novedadesLog = document.getElementById('novedades-log');
 
-            // Delegación de eventos
             novedadesLog.addEventListener('change', (e) => {
                 const target = e.target;
                 if (target.classList.contains('novedad-checkbox')) {
@@ -507,8 +507,6 @@
                     confirmModal.classList.remove('hidden');
                 }
             });
-
-            // Actualizar estado del botón WhatsApp
             updateWhatsappButton();
         }
         
@@ -516,13 +514,6 @@
 
         async function setupAuthAndDB() {
             console.log("--- DEBUG: Iniciando setupAuthAndDB ---");
-            console.log(`DEBUG: Entorno Canvas detectado: ${isCanvasEnvironment}`);
-            if (isCanvasEnvironment) {
-                console.log("DEBUG: Usando configuración de Firebase de Canvas.");
-            } else {
-                console.log("DEBUG: Usando configuración de Firebase 'hotel-manager-system' (externa).");
-            }
-
             try {
                 setLogLevel('debug'); 
                 const app = initializeApp(firebaseConfig);
@@ -530,49 +521,50 @@
                 db = getFirestore(app);
                 await setPersistence(auth, browserSessionPersistence);
                 
-                if (initialAuthToken) { 
-                    console.log("DEBUG: Intentando autenticación con Custom Token (Canvas)...");
-                    await signInWithCustomToken(auth, initialAuthToken);
-                } else {
-                    console.log("DEBUG: Intentando autenticación anónima (Externa)...");
-                    await signInAnonymously(auth); 
-                }
-
-                // --- 'onAuthStateChanged' MOVIDO AQUÍ ---
+                // El listener AHORA maneja el flujo de UI
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
+                        // Usuario Autenticado
                         userId = user.uid;
-                        userInfoDisplay.innerHTML = `<strong>Conectado</strong>`;
+                        userInfoDisplay.innerHTML = `<strong>Conectado</strong> (${user.email})`;
                         userInfoDisplay.classList.remove('bg-indigo-100', 'text-indigo-800', 'bg-red-100', 'text-red-800');
                         userInfoDisplay.classList.add('bg-green-100', 'text-green-800');
                         submitButton.disabled = false;
-                        listenForNovedades(); 
-                        console.log("Autenticación y DB listas.");
                         
-                        // Iniciar componentes de la app aquí
+                        // Mostrar app, ocultar login
+                        mainContent.classList.remove('hidden');
+                        loginOverlay.classList.add('hidden');
+
+                        listenForNovedades(); 
                         initializeAppComponents();
+                        console.log("Autenticación y DB listas.");
 
                     } else {
+                        // Usuario No Autenticado
                         userId = null;
                         console.warn("DEBUG: Estado de autenticación: Desconectado.");
-                        userInfoDisplay.innerHTML = `<strong>Error de conexión</strong>`;
-                        userInfoDisplay.classList.remove('bg-indigo-100', 'text-indigo-800', 'bg-green-100', 'text-green-800');
+                        
+                        // Ocultar app, mostrar login
+                        mainContent.classList.add('hidden');
+                        loginOverlay.classList.remove('hidden');
+
+                        // Resetear estado de UI
+                        userInfoDisplay.innerHTML = `<strong>Desconectado</strong>`;
+                        userInfoDisplay.classList.remove('bg-green-100', 'text-green-800');
                         userInfoDisplay.classList.add('bg-red-100', 'text-red-800');
                         submitButton.disabled = true;
+                        novedadesLog.innerHTML = ''; // Limpiar tabla
                     }
                 });
-                // --- FIN DE LA CORRECCIÓN ---
 
             } catch (error) {
                 console.error("Error al configurar Firebase:", error);
-                userInfoDisplay.innerHTML = `<strong>Error de conexión</strong>`;
-                userInfoDisplay.classList.remove('bg-indigo-100', 'text-indigo-800', 'bg-green-100', 'text-green-800');
-                userInfoDisplay.classList.add('bg-red-100', 'text-red-800');
+                loginError.textContent = `Error de Firebase: ${error.message}`;
+                loginError.classList.remove('hidden');
                 showMessageModal("Error de Conexión", "No se pudo conectar a la base de datos. Verifique la consola para más detalles.");
             }
         }
 
-        // --- FUNCIÓN MODIFICADA ---
         function listenForNovedades() {
             const collectionPath = getCollectionPath();
             console.log(`DEBUG: Escuchando novedades en la colección: ${collectionPath}`);
@@ -592,11 +584,9 @@
                 renderNovedadesLog(novedades);
 
                 if (novedades.length === 0) {
-                    // Mensaje de estado eliminado
                     exportButton.disabled = true; 
                     deleteAllButton.disabled = true; 
                 } else {
-                    // Mensaje de estado eliminado
                     exportButton.disabled = false; 
                     deleteAllButton.disabled = false;
                 }
@@ -607,7 +597,6 @@
         }
         
         // --- PARCHE 3: renderNovedadesLog (Seguridad XSS) ---
-        // Reemplazar renderNovedadesLog para evitar innerHTML y escapar textContent
         function renderNovedadesLog(novedades) {
             novedadesLog.innerHTML = '';
 
@@ -714,39 +703,28 @@
 
                 novedadesLog.appendChild(row);
             });
-
-            // Reemplazamos attach por delegación (evita duplicados)
-            setupTableListeners(); // ahora sólo configura el delegador
+            setupTableListeners();
         }
-
 
         async function addNovedad(data) {
             if (!db || !userId) {
                 console.error("DEBUG: addNovedad abortado. DB o UserID no están listos.");
                 return;
             }
-
             submitButton.disabled = true;
             loadingSpinner.classList.remove('hidden');
-
             try {
                 const collectionPath = getCollectionPath();
-                console.log(`DEBUG: Añadiendo documento a: ${collectionPath}`);
                 const novedadesRef = collection(db, collectionPath);
-
                 const newNovedad = {
                     ...data,
                     timestamp: serverTimestamp(),
                     userId: userId, 
                     estado: 'En curso' 
                 };
-                
-                console.log("DEBUG: Documento a guardar:", newNovedad);
                 await addDoc(novedadesRef, newNovedad);
-                console.log("DEBUG: Documento guardado exitosamente.");
                 form.reset(); 
                 resetMultiselect();
-
             } catch (error) {
                 console.error("Error al añadir la novedad:", error);
                 showMessageModal("Error", `No se pudo registrar la novedad. Detalles: ${error.message}`);
@@ -757,34 +735,24 @@
         }
         
         async function updateEstado(id, estado) {
-            if (!db) {
-                console.error("DEBUG: updateEstado abortado. DB no está lista.");
-                return;
-            }
+            if (!db) return;
             try {
                 const collectionPath = getCollectionPath();
                 const docRef = doc(db, collectionPath, id);
                 await updateDoc(docRef, { estado: estado });
-                console.log(`DEBUG: Estado de novedad ${id} actualizado a ${estado}`);
             } catch (error) {
                 console.error("Error al actualizar el estado:", error);
                 showMessageModal("Error de Actualización", `No se pudo cambiar el estado. Detalles: ${error.message}`);
             }
         }
 
-        // --- NUEVA FUNCIÓN: Borrar Novedad Individual ---
         async function deleteNovedad(id) {
-            if (!db) {
-                console.error("DEBUG: deleteNovedad abortado. DB no está lista.");
-                return;
-            }
+            if (!db) return;
             try {
                 const collectionPath = getCollectionPath();
                 const docRef = doc(db, collectionPath, id);
                 await deleteDoc(docRef);
-                console.log(`DEBUG: Novedad ${id} eliminada.`);
                 showMessageModal("Éxito", "El registro ha sido eliminado.");
-                // Si estaba seleccionado, quitarlo de la lista de whatsapp
                 if (selectedNovedadIds.has(id)) {
                     selectedNovedadIds.delete(id);
                     updateWhatsappButton();
@@ -796,40 +764,32 @@
         }
 
         // --- PARCHE 4: deleteAllNovedades (Manejo de >500 docs) ---
-        // Mejorar deleteAllNovedades para manejar >500 docs (chunked batches)
         async function deleteAllNovedades() {
             if (!db) {
                 showMessageModal("Error", "La base de datos no está lista.");
                 return;
             }
-
             confirmDeleteAllBtn.disabled = true;
             confirmDeleteAllBtn.innerText = "Eliminando...";
-
             try {
                 const collectionPath = getCollectionPath();
                 const colRef = collection(db, collectionPath);
                 const snapshot = await getDocs(colRef);
-
                 if (snapshot.empty) {
                     showMessageModal("Información", "No hay registros para eliminar.");
                     return;
                 }
-
                 const docs = snapshot.docs;
-                const CHUNK_SIZE = 450; // menos de 500 para margen
+                const CHUNK_SIZE = 450;
                 for (let i = 0; i < docs.length; i += CHUNK_SIZE) {
                     const chunk = docs.slice(i, i + CHUNK_SIZE);
                     const batch = writeBatch(db);
                     chunk.forEach(d => batch.delete(d.ref));
                     await batch.commit();
-                    console.log(`DEBUG: Eliminados ${chunk.length} documentos en batch ${Math.floor(i / CHUNK_SIZE) + 1}`);
                 }
-
                 showMessageModal("Éxito", `Se han eliminado todos los ${docs.length} registros.`);
                 selectedNovedadIds.clear();
                 updateWhatsappButton();
-
             } catch (error) {
                 console.error("Error al eliminar todas las novedades:", error);
                 showMessageModal("Error de Borrado Total", `No se pudieron eliminar los registros. Detalles: ${error.message}`);
@@ -841,62 +801,61 @@
                 deleteAllError.classList.add('hidden');
             }
         }
-
         
         // --- Event Listeners e Inicialización ---
 
-        // --- LÓGICA DE INICIO MODIFICADA ---
-
-        // 1. Verificar si el usuario ya inició sesión en esta sesión del navegador
-        if (sessionStorage.getItem('hotel_access_granted') === 'true') {
-            // Si ya tiene acceso, ocultar el login, mostrar el contenido e iniciar Firebase
-            loginOverlay.classList.add('hidden');
-            mainContent.classList.remove('hidden');
-            setupAuthAndDB();
-        } else {
-            // Si no, asegurarse de que el login esté visible y el contenido oculto
-            loginOverlay.classList.remove('hidden');
-            mainContent.classList.add('hidden');
-        }
+        // 1. Inicialización de Firebase (se llama al cargar el script)
+        setupAuthAndDB();
 
         // 2. Listener para el botón de login
-        loginButton.addEventListener('click', () => {
+        loginButton.addEventListener('click', async () => {
+            const email = loginEmail.value;
             const pass = loginPassword.value;
-            if (pass === 'hotel545') {
-                // Clave correcta
-                sessionStorage.setItem('hotel_access_granted', 'true');
-                loginOverlay.classList.add('hidden');
-                mainContent.classList.remove('hidden');
-                // Iniciar la aplicación
-                setupAuthAndDB();
-            } else {
-                // Clave incorrecta
+            if (!email || !pass) {
+                loginError.textContent = "Email y clave son requeridos.";
                 loginError.classList.remove('hidden');
-                loginPassword.value = '';
+                return;
+            }
+            loginError.classList.add('hidden');
+            try {
+                await signInWithEmailAndPassword(auth, email, pass);
+                // El listener onAuthStateChanged manejará el resto
+            } catch (error) {
+                console.error("Error de inicio de sesión:", error.code);
+                loginError.textContent = "Email o clave incorrecta.";
+                loginError.classList.remove('hidden');
             }
         });
         
-        // Permitir entrar con "Enter" en el campo de contraseña
         loginPassword.addEventListener('keyup', (e) => {
-            loginError.classList.add('hidden'); // Ocultar error al escribir
-            if (e.key === 'Enter') {
-                loginButton.click();
-            }
+            loginError.classList.add('hidden');
+            if (e.key === 'Enter') loginButton.click();
+        });
+        loginEmail.addEventListener('keyup', (e) => {
+            loginError.classList.add('hidden');
+            if (e.key === 'Enter') loginButton.click();
+        });
+
+        // 3. Listener para Cerrar Sesión
+        logoutButton.addEventListener('click', () => {
+            signOut(auth).catch(error => {
+                console.error("Error al cerrar sesión:", error);
+                showMessageModal("Error", "No se pudo cerrar la sesión.");
+            });
         });
 
 
-        // 3. Mostrar el turno actual (se llama después de setupAuthAndDB)
-        
+        // 4. Mostrar el turno actual
         function updateShiftDisplay() {
             currentShiftDisplay.textContent = calcularTurno();
         }
-
         function initializeAppComponents() {
             updateShiftDisplay();
             setInterval(updateShiftDisplay, 60000); 
+            populateMultiselect();
         }
         
-        // 4. Manejo del envío del formulario
+        // 5. Manejo del envío del formulario
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             const formData = new FormData(form);
@@ -904,7 +863,6 @@
             multiselectDropdown.querySelectorAll('.multiselect-option:checked').forEach(cb => {
                 selectedNotificadoA.push(cb.value);
             });
-            
             const data = {
                 prioridad: formData.get('prioridad').trim(),
                 areaElemento: formData.get('areaElemento').trim(),
@@ -914,7 +872,6 @@
                 notificadoA: selectedNotificadoA.join(', ') || null, 
                 turno: calcularTurno() 
             };
-            
             if (!data.areaElemento || !data.novedad) {
                 showMessageModal("Error de Formulario", "Los campos 'Área/Elemento' y 'Detalles de la Novedad' son requeridos.");
                 return;
@@ -922,9 +879,8 @@
             addNovedad(data);
         });
 
-        // 5. Lógica del Botón de Copiar a WhatsApp
+        // 6. Lógica del Botón de Copiar a WhatsApp
         whatsappCopyButton.addEventListener('click', async () => {
-            // ... (código de copiar a whatsapp sin cambios) ...
             if (selectedNovedadIds.size === 0) {
                 showMessageModal("Atención", "Por favor, selecciona al menos una novedad para copiar.");
                 return;
@@ -963,7 +919,6 @@
                 }
             }
             const textToCopy = finalMessageParts.join('\n').trim();
-            console.log("DEBUG: Texto a copiar a WhatsApp:", textToCopy);
             try {
                 const textArea = document.createElement("textarea");
                 textArea.value = textToCopy;
@@ -972,7 +927,6 @@
                 textArea.select();
                 const successful = document.execCommand('copy');
                 document.body.removeChild(textArea);
-
                 if (successful) {
                     selectedNovedadIds.clear();
                     document.querySelectorAll('.novedad-checkbox').forEach(cb => cb.checked = false);
@@ -987,7 +941,7 @@
             }
         });
 
-        // 6. Lógica del Botón de Exportar
+        // 7. Lógica del Botón de Exportar
         
         // --- PARCHE 5: ensureXLSXLoaded (onerror) ---
         function ensureXLSXLoaded() {
@@ -1066,9 +1020,8 @@
         }
         exportButton.addEventListener('click', exportAllToXLSX);
 
-        // --- NUEVO: Listeners para Modales de Borrado ---
+        // 8. Listeners para Modales de Borrado
         
-        // Modal Individual
         cancelDeleteBtn.addEventListener('click', () => {
             confirmModal.classList.add('hidden');
         });
@@ -1078,7 +1031,6 @@
             confirmModal.classList.add('hidden');
         });
 
-        // Modal Borrar Todo
         deleteAllButton.addEventListener('click', () => {
             deleteAllPassword.value = '';
             deleteAllError.classList.add('hidden');
@@ -1099,48 +1051,33 @@
         });
 
 
-        // --- Lógica del Dropdown Multiselect ---
+        // 9. Lógica del Dropdown Multiselect
         
-        /**
-         * Pobla el dropdown con las opciones.
-         */
         function populateMultiselect() {
-            // Limpiar opciones existentes (excepto "Seleccionar todo")
             multiselectDropdown.querySelectorAll('.multiselect-option-container').forEach(el => el.remove());
-            
             multiselectOptions.forEach(option => {
                 const optionId = `ms-opt-${option.replace(/\s+/g, '-')}`;
                 const container = document.createElement('label');
                 container.className = 'multiselect-option-container flex items-center px-2 py-1 rounded-md hover:bg-gray-100 cursor-pointer';
                 container.setAttribute('for', optionId);
-                
                 container.innerHTML = `
                     <input type="checkbox" id="${optionId}" value="${option}" class="multiselect-option h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
                     <span class="ml-2 text-sm text-gray-700">${option}</span>
                 `;
                 multiselectDropdown.appendChild(container);
             });
-
-            // Añadir listeners a las nuevas opciones
             addOptionListeners();
         }
 
-        /**
-         * Añade listeners a los checkboxes de las opciones.
-         */
         function addOptionListeners() {
             multiselectDropdown.querySelectorAll('.multiselect-option').forEach(cb => {
                 cb.addEventListener('change', updateMultiselectLabelAndSelectAll);
             });
         }
 
-        /**
-         * Actualiza el texto del botón (label) y el estado del checkbox "Seleccionar todo".
-         */
         function updateMultiselectLabelAndSelectAll() {
             const checkedOptions = multiselectDropdown.querySelectorAll('.multiselect-option:checked');
             const totalOptions = multiselectDropdown.querySelectorAll('.multiselect-option').length;
-            
             if (checkedOptions.length === 0) {
                 multiselectLabel.textContent = 'Elige';
                 multiselectLabel.classList.add('text-gray-500');
@@ -1154,14 +1091,11 @@
                  multiselectLabel.classList.remove('text-gray-500');
                 multiselectLabel.classList.add('text-gray-900', 'font-semibold');
             } else {
-                // Mostrar los primeros 2 seleccionados
                 const labels = Array.from(checkedOptions).map(cb => cb.value).join(', ');
                 multiselectLabel.textContent = labels;
                 multiselectLabel.classList.remove('text-gray-500');
                 multiselectLabel.classList.add('text-gray-900', 'font-semibold');
             }
-
-            // Actualizar el estado de "Seleccionar todo"
             if (checkedOptions.length === totalOptions) {
                 multiselectSelectAll.checked = true;
                 multiselectSelectAll.indeterminate = false;
@@ -1174,9 +1108,6 @@
             }
         }
 
-        /**
-         * Resetea el multiselect a su estado inicial.
-         */
         function resetMultiselect() {
             multiselectDropdown.querySelectorAll('.multiselect-option:checked').forEach(cb => {
                 cb.checked = false;
@@ -1186,9 +1117,6 @@
             updateMultiselectLabelAndSelectAll();
         }
 
-        /**
-         * Filtra las opciones basadas en el input de búsqueda.
-         */
         function filterMultiselectOptions() {
             const filter = multiselectSearch.value.toLowerCase();
             multiselectDropdown.querySelectorAll('.multiselect-option-container').forEach(container => {
@@ -1201,28 +1129,22 @@
             });
         }
 
-        // Listener para abrir/cerrar el dropdown
         multiselectButton.addEventListener('click', () => {
             multiselectDropdownContainer.classList.toggle('hidden');
             if (!multiselectDropdownContainer.classList.contains('hidden')) {
-                // Auto-focus en el buscador al abrir
                 multiselectSearch.focus();
             }
         });
 
-        // Listener para cerrar el dropdown si se hace clic fuera de él
         document.addEventListener('click', (e) => {
             if (!multiselectButton.contains(e.target) && !multiselectDropdownContainer.contains(e.target)) {
                 multiselectDropdownContainer.classList.add('hidden');
             }
         });
 
-        // Listener para el buscador
         multiselectSearch.addEventListener('input', filterMultiselectOptions);
 
-        // Listener para "Seleccionar todo"
         multiselectSelectAll.addEventListener('change', () => {
-            // Seleccionar solo los visibles (filtrados)
             multiselectDropdown.querySelectorAll('.multiselect-option-container').forEach(container => {
                 if (!container.classList.contains('hidden')) {
                     container.querySelector('.multiselect-option').checked = multiselectSelectAll.checked;
@@ -1230,11 +1152,6 @@
             });
             updateMultiselectLabelAndSelectAll();
         });
-
-        // Poblar el multiselect al inicio
-        populateMultiselect();
-
-        // --- FIN: Lsógica Multiselect ---
 
     </script>
 </body>
