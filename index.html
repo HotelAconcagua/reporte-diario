@@ -314,7 +314,8 @@
         import { 
             getFirestore, doc, setDoc, onSnapshot, collection, query, 
             where, orderBy, serverTimestamp, updateDoc, addDoc, 
-            setLogLevel, getDocs, deleteDoc, writeBatch 
+            setLogLevel, getDocs, deleteDoc, writeBatch,
+            deleteField // <-- AÑADIDO
         } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
         // --- Configuración DUAL de Firebase ---
@@ -684,9 +685,29 @@
                 const optComp = document.createElement('option');
                 optComp.value = 'Completado';
                 optComp.textContent = 'Completado';
-                if (novedad.estado === 'Completado') optComp.selected = true;
+                // NO HACE FALTA: if (novedad.estado === 'Completado') optComp.selected = true;
                 selectEstado.appendChild(optEnCurso);
                 selectEstado.appendChild(optComp);
+
+                // --- CORRECCIÓN BUG: Fijar el valor explícitamente ---
+                // Esto soluciona el bug donde el texto no se actualizaba
+                if (novedad.estado === 'Completado') {
+                    selectEstado.value = 'Completado';
+                } else {
+                    selectEstado.value = 'En curso';
+                }
+                
+                // --- NUEVA FUNCIÓN: Tooltip de completado ---
+                if (novedad.estado === 'Completado' && novedad.completadoTimestamp) {
+                    const completadoDate = novedad.completadoTimestamp.toDate();
+                    const completadoPor = novedad.completadoPor || 'N/A';
+                    const tooltipText = `Completado el: ${formatDate(completadoDate)} a las ${completadoDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })} por ${completadoPor}`;
+                    selectEstado.title = tooltipText;
+                } else {
+                    selectEstado.title = "Cambiar estado";
+                }
+                // --- FIN NUEVA FUNCIÓN ---
+
                 tdEstado.appendChild(selectEstado);
                 row.appendChild(tdEstado);
 
@@ -734,12 +755,30 @@
             }
         }
         
+        // --- FUNCIÓN MODIFICADA: Guardar timestamp de completado ---
         async function updateEstado(id, estado) {
-            if (!db) return;
+            if (!db || !auth.currentUser) {
+                console.error("DEBUG: updateEstado abortado. DB o User no están listos.");
+                return;
+            }
             try {
                 const collectionPath = getCollectionPath();
                 const docRef = doc(db, collectionPath, id);
-                await updateDoc(docRef, { estado: estado });
+                
+                let updateData = { estado: estado };
+                
+                // Si se marca como "Completado", guardar quién y cuándo
+                if (estado === 'Completado') {
+                    updateData.completadoTimestamp = serverTimestamp();
+                    updateData.completadoPor = auth.currentUser.email;
+                } else {
+                    // Si se revierte a "En curso", borrar el timestamp
+                    updateData.completadoTimestamp = deleteField();
+                    updateData.completadoPor = deleteField();
+                }
+
+                await updateDoc(docRef, updateData);
+                
             } catch (error) {
                 console.error("Error al actualizar el estado:", error);
                 showMessageModal("Error de Actualización", `No se pudo cambiar el estado. Detalles: ${error.message}`);
