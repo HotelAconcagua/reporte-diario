@@ -240,6 +240,8 @@
                 firebaseConfig = {}; 
             }
         } else {
+            // --- CORRECCIÓN FINAL ---
+            // Esta es la clave de tu imagen 'image_be2f49.png' y 'image_b0f105.png'
             firebaseConfig = {
                 apiKey: "AIzaSyBVzV9DTbVpgVeymZTa-MYfTXDkdiW_g",
                 authDomain: "hotel-manager-system.firebaseapp.com",
@@ -389,7 +391,8 @@
                 console.log("DEBUG: Usando configuración de Firebase de Canvas.");
             } else {
                 console.log("DEBUG: Usando configuración de Firebase 'hotel-manager-system' (externa).");
-                console.log("DEBUG: Config a usar:", JSON.stringify(firebaseConfig.projectId, null, 2));
+                console.log("DEBUG: Config a usar (Proyecto):", firebaseConfig.projectId);
+                console.log("DEBUG: Config a usar (API Key):", firebaseConfig.apiKey);
             }
             // --- FIN CONSOLE LOGS ---
 
@@ -563,6 +566,7 @@
             } finally {
                 submitButton.disabled = false;
                 loadingSpinner.classList.add('hidden');
+
             }
         }
         
@@ -839,7 +843,7 @@
         // Poblar el multiselect al inicio
         populateMultiselect();
 
-        // --- FIN: Lógisca Multiselect ---
+        // --- FIN: Lógica Multiselect ---
 
     </script>
 </body>
