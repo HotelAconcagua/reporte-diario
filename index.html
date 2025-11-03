@@ -71,43 +71,44 @@
 </head>
 <body class="bg-gray-50 font-sans p-4 md:p-8">
 
-    <!-- NUEVO: Pantalla de Login Segura -->
+    <!-- NUEVO: Pantalla de Login -->
     <div id="login-overlay" class="fixed inset-0 bg-gray-100 z-50 flex items-center justify-center p-4">
         <div class="bg-white p-8 rounded-xl shadow-custom w-full max-w-sm">
             <h2 class="text-2xl font-bold text-indigo-700 text-center mb-6">Iniciar Sesión</h2>
-            <p class="text-sm text-gray-600 mb-4 text-center">Acceso al registro de novedades.</p>
-            <div class="space-y-4">
+            <p class="text-sm text-gray-600 mb-4 text-center">Acceso al registro de novedades del hotel.</p>
+            <form id="login-form" class="space-y-4">
                 <div>
                     <label for="login-email" class="block text-sm font-medium text-gray-700">Email</label>
-                    <input type="email" id="login-email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border" placeholder="usuario@hotel.com">
+                    <input type="email" id="login-email" value="raicesaconcagua545@gmail.com" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border" placeholder="usuario@hotel.com">
                 </div>
                 <div>
                     <label for="login-password" class="block text-sm font-medium text-gray-700">Clave</label>
-                    <input type="password" id="login-password" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border" placeholder="••••••••">
+                    <input type="password" id="login-password" value="hotel545" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border" placeholder="••••••••">
                 </div>
-                <p id="login-error" class="text-red-600 text-sm text-center hidden">Email o clave incorrecta.</p>
-                <button id="login-button" class="w-full inline-flex justify-center py-3 px-6 border border-transparent shadow-md text-sm font-medium rounded-full text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
+                <p id="login-error" class="text-red-600 text-sm text-center hidden">Clave o email incorrecto.</p>
+                <button id="login-button" type="submit" class="w-full inline-flex justify-center py-3 px-6 border border-transparent shadow-md text-sm font-medium rounded-full text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
                     Entrar
                 </button>
-            </div>
+            </form>
         </div>
     </div>
     <!-- FIN: Pantalla de Login -->
 
+
     <!-- Contenido Principal (Oculto por defecto) -->
     <div id="main-content" class="max-w-7xl mx-auto hidden">
         
-        <header class="mb-8">
-            <div class="flex justify-between items-center">
+        <header class="mb-8 flex justify-between items-center">
+            <div>
                 <h1 class="text-3xl md:text-4xl font-extrabold text-indigo-700 mb-2">Registro Diario</h1>
-                <!-- Botón de Cerrar Sesión -->
-                <button id="logout-button" class="text-sm font-medium text-indigo-600 hover:text-indigo-800">
-                    Cerrar Sesión
-                </button>
+                <div id="user-info" class="text-sm mt-2 p-2 bg-indigo-100 text-indigo-800 rounded-md font-semibold">
+                    Cargando usuario...
+                </div>
             </div>
-             <div id="user-info" class="text-sm mt-2 p-2 bg-indigo-100 text-indigo-800 rounded-md font-semibold">
-                Cargando usuario...
-            </div>
+            <!-- Botón de Salir -->
+            <button id="logout-button" class="py-2 px-4 border border-transparent text-sm font-medium rounded-full text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition">
+                Cerrar Sesión
+            </button>
         </header>
 
         <!-- Formulario de Registro de Novedades -->
@@ -208,7 +209,7 @@
             
             <!-- CONTROLES DE LOG Y BOTONES -->
             <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
-                <!-- Contenedor para botones (responsive) -->
+                
                 <div class="flex flex-col sm:flex-row gap-3">
                     <button id="whatsapp-copy-button" class="inline-flex items-center justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-full text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out disabled:opacity-50" disabled>
                         <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
@@ -223,14 +224,13 @@
                         </svg>
                         Exportar
                     </button>
-
-                    <!-- Botón Borrar Todo (MOVIDO AQUÍ) -->
-                    <button type="button" id="delete-all-btn" class="inline-flex items-center justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-full text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150 ease-in-out disabled:opacity-50" disabled title="Eliminar todo el historial">
-                        <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                           <path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75V4.5h8V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4.5A1.25 1.25 0 0111.25 3h2.5A1.25 1.25 0 0115 4.25V5.5h-5V4.25zM3.75 6A1.75 1.75 0 002 7.75v7.5A1.75 1.75 0 003.75 17h12.5A1.75 1.75 0 0018 15.25v-7.5A1.75 1.75 0 0016.25 6H3.75zM10 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 10zM13 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0113 10zM7 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 017 10z" clip-rule="evenodd" />
-                       </svg>
-                       Borrar Todo
-                   </button>
+                    <!-- Botón Borrar Todo (Nuevo) -->
+                    <button type="button" id="delete-all-btn" class="inline-flex items-center justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-full text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150 ease-in-out disabled:opacity-50">
+                         <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75V4.5h8V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4.5A1.25 1.25 0 0111.25 3h2.5A1.25 1.25 0 0115 4.25V5.5h-5V4.25zM3.75 6A1.75 1.75 0 002 7.75v7.5A1.75 1.75 0 003.75 17h12.5A1.75 1.75 0 0018 15.25v-7.5A1.75 1.75 0 0016.25 6H3.75zM10 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 10zM13 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0113 10zM7 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 017 10z" clip-rule="evenodd" />
+                        </svg>
+                        Borrar Todo
+                    </button>
                 </div>
             </div>
 
@@ -273,7 +273,7 @@
         </div>
     </div>
 
-    <!-- Modal de Confirmación de Borrado (Individual) -->
+    <!-- NUEVO: Modal de Confirmación de Borrado (Individual) -->
     <div id="confirm-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 transition-opacity duration-300 p-4">
         <div class="bg-white rounded-lg shadow-xl p-6 w-11/12 max-w-sm transform transition-all">
             <h3 class="text-lg font-bold text-red-700 mb-3">Confirmar Eliminación</h3>
@@ -285,7 +285,7 @@
         </div>
     </div>
 
-    <!-- Modal de Confirmación de Borrado (Total) -->
+    <!-- NUEVO: Modal de Confirmación de Borrado (Total) -->
     <div id="delete-all-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 transition-opacity duration-300 p-4">
         <div class="bg-white rounded-lg shadow-xl p-6 w-11/12 max-w-sm transform transition-all">
             <h3 class="text-lg font-bold text-red-700 mb-3">Eliminar Todos los Registros</h3>
@@ -306,16 +306,19 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
         // --- IMPORTACIONES ACTUALIZADAS ---
         import { 
-            getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, 
-            setPersistence, browserSessionPersistence, 
+            getAuth, 
+            signInAnonymously, 
+            signInWithCustomToken, 
+            onAuthStateChanged, 
+            setPersistence, 
+            browserSessionPersistence,
             signInWithEmailAndPassword, // <-- NUEVO
             signOut // <-- NUEVO
         } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
         import { 
             getFirestore, doc, setDoc, onSnapshot, collection, query, 
             where, orderBy, serverTimestamp, updateDoc, addDoc, 
-            setLogLevel, getDocs, deleteDoc, writeBatch,
-            deleteField // <-- AÑADIDO
+            setLogLevel, getDocs, deleteDoc, writeBatch, deleteField // <-- NUEVO
         } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
         // --- Configuración DUAL de Firebase ---
@@ -332,7 +335,7 @@
                 firebaseConfig = {}; 
             }
         } else {
-            // Configuración externa
+            // Configuración Externa (Hotel Manager System)
             firebaseConfig = {
                 apiKey: "AIzaSyBvzV9DTb0VbpgVaymzTa-MYtfXDkdiW_g",
                 authDomain: "hotel-manager-system.firebaseapp.com",
@@ -344,13 +347,12 @@
         }
         // --- Fin Configuración DUAL ---
 
-        let db, auth, userId = null;
+        let db, auth, userId = null, userEmail = null; // <-- NUEVO userEmail
         const COLLECTION_NAME = 'hotel_log'; 
         
-        // --- PARCHE 1: getCollectionPath ---
         function getCollectionPath() {
             if (isCanvasEnvironment) {
-                // Evitar slash inicial para Firestore collection() y rutas coherentes
+                // Evitar slash inicial para Firestore collection()
                 return `artifacts/${appId}/public/data/${COLLECTION_NAME}`;
             } else {
                 return COLLECTION_NAME;
@@ -360,10 +362,8 @@
         // --- Referencias del DOM y Estado Global ---
         const form = document.getElementById('novedad-form');
         const submitButton = document.getElementById('submit-button');
-        
-        // --- CORRECCIÓN: CAMBIAR A 'let' PARA PERMITIR REASIGNACIÓN ---
-        let novedadesLog = document.getElementById('novedades-log');
-        
+        // const logStatus = document.getElementById('log-status'); // Eliminado
+        let novedadesLog = document.getElementById('novedades-log'); // <-- Cambiado a let
         const currentShiftDisplay = document.getElementById('current-shift');
         const userInfoDisplay = document.getElementById('user-info');
         const loadingSpinner = document.getElementById('loading-spinner');
@@ -381,14 +381,16 @@
         const deleteAllPassword = document.getElementById('delete-all-password');
         const deleteAllError = document.getElementById('delete-all-error');
 
-        // --- Referencias DOM para Login ---
+        // --- NUEVO: Referencias DOM para Login ---
         const loginOverlay = document.getElementById('login-overlay');
         const mainContent = document.getElementById('main-content');
-        const loginButton = document.getElementById('login-button');
-        const loginEmail = document.getElementById('login-email'); // <-- NUEVO
+        const loginForm = document.getElementById('login-form');
+        const loginEmail = document.getElementById('login-email');
         const loginPassword = document.getElementById('login-password');
         const loginError = document.getElementById('login-error');
-        const logoutButton = document.getElementById('logout-button'); // <-- NUEVO
+        const loginButton = document.getElementById('login-button');
+        const logoutButton = document.getElementById('logout-button');
+        // --- FIN: Referencias DOM Login ---
 
         // --- Referencias del DOM para Multiselect ---
         const multiselectButton = document.getElementById('multiselect-button');
@@ -447,6 +449,17 @@
                 year: 'numeric'
             });
         }
+        
+        // --- NUEVO: Formato de Fecha/Hora para Tooltip ---
+        function formatFullTimestamp(date) {
+            if (!date || typeof date.toLocaleDateString !== 'function') {
+                return 'N/A';
+            }
+            const fecha = date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            const hora = date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+            return `${fecha} a las ${hora}`;
+        }
+
 
         function getPriorityClasses(prioridad) {
             switch (prioridad) {
@@ -482,11 +495,15 @@
             updateWhatsappButton();
         }
 
-        // --- PARCHE 2: setupTableListeners (Event Delegation) ---
+        // --- FUNCIÓN MEJORADA: Delegación de Eventos ---
+        // (Soluciona el bug de listeners duplicados)
         function setupTableListeners() {
-            novedadesLog.replaceWith(novedadesLog.cloneNode(true));
-            novedadesLog = document.getElementById('novedades-log');
+            // Remover listeners previos en el contenedor (si los hubiera)
+            const newNovedadesLog = novedadesLog.cloneNode(false); // Clonar vacío
+            novedadesLog.parentNode.replaceChild(newNovedadesLog, novedadesLog);
+            novedadesLog = newNovedadesLog; // Actualizar referencia global
 
+            // Delegación de eventos
             novedadesLog.addEventListener('change', (e) => {
                 const target = e.target;
                 if (target.classList.contains('novedad-checkbox')) {
@@ -495,24 +512,37 @@
                     const id = target.dataset.id;
                     const nuevoEstado = target.value;
                     updateEstado(id, nuevoEstado);
+                    
+                    // Actualizar UI del select (soluciona bug visual)
                     target.className = `estado-select px-2 py-1 rounded-full text-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 ${getStatusClasses(nuevoEstado)}`;
+                    // Añadir/Actualizar tooltip
+                    if (nuevoEstado === 'Completado') {
+                         target.title = `Completado por ${userEmail} (Ahora)`;
+                    } else {
+                         target.title = 'Cambiar estado';
+                    }
                 }
             });
 
             novedadesLog.addEventListener('click', (e) => {
+                // Encontrar el botón más cercano
                 const target = e.target.closest('button');
                 if (!target) return;
+                
                 if (target.classList.contains('delete-novedad-btn')) {
                     const id = target.dataset.id;
                     confirmDeleteBtn.dataset.id = id;
                     confirmModal.classList.remove('hidden');
                 }
             });
+
+            // Actualizar estado del botón WhatsApp
             updateWhatsappButton();
         }
         
         // --- Lógica de la Base de Datos y Autenticación ---
 
+        // --- FUNCIÓN MODIFICADA: Ahora solo inicializa ---
         async function setupAuthAndDB() {
             console.log("--- DEBUG: Iniciando setupAuthAndDB ---");
             try {
@@ -521,57 +551,33 @@
                 auth = getAuth(app);
                 db = getFirestore(app);
                 await setPersistence(auth, browserSessionPersistence);
+                console.log("DEBUG: Firebase App inicializada.");
                 
-                // El listener AHORA maneja el flujo de UI
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        // Usuario Autenticado
-                        userId = user.uid;
-                        userInfoDisplay.innerHTML = `<strong>Conectado</strong> (${user.email})`;
-                        userInfoDisplay.classList.remove('bg-indigo-100', 'text-indigo-800', 'bg-red-100', 'text-red-800');
-                        userInfoDisplay.classList.add('bg-green-100', 'text-green-800');
-                        submitButton.disabled = false;
-                        
-                        // Mostrar app, ocultar login
-                        mainContent.classList.remove('hidden');
-                        loginOverlay.classList.add('hidden');
-
-                        listenForNovedades(); 
-                        initializeAppComponents();
-                        console.log("Autenticación y DB listas.");
-
-                    } else {
-                        // Usuario No Autenticado
-                        userId = null;
-                        console.warn("DEBUG: Estado de autenticación: Desconectado.");
-                        
-                        // Ocultar app, mostrar login
-                        mainContent.classList.add('hidden');
-                        loginOverlay.classList.remove('hidden');
-
-                        // Resetear estado de UI
-                        userInfoDisplay.innerHTML = `<strong>Desconectado</strong>`;
-                        userInfoDisplay.classList.remove('bg-green-100', 'text-green-800');
-                        userInfoDisplay.classList.add('bg-red-100', 'text-red-800');
-                        submitButton.disabled = true;
-                        novedadesLog.innerHTML = ''; // Limpiar tabla
-                    }
-                });
-
+                // Mover onAuthStateChanged fuera para que se ejecute 1 vez
+                
             } catch (error) {
                 console.error("Error al configurar Firebase:", error);
-                loginError.textContent = `Error de Firebase: ${error.message}`;
-                loginError.classList.remove('hidden');
-                showMessageModal("Error de Conexión", "No se pudo conectar a la base de datos. Verifique la consola para más detalles.");
+                userInfoDisplay.innerHTML = `<strong>Error de conexión</strong>`;
+                userInfoDisplay.classList.add('bg-red-100', 'text-red-800');
+                showMessageModal("Error Crítico", `No se pudo inicializar Firebase. Detalles: ${error.message}`);
             }
         }
+        
+        // --- NUEVO: Iniciar componentes de la app (turno) ---
+        function initializeAppComponents() {
+            updateShiftDisplay();
+            setInterval(updateShiftDisplay, 60000); 
+        }
 
+        // --- FUNCIÓN MEJORADA: Delegación de Eventos ---
+        // (Soluciona el bug de listeners duplicados)
         function listenForNovedades() {
             const collectionPath = getCollectionPath();
             console.log(`DEBUG: Escuchando novedades en la colección: ${collectionPath}`);
             const novedadesRef = collection(db, collectionPath);
+            const q = query(novedadesRef, orderBy('timestamp', 'desc')); // Ordenar por timestamp
             
-            onSnapshot(novedadesRef, (snapshot) => {
+            onSnapshot(q, (snapshot) => {
                 const novedades = [];
                 allNovedadesMap.clear(); 
                 snapshot.forEach(doc => {
@@ -581,43 +587,54 @@
                 });
                 console.log(`DEBUG: Snapshot recibido, ${snapshot.size} documentos cargados.`);
 
-                novedades.sort((a, b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0));
+                // Ya no necesitamos ordenar (sort) aquí, Firestore lo hace
                 renderNovedadesLog(novedades);
 
                 if (novedades.length === 0) {
+                    // Mensaje eliminado
                     exportButton.disabled = true; 
-                    deleteAllButton.disabled = true; 
+                    deleteAllButton.disabled = true;
                 } else {
                     exportButton.disabled = false; 
                     deleteAllButton.disabled = false;
                 }
             }, (error) => {
                 console.error("Error al escuchar novedades:", error);
-                showMessageModal("Error al Cargar", `Error al cargar: ${error.message}. Intenta recargar la página.`);
+                userInfoDisplay.innerHTML = `<strong>Error de conexión</strong>`;
+                userInfoDisplay.classList.add('bg-red-100', 'text-red-800');
             });
         }
         
-        // --- PARCHE 3: renderNovedadesLog (Seguridad XSS) ---
+        // --- FUNCIÓN MEJORADA: Anti-XSS y Tooltip ---
+        // (Usa DOM nativo en lugar de innerHTML para seguridad)
         function renderNovedadesLog(novedades) {
-            novedadesLog.innerHTML = '';
+            
+            // Re-adjuntar listeners usando delegación (más eficiente)
+            setupTableListeners();
+            novedadesLog.innerHTML = ''; // Limpiar la tabla
 
             novedades.forEach(novedad => {
                 const row = document.createElement('tr');
                 row.className = 'hover:bg-gray-50';
 
-                const timestampDate = novedad.timestamp && typeof novedad.timestamp.toDate === 'function' ? novedad.timestamp.toDate() : new Date();
+                const timestampDate = novedad.timestamp && typeof novedad.timestamp.toDate === 'function' ? novedad.timestamp.toDate() : new Date(0);
                 const fecha = formatDate(timestampDate);
                 const hora = timestampDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                const isChecked = selectedNovedadIds.has(novedad.id) ? 'checked' : '';
+                
+                let tooltipEstado = "Cambiar estado";
+                if (novedad.estado === 'Completado' && novedad.completadoTimestamp) {
+                    const completadoDate = novedad.completadoTimestamp.toDate();
+                    tooltipEstado = `Completado por ${novedad.completadoPor || 'N/A'} el ${formatFullTimestamp(completadoDate)}`;
+                }
+
+                // Usar innerHTML solo para celdas controladas (fecha/hora)
+                // Usar textContent para datos del usuario (Anti-XSS)
 
                 // Celda Selección
                 const tdSel = document.createElement('td');
                 tdSel.className = 'px-3 py-3 whitespace-nowrap text-sm text-gray-900';
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.dataset.id = novedad.id;
-                checkbox.className = 'novedad-checkbox h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500';
-                checkbox.checked = selectedNovedadIds.has(novedad.id);
-                tdSel.appendChild(checkbox);
+                tdSel.innerHTML = `<input type="checkbox" data-id="${novedad.id}" class="novedad-checkbox h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" ${isChecked}>`;
                 row.appendChild(tdSel);
 
                 // Turno
@@ -625,20 +642,17 @@
                 tdTurno.className = 'px-3 py-3 whitespace-nowrap text-sm font-medium text-gray-900';
                 tdTurno.textContent = novedad.turno || '';
                 row.appendChild(tdTurno);
-
+                
                 // Fecha + Hora
                 const tdFecha = document.createElement('td');
                 tdFecha.className = 'px-3 py-3 whitespace-nowrap text-sm text-gray-600';
                 tdFecha.innerHTML = `${fecha}<br><span class="text-xs text-gray-500">${hora}</span>`;
                 row.appendChild(tdFecha);
 
-                // Prioridad (badge)
+                // Prioridad
                 const tdPrior = document.createElement('td');
                 tdPrior.className = 'px-3 py-3 whitespace-nowrap';
-                const spanPrior = document.createElement('span');
-                spanPrior.className = `inline-flex items-center px-3 py-0.5 rounded-full text-xs ${getPriorityClasses(novedad.prioridad)}`;
-                spanPrior.textContent = novedad.prioridad || '';
-                tdPrior.appendChild(spanPrior);
+                tdPrior.innerHTML = `<span class="inline-flex items-center px-3 py-0.5 rounded-full text-xs ${getPriorityClasses(novedad.prioridad)}">${novedad.prioridad}</span>`;
                 row.appendChild(tdPrior);
 
                 // Área/Elemento
@@ -659,93 +673,79 @@
                 tdHabit.textContent = novedad.habitacion || '-';
                 row.appendChild(tdHabit);
 
-                // Novedad (usar textContent para escapar)
+                // Novedad (Seguro)
                 const tdNovedad = document.createElement('td');
                 tdNovedad.className = 'px-3 py-3 text-sm text-gray-700 max-w-lg truncate hover:whitespace-normal hover:overflow-visible hover:bg-white hover:shadow-lg transition-all duration-300 cursor-pointer';
-                tdNovedad.textContent = novedad.novedad || ''; // <- CORRECCIÓN XSS
+                tdNovedad.textContent = novedad.novedad || '';
                 tdNovedad.title = novedad.novedad || '';
                 row.appendChild(tdNovedad);
-
+                
                 // Notificado a
-                const tdNot = document.createElement('td');
-                tdNot.className = 'px-3 py-3 whitespace-nowrap text-sm text-gray-600';
-                tdNot.textContent = novedad.notificadoA || '-';
-                row.appendChild(tdNot);
+                const tdNotificado = document.createElement('td');
+                tdNotificado.className = 'px-3 py-3 whitespace-nowrap text-sm text-gray-600';
+                tdNotificado.textContent = novedad.notificadoA || '-';
+                row.appendChild(tdNotificado);
 
-                // Estado (select)
+                // Estado
                 const tdEstado = document.createElement('td');
                 tdEstado.className = 'px-3 py-3 whitespace-nowrap text-sm text-gray-600';
-                const selectEstado = document.createElement('select');
-                selectEstado.dataset.id = novedad.id;
-                selectEstado.className = `estado-select px-2 py-1 rounded-full text-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 ${getStatusClasses(novedad.estado)}`;
-                const optEnCurso = document.createElement('option');
-                optEnCurso.value = 'En curso';
-                optEnCurso.textContent = 'En curso';
-                if (novedad.estado === 'En curso') optEnCurso.selected = true;
-                const optComp = document.createElement('option');
-                optComp.value = 'Completado';
-                optComp.textContent = 'Completado';
-                // NO HACE FALTA: if (novedad.estado === 'Completado') optComp.selected = true;
-                selectEstado.appendChild(optEnCurso);
-                selectEstado.appendChild(optComp);
-
-                // --- CORRECCIÓN BUG: Fijar el valor explícitamente ---
-                // Esto soluciona el bug donde el texto no se actualizaba
-                if (novedad.estado === 'Completado') {
-                    selectEstado.value = 'Completado';
-                } else {
-                    selectEstado.value = 'En curso';
-                }
-                
-                // --- NUEVA FUNCIÓN: Tooltip de completado ---
-                if (novedad.estado === 'Completado' && novedad.completadoTimestamp) {
-                    const completadoDate = novedad.completadoTimestamp.toDate();
-                    const completadoPor = novedad.completadoPor || 'N/A';
-                    const tooltipText = `Completado el: ${formatDate(completadoDate)} a las ${completadoDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })} por ${completadoPor}`;
-                    selectEstado.title = tooltipText;
-                } else {
-                    selectEstado.title = "Cambiar estado";
-                }
-                // --- FIN NUEVA FUNCIÓN ---
-
-                tdEstado.appendChild(selectEstado);
+                tdEstado.innerHTML = `
+                    <select data-id="${novedad.id}" class="estado-select px-2 py-1 rounded-full text-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 ${getStatusClasses(novedad.estado)}" title="${tooltipEstado}">
+                        <option value="En curso" ${novedad.estado === 'En curso' ? 'selected' : ''} class="bg-white text-yellow-700">En curso</option>
+                        <option value="Completado" ${novedad.estado === 'Completado' ? 'selected' : ''} class="bg-white text-green-700">Completado</option>
+                    </select>
+                `;
+                // --- CORRECCIÓN BUG DROPDOWN ---
+                // Asegurarse de que el valor seleccionado sea el correcto
+                tdEstado.querySelector('select').value = novedad.estado;
+                // --- FIN CORRECCIÓN ---
                 row.appendChild(tdEstado);
 
-                // Borrar (botón)
-                const tdDelete = document.createElement('td');
-                tdDelete.className = 'px-3 py-3 whitespace-nowrap text-sm text-center';
-                const delBtn = document.createElement('button');
-                delBtn.dataset.id = novedad.id;
-                delBtn.className = 'delete-novedad-btn text-gray-400 hover:text-red-600 p-1 rounded-full hover:bg-red-100 transition-colors duration-200';
-                delBtn.title = 'Eliminar registro';
-                delBtn.innerHTML = `<svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75V4.5h8V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4.5A1.25 1.25 0 0111.25 3h2.5A1.25 1.25 0 0115 4.25V5.5h-5V4.25zM3.75 6A1.75 1.75 0 002 7.75v7.5A1.75 1.75 0 003.75 17h12.5A1.75 1.75 0 0018 15.25v-7.5A1.75 1.75 0 0016.25 6H3.75zM10 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 10zM13 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0113 10zM7 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 017 10z" clip-rule="evenodd" /></svg>`;
-                tdDelete.appendChild(delBtn);
-                row.appendChild(tdDelete);
-
+                // Borrar
+                const tdBorrar = document.createElement('td');
+                tdBorrar.className = 'px-3 py-3 whitespace-nowrap text-sm text-center';
+                tdBorrar.innerHTML = `
+                    <button data-id="${novedad.id}" class="delete-novedad-btn text-gray-400 hover:text-red-600 p-1 rounded-full hover:bg-red-100 transition-colors duration-200" title="Eliminar registro">
+                        <svg class="w-5 h-5 pointer-events-none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75V4.5h8V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4.5A1.25 1.25 0 0111.25 3h2.5A1.25 1.25 0 0115 4.25V5.5h-5V4.25zM3.75 6A1.75 1.75 0 002 7.75v7.5A1.75 1.75 0 003.75 17h12.5A1.75 1.75 0 0018 15.25v-7.5A1.75 1.75 0 0016.25 6H3.75zM10 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 10zM13 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0113 10zM7 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 017 10z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                `;
+                row.appendChild(tdBorrar);
+                
                 novedadesLog.appendChild(row);
             });
-            setupTableListeners();
         }
+
 
         async function addNovedad(data) {
             if (!db || !userId) {
                 console.error("DEBUG: addNovedad abortado. DB o UserID no están listos.");
                 return;
             }
+
             submitButton.disabled = true;
             loadingSpinner.classList.remove('hidden');
+
             try {
                 const collectionPath = getCollectionPath();
+                console.log(`DEBUG: Añadiendo documento a: ${collectionPath}`);
                 const novedadesRef = collection(db, collectionPath);
+
                 const newNovedad = {
                     ...data,
                     timestamp: serverTimestamp(),
                     userId: userId, 
+                    userEmail: userEmail, // <-- NUEVO
                     estado: 'En curso' 
                 };
+                
+                console.log("DEBUG: Documento a guardar:", newNovedad);
                 await addDoc(novedadesRef, newNovedad);
+                console.log("DEBUG: Documento guardado exitosamente.");
                 form.reset(); 
                 resetMultiselect();
+
             } catch (error) {
                 console.error("Error al añadir la novedad:", error);
                 showMessageModal("Error", `No se pudo registrar la novedad. Detalles: ${error.message}`);
@@ -755,42 +755,49 @@
             }
         }
         
-        // --- FUNCIÓN MODIFICADA: Guardar timestamp de completado ---
+        // --- FUNCIÓN MODIFICADA: Guardar Timestamp y Email al completar ---
         async function updateEstado(id, estado) {
-            if (!db || !auth.currentUser) {
-                console.error("DEBUG: updateEstado abortado. DB o User no están listos.");
+            if (!db) {
+                console.error("DEBUG: updateEstado abortado. DB no está lista.");
                 return;
             }
             try {
                 const collectionPath = getCollectionPath();
                 const docRef = doc(db, collectionPath, id);
                 
-                let updateData = { estado: estado };
+                let updateData = {
+                    estado: estado
+                };
                 
-                // Si se marca como "Completado", guardar quién y cuándo
+                // Si se marca como completado, guardar quién y cuándo
                 if (estado === 'Completado') {
                     updateData.completadoTimestamp = serverTimestamp();
-                    updateData.completadoPor = auth.currentUser.email;
+                    updateData.completadoPor = userEmail; // Guardar email del usuario
                 } else {
-                    // Si se revierte a "En curso", borrar el timestamp
+                    // Si se vuelve a "En curso", borrar los datos de completado
                     updateData.completadoTimestamp = deleteField();
                     updateData.completadoPor = deleteField();
                 }
 
                 await updateDoc(docRef, updateData);
-                
+                console.log(`DEBUG: Estado de novedad ${id} actualizado a ${estado}`);
             } catch (error) {
                 console.error("Error al actualizar el estado:", error);
                 showMessageModal("Error de Actualización", `No se pudo cambiar el estado. Detalles: ${error.message}`);
             }
         }
 
+        // --- Borrar Novedad Individual ---
         async function deleteNovedad(id) {
-            if (!db) return;
+            if (!db) {
+                console.error("DEBUG: deleteNovedad abortado. DB no está lista.");
+                return;
+            }
             try {
                 const collectionPath = getCollectionPath();
                 const docRef = doc(db, collectionPath, id);
                 await deleteDoc(docRef);
+                console.log(`DEBUG: Novedad ${id} eliminada.`);
                 showMessageModal("Éxito", "El registro ha sido eliminado.");
                 if (selectedNovedadIds.has(id)) {
                     selectedNovedadIds.delete(id);
@@ -802,33 +809,42 @@
             }
         }
 
-        // --- PARCHE 4: deleteAllNovedades (Manejo de >500 docs) ---
+        // --- FUNCIÓN MEJORADA: Borrado en Batches (Anti-límite 500) ---
         async function deleteAllNovedades() {
             if (!db) {
                 showMessageModal("Error", "La base de datos no está lista.");
                 return;
             }
+            
+            console.log("Iniciando borrado total...");
             confirmDeleteAllBtn.disabled = true;
             confirmDeleteAllBtn.innerText = "Eliminando...";
+
             try {
                 const collectionPath = getCollectionPath();
                 const colRef = collection(db, collectionPath);
                 const snapshot = await getDocs(colRef);
+
                 if (snapshot.empty) {
                     showMessageModal("Información", "No hay registros para eliminar.");
                     return;
                 }
+
                 const docs = snapshot.docs;
-                const CHUNK_SIZE = 450;
+                const CHUNK_SIZE = 450; // Límite de Firestore es 500
                 for (let i = 0; i < docs.length; i += CHUNK_SIZE) {
                     const chunk = docs.slice(i, i + CHUNK_SIZE);
                     const batch = writeBatch(db);
                     chunk.forEach(d => batch.delete(d.ref));
                     await batch.commit();
+                    console.log(`DEBUG: Eliminados ${chunk.length} documentos...`);
                 }
+
+                console.log(`DEBUG: Se eliminaron ${docs.length} documentos.`);
                 showMessageModal("Éxito", `Se han eliminado todos los ${docs.length} registros.`);
                 selectedNovedadIds.clear();
                 updateWhatsappButton();
+
             } catch (error) {
                 console.error("Error al eliminar todas las novedades:", error);
                 showMessageModal("Error de Borrado Total", `No se pudieron eliminar los registros. Detalles: ${error.message}`);
@@ -841,60 +857,96 @@
             }
         }
         
-        // --- Event Listeners e Inicialización ---
+        // --- Lógica de Inicialización de la App ---
+        
+        // 1. Inicializar Firebase primero
+        await setupAuthAndDB();
 
-        // 1. Inicialización de Firebase (se llama al cargar el script)
-        setupAuthAndDB();
+        // 2. Escuchar cambios de autenticación
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // USUARIO LOGUEADO
+                userId = user.uid;
+                userEmail = user.email; // Guardar email
+                userInfoDisplay.innerHTML = `<strong>Conectado</strong>`;
+                userInfoDisplay.classList.remove('bg-red-100', 'text-red-800');
+                userInfoDisplay.classList.add('bg-green-100', 'text-green-800');
+                
+                // Mostrar app, ocultar login
+                mainContent.classList.remove('hidden');
+                loginOverlay.classList.add('hidden');
+                
+                submitButton.disabled = false;
+                
+                // Iniciar escucha de la DB
+                listenForNovedades(); 
+                // Iniciar componentes (reloj de turno)
+                initializeAppComponents();
 
-        // 2. Listener para el botón de login
-        loginButton.addEventListener('click', async () => {
-            const email = loginEmail.value;
-            const pass = loginPassword.value;
-            if (!email || !pass) {
-                loginError.textContent = "Email y clave son requeridos.";
-                loginError.classList.remove('hidden');
-                return;
+                console.log(`DEBUG: Autenticación y DB listas. Usuario: ${userEmail}`);
+            } else {
+                // USUARIO DESLOGUEADO
+                userId = null;
+                userEmail = null;
+                userInfoDisplay.innerHTML = `<strong>Error de conexión</strong>`;
+                userInfoDisplay.classList.add('bg-red-100', 'text-red-800');
+                
+                // Mostrar login, ocultar app
+                mainContent.classList.add('hidden');
+                loginOverlay.classList.remove('hidden');
+                
+                submitButton.disabled = true;
+                // Limpiar la tabla por seguridad
+                novedadesLog.innerHTML = '';
+                allNovedadesMap.clear();
+                selectedNovedadIds.clear();
+                
+                console.warn("DEBUG: Estado de autenticación: Desconectado.");
             }
+        });
+
+        // 3. Listener del formulario de LOGIN
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = loginEmail.value;
+            const password = loginPassword.value;
+            
             loginError.classList.add('hidden');
+            loginButton.disabled = true;
+            loginButton.innerText = "Entrando...";
+            
             try {
-                await signInWithEmailAndPassword(auth, email, pass);
-                // El listener onAuthStateChanged manejará el resto
+                await signInWithEmailAndPassword(auth, email, password);
+                // El onAuthStateChanged se encargará del resto
             } catch (error) {
                 console.error("Error de inicio de sesión:", error.code);
-                loginError.textContent = "Email o clave incorrecta.";
+                if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found' || error.code === 'auth/invalid-email' || error.code === 'auth/invalid-credential') {
+                    loginError.textContent = "Email o clave incorrecta.";
+                } else if (error.code === 'auth/operation-not-allowed') {
+                     loginError.textContent = "Método de login (Email/Pass) no habilitado en Firebase.";
+                } else {
+                    loginError.textContent = "Error desconocido. Revisa la consola.";
+                }
                 loginError.classList.remove('hidden');
+            } finally {
+                loginButton.disabled = false;
+                loginButton.innerText = "Entrar";
             }
         });
         
-        loginPassword.addEventListener('keyup', (e) => {
-            loginError.classList.add('hidden');
-            if (e.key === 'Enter') loginButton.click();
-        });
-        loginEmail.addEventListener('keyup', (e) => {
-            loginError.classList.add('hidden');
-            if (e.key === 'Enter') loginButton.click();
-        });
-
-        // 3. Listener para Cerrar Sesión
+        // 4. Listener del botón de LOGOUT
         logoutButton.addEventListener('click', () => {
             signOut(auth).catch(error => {
                 console.error("Error al cerrar sesión:", error);
-                showMessageModal("Error", "No se pudo cerrar la sesión.");
             });
         });
 
-
-        // 4. Mostrar el turno actual
+        // 5. Mostrar el turno actual (se llama desde onAuthStateChanged)
         function updateShiftDisplay() {
             currentShiftDisplay.textContent = calcularTurno();
         }
-        function initializeAppComponents() {
-            updateShiftDisplay();
-            setInterval(updateShiftDisplay, 60000); 
-            populateMultiselect();
-        }
-        
-        // 5. Manejo del envío del formulario
+
+        // 6. Manejo del envío del formulario de NOVEDAD
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             const formData = new FormData(form);
@@ -902,6 +954,7 @@
             multiselectDropdown.querySelectorAll('.multiselect-option:checked').forEach(cb => {
                 selectedNotificadoA.push(cb.value);
             });
+            
             const data = {
                 prioridad: formData.get('prioridad').trim(),
                 areaElemento: formData.get('areaElemento').trim(),
@@ -911,6 +964,7 @@
                 notificadoA: selectedNotificadoA.join(', ') || null, 
                 turno: calcularTurno() 
             };
+            
             if (!data.areaElemento || !data.novedad) {
                 showMessageModal("Error de Formulario", "Los campos 'Área/Elemento' y 'Detalles de la Novedad' son requeridos.");
                 return;
@@ -918,7 +972,7 @@
             addNovedad(data);
         });
 
-        // 6. Lógica del Botón de Copiar a WhatsApp
+        // 7. Lógica del Botón de Copiar a WhatsApp
         whatsappCopyButton.addEventListener('click', async () => {
             if (selectedNovedadIds.size === 0) {
                 showMessageModal("Atención", "Por favor, selecciona al menos una novedad para copiar.");
@@ -958,14 +1012,19 @@
                 }
             }
             const textToCopy = finalMessageParts.join('\n').trim();
+            console.log("DEBUG: Texto a copiar a WhatsApp:", textToCopy);
             try {
+                // Fallback para document.execCommand
                 const textArea = document.createElement("textarea");
                 textArea.value = textToCopy;
+                textArea.style.position = "fixed"; 
+                textArea.style.top = "-9999px";
                 document.body.appendChild(textArea);
                 textArea.focus();
                 textArea.select();
                 const successful = document.execCommand('copy');
                 document.body.removeChild(textArea);
+
                 if (successful) {
                     selectedNovedadIds.clear();
                     document.querySelectorAll('.novedad-checkbox').forEach(cb => cb.checked = false);
@@ -980,16 +1039,15 @@
             }
         });
 
-        // 7. Lógica del Botón de Exportar
-        
-        // --- PARCHE 5: ensureXLSXLoaded (onerror) ---
+        // 8. Lógica del Botón de Exportar
+        // --- FUNCIÓN MEJORADA: onerror ---
         function ensureXLSXLoaded() {
             if (window.XLSX) return Promise.resolve();
             return new Promise((resolve, reject) => {
                 const s = document.createElement('script');
                 s.src = 'https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js';
                 s.onload = () => resolve();
-                s.onerror = () => reject(new Error('No se pudo cargar la librería XLSX'));
+                s.onerror = () => reject(new Error('No se pudo cargar la librería XLSX')); // Corregido
                 document.head.appendChild(s);
             });
         }
@@ -1006,17 +1064,23 @@
                 const qRef = query(colRef, orderBy('timestamp', 'desc'));
                 const snapshot = await getDocs(qRef);
                 const rows = [];
-                const headers = ['Turno', 'Fecha', 'Hora', 'Prioridad', 'Área/Elemento', 'Nº Reserva', 'Habitación', 'Novedad', 'Notificado a', 'Estado', 'UserId', 'Timestamp'];
+                const headers = ['Turno', 'Fecha', 'Hora', 'Prioridad', 'Área/Elemento', 'Nº Reserva', 'Habitación', 'Novedad', 'Notificado a', 'Estado', 'Completado Por', 'Completado Fecha', 'UserId', 'Timestamp'];
                 rows.push(headers);
                 snapshot.forEach(docSnap => {
                     const d = docSnap.data();
-                    const ts = d.timestamp && d.timestamp.toDate ? d.timestamp.toDate() : (d.timestamp ? new Date(d.timestamp) : new Date());
+                    const ts = d.timestamp && d.timestamp.toDate ? d.timestamp.toDate() : new Date(0);
                     const fecha = formatDate(ts);
                     const hora = ts.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                    
+                    const completadoTs = d.completadoTimestamp && d.completadoTimestamp.toDate ? d.completadoTimestamp.toDate() : null;
+                    const completadoFecha = completadoTs ? formatFullTimestamp(completadoTs) : '';
+
                     rows.push([
                         d.turno || '', fecha, hora, d.prioridad || '', d.areaElemento || '',
                         d.nReserva || '', d.habitacion || '', (d.novedad || '').replace(/\r?\n/g, ' '),
-                        d.notificadoA || '', d.estado || '', d.userId || '', ts.toISOString()
+                        d.notificadoA || '', d.estado || '',
+                        d.completadoPor || '', completadoFecha, // Nuevas columnas
+                        d.userId || '', ts.toISOString()
                     ]);
                 });
                 await ensureXLSXLoaded();
@@ -1024,6 +1088,7 @@
                 const colWidths = [
                     { wch: 10 }, { wch: 12 }, { wch: 8 }, { wch: 10 }, { wch: 25 },
                     { wch: 20 }, { wch: 10 }, { wch: 80 }, { wch: 25 }, { wch: 12 },
+                    { wch: 30 }, { wch: 20 }, // Nuevas columnas
                     { wch: 28 }, { wch: 25 }
                 ];
                 ws['!cols'] = colWidths;
@@ -1059,8 +1124,9 @@
         }
         exportButton.addEventListener('click', exportAllToXLSX);
 
-        // 8. Listeners para Modales de Borrado
+        // 9. Listeners para Modales de Borrado
         
+        // Modal Individual
         cancelDeleteBtn.addEventListener('click', () => {
             confirmModal.classList.add('hidden');
         });
@@ -1070,6 +1136,7 @@
             confirmModal.classList.add('hidden');
         });
 
+        // Modal Borrar Todo
         deleteAllButton.addEventListener('click', () => {
             deleteAllPassword.value = '';
             deleteAllError.classList.add('hidden');
@@ -1089,9 +1156,7 @@
             }
         });
 
-
-        // 9. Lógica del Dropdown Multiselect
-        
+        // 10. Lógica del Dropdown Multiselect
         function populateMultiselect() {
             multiselectDropdown.querySelectorAll('.multiselect-option-container').forEach(el => el.remove());
             multiselectOptions.forEach(option => {
@@ -1107,13 +1172,11 @@
             });
             addOptionListeners();
         }
-
         function addOptionListeners() {
             multiselectDropdown.querySelectorAll('.multiselect-option').forEach(cb => {
                 cb.addEventListener('change', updateMultiselectLabelAndSelectAll);
             });
         }
-
         function updateMultiselectLabelAndSelectAll() {
             const checkedOptions = multiselectDropdown.querySelectorAll('.multiselect-option:checked');
             const totalOptions = multiselectDropdown.querySelectorAll('.multiselect-option').length;
@@ -1146,7 +1209,6 @@
                 multiselectSelectAll.indeterminate = false;
             }
         }
-
         function resetMultiselect() {
             multiselectDropdown.querySelectorAll('.multiselect-option:checked').forEach(cb => {
                 cb.checked = false;
@@ -1155,7 +1217,6 @@
             filterMultiselectOptions();
             updateMultiselectLabelAndSelectAll();
         }
-
         function filterMultiselectOptions() {
             const filter = multiselectSearch.value.toLowerCase();
             multiselectDropdown.querySelectorAll('.multiselect-option-container').forEach(container => {
@@ -1167,22 +1228,18 @@
                 }
             });
         }
-
         multiselectButton.addEventListener('click', () => {
             multiselectDropdownContainer.classList.toggle('hidden');
             if (!multiselectDropdownContainer.classList.contains('hidden')) {
                 multiselectSearch.focus();
             }
         });
-
         document.addEventListener('click', (e) => {
             if (!multiselectButton.contains(e.target) && !multiselectDropdownContainer.contains(e.target)) {
                 multiselectDropdownContainer.classList.add('hidden');
             }
         });
-
         multiselectSearch.addEventListener('input', filterMultiselectOptions);
-
         multiselectSelectAll.addEventListener('change', () => {
             multiselectDropdown.querySelectorAll('.multiselect-option-container').forEach(container => {
                 if (!container.classList.contains('hidden')) {
@@ -1191,6 +1248,9 @@
             });
             updateMultiselectLabelAndSelectAll();
         });
+        
+        // Poblar el multiselect al inicio
+        populateMultiselect();
 
     </script>
 </body>
