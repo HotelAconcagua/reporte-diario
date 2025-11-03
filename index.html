@@ -382,22 +382,38 @@
         // --- Lógica de la Base de Datos y Autenticación ---
 
         async function setupAuthAndDB() {
+            // --- INICIO CONSOLE LOGS ---
+            console.log("--- DEBUG: Iniciando setupAuthAndDB ---");
+            console.log(`DEBUG: Entorno Canvas detectado: ${isCanvasEnvironment}`);
+            if (isCanvasEnvironment) {
+                console.log("DEBUG: Usando configuración de Firebase de Canvas.");
+            } else {
+                console.log("DEBUG: Usando configuración de Firebase 'hotel-manager-system' (externa).");
+                console.log("DEBUG: Config a usar:", JSON.stringify(firebaseConfig.projectId, null, 2));
+            }
+            // --- FIN CONSOLE LOGS ---
+
             try {
-                setLogLevel('debug'); 
+                setLogLevel('debug'); // Habilitar logs detallados de Firebase
                 const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
                 await setPersistence(auth, browserSessionPersistence);
                 
                 if (initialAuthToken) { 
+                    console.log("DEBUG: Intentando autenticación con Custom Token (Canvas)...");
                     await signInWithCustomToken(auth, initialAuthToken);
                 } else {
+                    console.log("DEBUG: Intentando autenticación anónima (Externa)...");
                     await signInAnonymously(auth); 
                 }
 
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
                         userId = user.uid;
+                        // --- INICIO CONSOLE LOGS ---
+                        console.log(`DEBUG: Autenticación exitosa. UserID: ${userId}`);
+                        // --- FIN CONSOLE LOGS ---
                         userInfoDisplay.innerHTML = `<strong>Conectado</strong>`;
                         userInfoDisplay.classList.remove('bg-indigo-100', 'text-indigo-800', 'bg-red-100', 'text-red-800');
                         userInfoDisplay.classList.add('bg-green-100', 'text-green-800');
@@ -406,6 +422,7 @@
                         console.log("Autenticación y DB listas.");
                     } else {
                         userId = null;
+                        console.warn("DEBUG: Estado de autenticación: Desconectado.");
                         userInfoDisplay.innerHTML = `<strong>Error</strong>`;
                         userInfoDisplay.classList.remove('bg-indigo-100', 'text-indigo-800', 'bg-green-100', 'text-green-800');
                         userInfoDisplay.classList.add('bg-red-100', 'text-red-800');
@@ -414,7 +431,9 @@
                 });
 
             } catch (error) {
+                // --- INICIO CONSOLE LOGS ---
                 console.error("Error al configurar Firebase:", error);
+                // --- FIN CONSOLE LOGS ---
                 userInfoDisplay.innerHTML = `<strong>Error de Conexión</strong>`;
                 userInfoDisplay.classList.remove('bg-indigo-100', 'text-indigo-800', 'bg-green-100', 'text-green-800');
                 userInfoDisplay.classList.add('bg-red-100', 'text-red-800');
@@ -424,6 +443,9 @@
 
         function listenForNovedades() {
             const collectionPath = getCollectionPath();
+            // --- INICIO CONSOLE LOGS ---
+            console.log(`DEBUG: Escuchando novedades en la colección: ${collectionPath}`);
+            // --- FIN CONSOLE LOGS ---
             const novedadesRef = collection(db, collectionPath);
             
             onSnapshot(novedadesRef, (snapshot) => {
@@ -434,6 +456,9 @@
                     novedades.push(data);
                     allNovedadesMap.set(doc.id, data); 
                 });
+                // --- INICIO CONSOLE LOGS ---
+                console.log(`DEBUG: Snapshot recibido, ${snapshot.size} documentos cargados.`);
+                // --- FIN CONSOLE LOGS ---
 
                 novedades.sort((a, b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0));
                 renderNovedadesLog(novedades);
@@ -497,13 +522,19 @@
         }
 
         async function addNovedad(data) {
-            if (!db || !userId) return;
+            if (!db || !userId) {
+                console.error("DEBUG: addNovedad abortado. DB o UserID no están listos.");
+                return;
+            }
 
             submitButton.disabled = true;
             loadingSpinner.classList.remove('hidden');
 
             try {
                 const collectionPath = getCollectionPath();
+                // --- INICIO CONSOLE LOGS ---
+                console.log(`DEBUG: Añadiendo documento a: ${collectionPath}`);
+                // --- FIN CONSOLE LOGS ---
                 const novedadesRef = collection(db, collectionPath);
 
                 const newNovedad = {
@@ -512,8 +543,14 @@
                     userId: userId, 
                     estado: 'En curso' 
                 };
+                
+                // --- INICIO CONSOLE LOGS ---
+                console.log("DEBUG: Documento a guardar:", newNovedad);
+                // --- FIN CONSOLE LOGS ---
 
                 await addDoc(novedadesRef, newNovedad);
+                
+                console.log("DEBUG: Documento guardado exitosamente.");
                 
                 form.reset(); 
                 // --- NUEVO: Resetear el multiselect ---
@@ -530,7 +567,10 @@
         }
         
         async function updateEstado(id, estado) {
-            if (!db) return;
+            if (!db) {
+                console.error("DEBUG: updateEstado abortado. DB no está lista.");
+                return;
+            }
 
             try {
                 const collectionPath = getCollectionPath();
@@ -540,7 +580,7 @@
                     estado: estado
                 });
                 
-                console.log(`Estado de novedad ${id} actualizado a ${estado}`);
+                console.log(`DEBUG: Estado de novedad ${id} actualizado a ${estado}`);
             } catch (error) {
                 console.error("Error al actualizar el estado:", error);
                 showMessageModal("Error de Actualización", `No se pudo cambiar el estado. Detalles: ${error.message}`);
@@ -636,6 +676,10 @@
             }
 
             const textToCopy = finalMessageParts.join('\n').trim();
+            
+            // --- INICIO CONSOLE LOGS ---
+            console.log("DEBUG: Texto a copiar a WhatsApp:", textToCopy);
+            // --- FIN CONSOLE LOGS ---
             
             try {
                 const textArea = document.createElement("textarea");
