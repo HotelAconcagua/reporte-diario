@@ -14,8 +14,6 @@
     
     <!-- 
       Estilos base (solo para 'hidden' y estructura mínima).
-      Los moví de 'styles.css' a aquí para que la app no se rompa 
-      antes de que el JS decida qué tema cargar.
     -->
     <style>
         .hidden {
@@ -84,18 +82,6 @@
             #company-logo { width: 36px; }
             .main-title { font-size: 1.125rem; }
         }
-        
-        /* Estilos específicos para el modal de edición */
-        #edit-modal .modal-container {
-             max-width: 40rem; /* Hacemos el modal más ancho para el formulario */
-        }
-        #edit-form .form-grid {
-             grid-template-columns: repeat(2, 1fr); /* Dos columnas en el modal */
-        }
-        #edit-form .form-group-full {
-             grid-column: 1 / -1;
-        }
-        
     </style>
 </head>
 <body class="bg-fondo">
@@ -182,10 +168,10 @@
                     <input type="text" id="habitacion" name="habitacion" class="form-input" placeholder="Ej: 319">
                 </div>
 
-                <!-- Elemento/Tema -->
+                <!-- Área/Elemento -->
                 <div class="form-group">
-                    <label for="areaElemento" class="form-label">Elemento/Tema(Requerido)</label>
-                    <input type="text" id="areaElemento" name="areaElemento" required class="form-input" placeholder="Ej: Puerta/Objeto Perdido">
+                    <label for="areaElemento" class="form-label">Área/Elemento (Requerido)</label>
+                    <input type="text" id="areaElemento" name="areaElemento" required class="form-input" placeholder="Ej: Puerta - Mantenimiento">
                 </div>
 
                 <!-- Asignado / Notificado a (Multiselect) -->
@@ -275,13 +261,13 @@
                             <th>Turno</th>
                             <th>Fecha</th>
                             <th>Prioridad</th>
-                            <th>Elemento/Tema</th>
+                            <th>Área/Elemento</th>
                             <th>Nº Reserva</th>
                             <th>Habit.</th>
                             <th>Novedad</th>
                             <th>Notificado a</th>
                             <th>Estado</th>
-                            <th>Editar</th> <!-- Nuevo encabezado -->
+                            <th>Editar</th>
                             <th>Borrar</th>
                         </tr>
                     </thead>
@@ -294,81 +280,6 @@
 
     </div>
 
-    <!-- Modal de Edición de Novedad (NUEVO) -->
-    <div id="edit-modal" class="modal-overlay hidden">
-        <div class="modal-container card">
-            <h3 class="modal-title">Editar Novedad</h3>
-            <form id="edit-form" class="form-grid">
-                
-                <input type="hidden" id="edit-id" name="id">
-
-                <!-- Prioridad -->
-                <div class="form-group">
-                    <label for="edit-prioridad" class="form-label">Prioridad</label>
-                    <select id="edit-prioridad" name="prioridad" required class="form-select">
-                        <option class="prioridad-urgente-op" value="Urgente">Urgente</option>
-                        <option class="prioridad-alta-op" value="Alta">Alta</option>
-                        <option class="prioridad-media-op" value="Media">Media</option>
-                        <option class="prioridad-baja-op" value="Baja">Baja</option>
-                    </select>
-                </div>
-
-                <!-- Nº de Reserva -->
-                <div class="form-group">
-                    <label for="edit-nReserva" class="form-label">Nº de Reserva</label>
-                    <input type="text" id="edit-nReserva" name="nReserva" class="form-input" placeholder="Ej: 25016-171152">
-                </div>
-
-                <!-- Habitación -->
-                <div class="form-group">
-                    <label for="edit-habitacion" class="form-label">Habitación</label>
-                    <input type="text" id="edit-habitacion" name="habitacion" class="form-input" placeholder="Ej: 319">
-                </div>
-
-                <!-- Elemento/Tema -->
-                <div class="form-group">
-                    <label for="edit-areaElemento" class="form-label">Elemento/Tema (Requerido)</label>
-                    <input type="text" id="edit-areaElemento" name="areaElemento" required class="form-input" placeholder="Ej: Puerta - Mantenimiento">
-                </div>
-
-                <!-- Turno (Solo lectura, ya que se establece al crear) -->
-                <div class="form-group">
-                    <label class="form-label">Turno (Original)</label>
-                    <div id="edit-turno" class="turno-display">--:--</div>
-                </div>
-
-                <!-- Asignado / Notificado a (Campo de texto simple para edición, ya que el multiselect es complejo para el modal) -->
-                <div class="form-group">
-                    <label for="edit-notificadoA" class="form-label">Notificado a</label>
-                    <input type="text" id="edit-notificadoA" name="notificadoA" class="form-input" placeholder="Ej: Mantenimiento, HSKP">
-                </div>
-
-                <!-- Detalles de la Novedad -->
-                <div class="form-group form-group-full">
-                    <label for="edit-novedad" class="form-label">Detalles de la Novedad (Requerido)</label>
-                    <textarea id="edit-novedad" name="novedad" rows="4" required class="form-textarea" placeholder="Ej: Problemas con la tarjeta de acceso..."></textarea>
-                </div>
-                
-                <!-- Info de creación/actualización (opcional) -->
-                <div class="form-group form-group-full">
-                    <p class="form-label">Creado por: <span id="edit-metadata"></span></p>
-                </div>
-
-
-                <!-- Acciones del Formulario -->
-                <div class="form-actions">
-                    <button type="button" id="cancel-edit-btn" class="button button-gray">
-                        Cancelar
-                    </button>
-                    <button type="submit" id="save-edit-btn" class="button button-primary">
-                        Guardar Cambios
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-
     <!-- Modal de Mensajes -->
     <div id="message-modal" class="modal-overlay hidden">
         <div class="modal-container card">
@@ -379,6 +290,95 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal de Edición de Novedad (NUEVO) -->
+    <div id="edit-modal" class="modal-overlay hidden">
+        <div class="modal-container card" style="max-width: 38rem;">
+            <h3 class="modal-title">Editar Novedad</h3>
+            <form id="edit-novedad-form" class="form-grid">
+                <!-- ID de Novedad Oculto -->
+                <input type="hidden" id="edit-novedad-id" name="id">
+
+                <!-- Prioridad -->
+                <div class="form-group">
+                    <label for="editPrioridad" class="form-label">Prioridad</label>
+                    <select id="editPrioridad" name="prioridad" required class="form-select">
+                        <option class="prioridad-urgente-op" value="Urgente">Urgente</option>
+                        <option class="prioridad-alta-op" value="Alta">Alta</option>
+                        <option class="prioridad-media-op" value="Media">Media</option>
+                        <option class="prioridad-baja-op" value="Baja">Baja</option>
+                    </select>
+                </div>
+
+                <!-- Nº de Reserva -->
+                <div class="form-group">
+                    <label for="editNReserva" class="form-label">Nº de Reserva</label>
+                    <input type="text" id="editNReserva" name="nReserva" class="form-input" placeholder="Ej: 25016-171152">
+                </div>
+
+                <!-- Habitación -->
+                <div class="form-group">
+                    <label for="editHabitacion" class="form-label">Habitación</label>
+                    <input type="text" id="editHabitacion" name="habitacion" class="form-input" placeholder="Ej: 319">
+                </div>
+                
+                <!-- Área/Elemento -->
+                <div class="form-group">
+                    <label for="editAreaElemento" class="form-label">Área/Elemento (Requerido)</label>
+                    <input type="text" id="editAreaElemento" name="areaElemento" required class="form-input" placeholder="Ej: Puerta - Mantenimiento">
+                </div>
+                
+                <!-- Turno (Solo Lectura) -->
+                <div class="form-group">
+                    <label class="form-label">Turno (Original)</label>
+                    <div id="editCurrentShift" class="turno-display" style="width: 100%;">--:--</div>
+                </div>
+
+                <!-- Asignado / Notificado a (Multiselect Corregido) -->
+                <div class="form-group relative" style="grid-column: span 3 / span 3;">
+                    <label for="edit-multiselect-button" class="form-label">Notificado a</label>
+                    <button type="button" id="edit-multiselect-button" class="multiselect-toggle">
+                        <span id="edit-multiselect-label" class="multiselect-label-default">Elige</span>
+                        <svg class="multiselect-toggle-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 3a1 1 0 01.707.293l3 3a1 1 0 01-1.414 1.414L10 5.414 7.707 7.707a1 1 0 01-1.414-1.414l3-3A1 1 0 0110 3zm-3.707 9.293a1 1 0 011.414 0L10 14.586l2.293-2.293a1 1 0 011.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                    <!-- Contenedor del Dropdown de Edición -->
+                    <div id="edit-multiselect-dropdown-container" class="multiselect-dropdown-container hidden" style="max-width: none;">
+                        <div class="multiselect-search-container">
+                            <input type="text" id="edit-multiselect-search" class="multiselect-search-input" placeholder="Buscar...">
+                        </div>
+                        <div id="edit-multiselect-dropdown" class="multiselect-dropdown">
+                            <label class="multiselect-option-label">
+                                <input type="checkbox" id="edit-multiselect-select-all">
+                                <span class="font-semibold">(Seleccionar todo)</span>
+                            </label>
+                            <!-- Opciones dinámicas de Edición -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Detalles de la Novedad -->
+                <div class="form-group form-group-full">
+                    <label for="editNovedad" class="form-label">Detalles de la Novedad (Requerido)</label>
+                    <textarea id="editNovedad" name="novedad" rows="3" required class="form-textarea" placeholder="Ej: Problemas con la tarjeta de acceso..."></textarea>
+                </div>
+
+                <p id="edit-metadata" class="form-label form-group-full" style="font-size: 0.75rem; margin-top: 0.5rem; color: var(--color-texto-secundario);">
+                    Creado por: --
+                </p>
+
+                <!-- Acciones del Formulario de Edición -->
+                <div class="form-actions" style="margin-top: 0.5rem;">
+                    <button type="button" id="cancel-edit-btn" class="button button-gray">Cancelar</button>
+                    <button type="submit" id="save-edit-button" class="button button-primary">
+                        Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 
     <!-- Modal de Confirmación de Borrado (Individual) -->
     <div id="confirm-modal" class="modal-overlay hidden">
@@ -454,8 +454,24 @@
         }
 
         // --- Referencias del DOM y Estado Global ---
+        // Nuevo Formulario
         const form = document.getElementById('novedad-form');
         const submitButton = document.getElementById('submit-button');
+        
+        // Formulario de Edición (NUEVO)
+        const editModal = document.getElementById('edit-modal');
+        const editForm = document.getElementById('edit-novedad-form');
+        const cancelEditBtn = document.getElementById('cancel-edit-btn');
+        const editId = document.getElementById('edit-novedad-id');
+        const editPrioridad = document.getElementById('editPrioridad');
+        const editNReserva = document.getElementById('editNReserva');
+        const editHabitacion = document.getElementById('editHabitacion');
+        const editAreaElemento = document.getElementById('editAreaElemento');
+        const editNovedad = document.getElementById('editNovedad');
+        const editCurrentShift = document.getElementById('editCurrentShift');
+        const editMetadata = document.getElementById('edit-metadata');
+
+
         let novedadesLog = document.getElementById('novedades-log');
         const currentShiftDisplay = document.getElementById('current-shift');
         const userInfoDisplay = document.getElementById('user-info');
@@ -473,21 +489,6 @@
         const cancelDeleteAllBtn = document.getElementById('cancel-delete-all-btn');
         const deleteAllPassword = document.getElementById('delete-all-password');
         const deleteAllError = document.getElementById('delete-all-error');
-        
-        // Referencias DOM para Edición (NUEVO)
-        const editModal = document.getElementById('edit-modal');
-        const editForm = document.getElementById('edit-form');
-        const cancelEditBtn = document.getElementById('cancel-edit-btn');
-        const editIdInput = document.getElementById('edit-id');
-        const editPrioridadSelect = document.getElementById('edit-prioridad');
-        const editNReservaInput = document.getElementById('edit-nReserva');
-        const editHabitacionInput = document.getElementById('edit-habitacion');
-        const editAreaElementoInput = document.getElementById('edit-areaElemento');
-        const editNovedadTextarea = document.getElementById('edit-novedad');
-        const editNotificadoAInput = document.getElementById('edit-notificadoA');
-        const editTurnoDisplay = document.getElementById('edit-turno');
-        const editMetadataDisplay = document.getElementById('edit-metadata');
-
 
         // Referencias DOM para Login
         const loginOverlay = document.getElementById('login-overlay');
@@ -504,7 +505,7 @@
         const sunIcon = document.getElementById('theme-sun-icon');
         const moonIcon = document.getElementById('theme-moon-icon');
 
-        // Referencias del DOM para Multiselect
+        // Referencias del DOM para Multiselect (Formulario de Creación)
         const multiselectButton = document.getElementById('multiselect-button');
         const multiselectDropdownContainer = document.getElementById('multiselect-dropdown-container');
         const multiselectSearch = document.getElementById('multiselect-search');
@@ -512,11 +513,21 @@
         const multiselectSelectAll = document.getElementById('multiselect-select-all');
         const multiselectLabel = document.getElementById('multiselect-label');
         
-        // CORRECCIÓN: Referencia para Dropdown de Prioridad
+        // Referencias del DOM para Multiselect (Formulario de Edición - NUEVO)
+        const editMultiselectButton = document.getElementById('edit-multiselect-button');
+        const editMultiselectDropdownContainer = document.getElementById('edit-multiselect-dropdown-container');
+        const editMultiselectSearch = document.getElementById('edit-multiselect-search');
+        const editMultiselectDropdown = document.getElementById('edit-multiselect-dropdown');
+        const editMultiselectSelectAll = document.getElementById('edit-multiselect-select-all');
+        const editMultiselectLabel = document.getElementById('edit-multiselect-label');
+
+        // CORRECCIÓN: Referencia para Dropdown de Prioridad (Creación)
         const prioridadSelect = document.getElementById('prioridad');
+        // CORRECCIÓN: Referencia para Dropdown de Prioridad (Edición)
+        const editPrioridadSelect = document.getElementById('editPrioridad');
 
         const multiselectOptions = [
-            'Mantenimiento', 'HSKP', 'ReservasHA', 'ReservasHE', 'Jefe Recepción', 
+            'Mantenimiento', 'HSKP', 'ReservasHA', 'ReservasHE', 'Front', 'Jefe Recepción', 
             'Seguridad', 'Parking', 'A.Públicas', 'Piscina', 'GerenciaO', 'GerenciaD'
         ];
 
@@ -606,23 +617,31 @@
             }
         }
         
-        // Lógica para colorear dropdown de Prioridad
-        function updatePrioridadColor(selectElement = prioridadSelect) {
-            if (!selectElement) return;
-            const selectedValue = selectElement.value;
-            // Limpiar clases anteriores
-            selectElement.classList.remove('prioridad-urgente', 'prioridad-alta', 'prioridad-media', 'prioridad-baja');
-            // Añadir nueva clase
+        // Lógica para colorear dropdown de Prioridad (Creación)
+        function updatePrioridadColor() {
+            if (!prioridadSelect) return;
+            const selectedValue = prioridadSelect.value;
+            prioridadSelect.classList.remove('prioridad-urgente', 'prioridad-alta', 'prioridad-media', 'prioridad-baja');
             switch (selectedValue) {
-                case 'Urgente': selectElement.classList.add('prioridad-urgente'); break;
-                case 'Alta': selectElement.classList.add('prioridad-alta'); break;
-                case 'Media': selectElement.classList.add('prioridad-media'); break;
-                case 'Baja': selectElement.classList.add('prioridad-baja'); break;
+                case 'Urgente': prioridadSelect.classList.add('prioridad-urgente'); break;
+                case 'Alta': prioridadSelect.classList.add('prioridad-alta'); break;
+                case 'Media': prioridadSelect.classList.add('prioridad-media'); break;
+                case 'Baja': prioridadSelect.classList.add('prioridad-baja'); break;
             }
         }
         
-        // Listener para el select de edición (NUEVO)
-        editPrioridadSelect.addEventListener('change', () => updatePrioridadColor(editPrioridadSelect));
+        // Lógica para colorear dropdown de Prioridad (Edición)
+        function updateEditPrioridadColor() {
+            if (!editPrioridadSelect) return;
+            const selectedValue = editPrioridadSelect.value;
+            editPrioridadSelect.classList.remove('prioridad-urgente', 'prioridad-alta', 'prioridad-media', 'prioridad-baja');
+            switch (selectedValue) {
+                case 'Urgente': editPrioridadSelect.classList.add('prioridad-urgente'); break;
+                case 'Alta': editPrioridadSelect.classList.add('prioridad-alta'); break;
+                case 'Media': editPrioridadSelect.classList.add('prioridad-media'); break;
+                case 'Baja': editPrioridadSelect.classList.add('prioridad-baja'); break;
+            }
+        }
 
 
         function updateWhatsappButton() {
@@ -704,7 +723,6 @@
             }
         }
         
-        // (La función listenForNovedades ahora llama a la nueva función de renderizado)
         function listenForNovedades() {
             const collectionPath = getCollectionPath();
             console.log(`DEBUG: Escuchando novedades en la colección: ${collectionPath}`);
@@ -736,7 +754,6 @@
             });
         }
         
-        // (Función de renderizado actualizada para incluir el botón de Editar)
         function renderNovedadesLog(novedades) {
             novedadesLog.innerHTML = '';
 
@@ -773,13 +790,14 @@
 
                 // Prioridad (badge)
                 const tdPrior = document.createElement('td');
+                tdPrior.className = 'cell-prioridad'; // Clase para control de ancho
                 const spanPrior = document.createElement('span');
                 spanPrior.className = getPriorityClasses(novedad.prioridad);
                 spanPrior.textContent = novedad.prioridad || '';
                 tdPrior.appendChild(spanPrior);
                 row.appendChild(tdPrior);
 
-                // Elemento/Tema
+                // Área/Elemento
                 const tdArea = document.createElement('td');
                 tdArea.className = 'cell-area';
                 tdArea.textContent = novedad.areaElemento || '-';
@@ -797,7 +815,7 @@
                 tdHabit.textContent = novedad.habitacion || '-';
                 row.appendChild(tdHabit);
 
-                // Novedad (usar textContent para escapar)
+                // Novedad
                 const tdNovedad = document.createElement('td');
                 tdNovedad.className = 'cell-novedad';
                 tdNovedad.textContent = novedad.novedad || '';
@@ -812,6 +830,7 @@
 
                 // Estado (select)
                 const tdEstado = document.createElement('td');
+                tdEstado.className = 'cell-estado';
                 const selectEstado = document.createElement('select');
                 selectEstado.dataset.id = novedad.id;
                 selectEstado.className = getStatusClasses(novedad.estado);
@@ -837,25 +856,25 @@
                 tdEstado.appendChild(selectEstado);
                 row.appendChild(tdEstado);
                 
-                // EDITAR (Botón - NUEVO)
+                // Editar (NUEVO)
                 const tdEdit = document.createElement('td');
-                tdEdit.className = 'cell-edit cell-borrar'; // Reusamos la clase de estilo 'cell-borrar' para centrado
+                tdEdit.className = 'cell-edit';
                 const editBtn = document.createElement('button');
                 editBtn.dataset.id = novedad.id;
-                editBtn.className = 'button-icon edit-button';
+                editBtn.className = 'button-icon edit-novedad-btn';
                 editBtn.title = 'Editar registro';
-                editBtn.innerHTML = `<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M5.433 13.917V17.5h3.583L16.5 10.917l-3.583-3.584L5.433 13.917zm13.197-6.264a.75.75 0 000-1.06l-2.062-2.062a.75.75 0 00-1.06 0l-1.41 1.41 3.584 3.584 1.41-1.41z"/>
-                    </svg>`;
+                // ÍCONO DE LÁPIZ CORREGIDO
+                editBtn.innerHTML = `<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M5.433 13.917V17.5h3.583L16.5 10.917l-3.583-3.584L5.433 13.917zm13.197-6.264a.75.75 0 000-1.06l-2.062-2.062a.75.75 0 00-1.06 0l-1.41 1.41 3.584 3.584 1.41-1.41z"/></svg>`;
                 tdEdit.appendChild(editBtn);
                 row.appendChild(tdEdit);
 
+
                 // Borrar (botón)
                 const tdDelete = document.createElement('td');
-                tdDelete.className = 'cell-delete cell-borrar';
+                tdDelete.className = 'cell-delete';
                 const delBtn = document.createElement('button');
                 delBtn.dataset.id = novedad.id;
-                delBtn.className = 'button-icon delete-button';
+                delBtn.className = 'button-icon delete-novedad-btn';
                 delBtn.title = 'Eliminar registro';
                 delBtn.innerHTML = `<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75V4.5h8V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4.5A1.25 1.25 0 0111.25 3h2.5A1.25 1.25 0 0115 4.25V5.5h-5V4.25zM3.75 6A1.75 1.75 0 002 7.75v7.5A1.75 1.75 0 003.75 17h12.5A1.75 1.75 0 0018 15.25v-7.5A1.75 1.75 0 0016.25 6H3.75zM10 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 10zM13 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0113 10zM7 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 017 10z" clip-rule="evenodd" /></svg>`;
                 tdDelete.appendChild(delBtn);
@@ -868,7 +887,7 @@
             setupTableListeners();
         }
         
-        // (Función de listeners actualizada para incluir el botón de Editar)
+        // (Función de listeners actualizada para usar Delegación)
         function setupTableListeners() {
             // Clonar el nodo para limpiar listeners anteriores (necesario para la delegación)
             const oldLog = novedadesLog;
@@ -903,113 +922,77 @@
                 const target = e.target.closest('button');
                 if (!target) return;
                 
-                if (target.classList.contains('delete-button')) {
+                if (target.classList.contains('delete-novedad-btn')) {
                     const id = target.dataset.id;
                     confirmDeleteBtn.dataset.id = id;
                     confirmModal.classList.remove('hidden');
-                } else if (target.classList.contains('edit-button')) { // NUEVO: Abrir modal de edición
+                } else if (target.classList.contains('edit-novedad-btn')) {
                     const id = target.dataset.id;
-                    openEditModal(id);
+                    const novedad = allNovedadesMap.get(id);
+                    if (novedad) {
+                        openEditModal(novedad);
+                    } else {
+                        showMessageModal("Error", "No se encontró el registro para editar.");
+                    }
                 }
             });
 
             updateWhatsappButton();
         }
         
-        // --- FUNCIONES DE EDICIÓN (NUEVO) ---
+        // --- Lógica del Modal de Edición (NUEVO) ---
+        
+        function openEditModal(novedad) {
+            editId.value = novedad.id;
+            
+            // Cargar datos estáticos/simples
+            editPrioridad.value = novedad.prioridad || 'Media';
+            editNReserva.value = novedad.nReserva || '';
+            editHabitacion.value = novedad.habitacion || '';
+            editAreaElemento.value = novedad.areaElemento || '';
+            editNovedad.value = novedad.novedad || '';
+            editCurrentShift.textContent = novedad.turno || '--:--';
 
-        function openEditModal(id) {
-            const novedad = allNovedadesMap.get(id);
-            if (!novedad) {
-                showMessageModal("Error", "Registro no encontrado para edición.");
-                return;
-            }
-
-            // 1. Cargar datos en el formulario del modal
-            editIdInput.value = novedad.id;
-            editPrioridadSelect.value = novedad.prioridad || 'Media';
-            updatePrioridadColor(editPrioridadSelect); // Aplicar color al select de edición
-            editNReservaInput.value = novedad.nReserva || '';
-            editHabitacionInput.value = novedad.habitacion || '';
-            editAreaElementoInput.value = novedad.areaElemento || '';
-            editNovedadTextarea.value = novedad.novedad || '';
-            editNotificadoAInput.value = novedad.notificadoA || '';
-            editTurnoDisplay.textContent = novedad.turno || '--:--';
-
-            // 2. Metadata (opcional)
-            const createdTimestamp = novedad.timestamp && typeof novedad.timestamp.toDate === 'function' 
-                ? formatFullTimestamp(novedad.timestamp.toDate()) : 'Fecha desconocida';
+            // Cargar Metadatos
+            const createdDate = novedad.timestamp && typeof novedad.timestamp.toDate === 'function' ? formatFullTimestamp(novedad.timestamp.toDate()) : 'Fecha Inválida';
             const user = novedad.userEmail || 'Desconocido';
-            editMetadataDisplay.textContent = `${user} el ${createdTimestamp}`;
+            editMetadata.textContent = `Creado por: ${user} el ${createdDate}`;
 
-            // 3. Mostrar Modal
+            // Aplicar color de prioridad
+            updateEditPrioridadColor(); 
+            
+            // 1. Inicializar Multiselect de Edición
+            // Limpiar selección previa y cargar opciones
+            populateEditMultiselect(); 
+            
+            // 2. Preseleccionar opciones
+            const selectedOptions = (novedad.notificadoA || '').split(', ').filter(s => s.trim() !== '');
+            editMultiselectDropdown.querySelectorAll('.edit-multiselect-option').forEach(cb => {
+                cb.checked = selectedOptions.includes(cb.value);
+            });
+
+            // 3. Actualizar etiqueta y estado
+            updateEditMultiselectLabelAndSelectAll();
+
+            // Mostrar el modal
             editModal.classList.remove('hidden');
         }
 
-        // Listener para cerrar el modal de edición
+        editForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            updateNovedad();
+        });
+
         cancelEditBtn.addEventListener('click', () => {
             editModal.classList.add('hidden');
         });
 
-        // Listener para guardar los cambios
-        editForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const id = editIdInput.value;
-            const updatedData = {
-                prioridad: editPrioridadSelect.value.trim(),
-                nReserva: editNReservaInput.value.trim() || null,
-                habitacion: editHabitacionInput.value.trim() || null,
-                areaElemento: editAreaElementoInput.value.trim(),
-                novedad: editNovedadTextarea.value.trim(),
-                notificadoA: editNotificadoAInput.value.trim() || null,
-                // No se actualizan ni el turno ni el estado/completado por aquí.
-                // Es solo para corrección de contenido.
-                ultimaEdicion: serverTimestamp(),
-                editadoPor: userEmail
-            };
-            
-            if (!updatedData.areaElemento || !updatedData.novedad) {
-                showMessageModal("Error de Formulario", "Los campos 'Elemento/Tema' y 'Detalles de la Novedad' son requeridos.");
-                return;
-            }
+        editPrioridad.addEventListener('change', updateEditPrioridadColor);
 
-            await updateNovedad(id, updatedData);
-        });
 
-        async function updateNovedad(id, data) {
-            if (!db) {
-                console.error("DEBUG: updateNovedad abortado. DB no está lista.");
-                return;
-            }
-            
-            const saveBtn = document.getElementById('save-edit-btn');
-            const originalText = saveBtn.textContent;
-            saveBtn.disabled = true;
-            saveBtn.textContent = 'Guardando...';
-
-            try {
-                const collectionPath = getCollectionPath();
-                const docRef = doc(db, collectionPath, id);
-                
-                await updateDoc(docRef, data);
-                
-                editModal.classList.add('hidden');
-                showMessageModal("Éxito", "La novedad ha sido actualizada correctamente.");
-                console.log(`DEBUG: Novedad ${id} actualizada.`);
-            } catch (error) {
-                console.error("Error al actualizar la novedad:", error);
-                showMessageModal("Error de Edición", `No se pudieron guardar los cambios. Detalles: ${error.message}`);
-            } finally {
-                saveBtn.disabled = false;
-                saveBtn.textContent = originalText;
-            }
-        }
-        // --- FIN FUNCIONES DE EDICIÓN ---
-
+        // --- Funciones CRUD ---
 
         async function addNovedad(data) {
-            // ... (código sin cambios) ...
             if (!db || !userId) {
                 console.error("DEBUG: addNovedad abortado. DB o UserID no están listos.");
                 return;
@@ -1029,7 +1012,7 @@
                 await addDoc(novedadesRef, newNovedad);
                 form.reset(); 
                 resetMultiselect();
-                updatePrioridadColor(); // CORRECCIÓN: Resetear color de prioridad
+                updatePrioridadColor(); // Resetear color de prioridad
             } catch (error) {
                 console.error("Error al añadir la novedad:", error);
                 showMessageModal("Error", `No se pudo registrar la novedad. Detalles: ${error.message}`);
@@ -1039,8 +1022,58 @@
             }
         }
         
+        async function updateNovedad() {
+            if (!db) {
+                console.error("DEBUG: updateNovedad abortado. DB no está lista.");
+                return;
+            }
+            
+            const id = editId.value;
+            if (!id) {
+                 showMessageModal("Error", "ID de novedad faltante.");
+                return;
+            }
+
+            // 1. Obtener opciones seleccionadas del multiselect de edición
+            const selectedNotificadoA = [];
+            editMultiselectDropdown.querySelectorAll('.edit-multiselect-option:checked').forEach(cb => {
+                selectedNotificadoA.push(cb.value);
+            });
+            
+            // 2. Recolectar datos del formulario
+            const updatedData = {
+                prioridad: editPrioridad.value.trim(),
+                nReserva: editNReserva.value.trim() || null,
+                habitacion: editHabitacion.value.trim() || null,
+                areaElemento: editAreaElemento.value.trim(),
+                novedad: editNovedad.value.trim(),
+                notificadoA: selectedNotificadoA.join(', ') || null,
+                
+                // Nota: No actualizamos 'turno' ni 'timestamp' al editar, solo se corrige el contenido.
+                // Guardamos quién y cuándo se editó por última vez (para auditoría)
+                lastEditedBy: userEmail,
+                lastEditedAt: serverTimestamp() 
+            };
+            
+            if (!updatedData.areaElemento || !updatedData.novedad) {
+                showMessageModal("Error de Formulario", "Los campos 'Área/Elemento' y 'Detalles de la Novedad' son requeridos.");
+                return;
+            }
+
+            try {
+                const collectionPath = getCollectionPath();
+                const docRef = doc(db, collectionPath, id);
+                await updateDoc(docRef, updatedData);
+                
+                editModal.classList.add('hidden');
+                showMessageModal("Éxito", "Novedad actualizada correctamente.");
+            } catch (error) {
+                console.error("Error al actualizar la novedad:", error);
+                showMessageModal("Error de Edición", `No se pudo actualizar la novedad. Detalles: ${error.message}`);
+            }
+        }
+
         async function updateEstado(id, estado) {
-            // ... (código actualizado para guardar quién y cuándo) ...
             if (!db) {
                 console.error("DEBUG: updateEstado abortado. DB no está lista.");
                 return;
@@ -1053,10 +1086,6 @@
                 if (estado === 'Completado') {
                     updateData.completadoEn = serverTimestamp();
                     updateData.completadoPor = userEmail;
-                } else {
-                    // Si vuelve a "En curso", reseteamos los campos de completado
-                    updateData.completadoEn = null;
-                    updateData.completadoPor = null;
                 }
                 
                 await updateDoc(docRef, updateData);
@@ -1068,7 +1097,6 @@
         }
 
         async function deleteNovedad(id) {
-            // ... (código sin cambios) ...
             if (!db) {
                 console.error("DEBUG: deleteNovedad abortado. DB no está lista.");
                 return;
@@ -1089,7 +1117,6 @@
         }
 
         async function deleteAllNovedades() {
-            // ... (código actualizado para usar batches múltiples) ...
             if (!db) {
                 showMessageModal("Error", "La base de datos no está lista.");
                 return;
@@ -1152,7 +1179,7 @@
             }
             // Actualizar color de prioridad al cambiar tema
             updatePrioridadColor();
-            updatePrioridadColor(editPrioridadSelect); // Asegurar que el select de edición también se actualice
+            updateEditPrioridadColor();
         }
 
         themeToggleBtn.addEventListener('click', () => {
@@ -1215,14 +1242,16 @@
             updateShiftDisplay();
             setInterval(updateShiftDisplay, 60000); 
             
-            // CORRECCIÓN: Listener para color de prioridad del formulario principal
-            prioridadSelect.addEventListener('change', () => updatePrioridadColor(prioridadSelect));
+            // Listeners para color de prioridad
+            prioridadSelect.addEventListener('change', updatePrioridadColor);
+            editPrioridadSelect.addEventListener('change', updateEditPrioridadColor);
+            
             // Aplicar color al inicio
-            updatePrioridadColor(prioridadSelect);
-            updatePrioridadColor(editPrioridadSelect);
+            updatePrioridadColor();
+            updateEditPrioridadColor();
         }
         
-        // 5. Manejo del envío del formulario
+        // 5. Manejo del envío del formulario (Creación)
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             const formData = new FormData(form);
@@ -1240,7 +1269,7 @@
                 turno: calcularTurno() 
             };
             if (!data.areaElemento || !data.novedad) {
-                showMessageModal("Error de Formulario", "Los campos 'Elemento/Tema' y 'Detalles de la Novedad' son requeridos.");
+                showMessageModal("Error de Formulario", "Los campos 'Área/Elemento' y 'Detalles de la Novedad' son requeridos.");
                 return;
             }
             addNovedad(data);
@@ -1329,7 +1358,7 @@
                 const qRef = query(colRef, orderBy('timestamp', 'desc'));
                 const snapshot = await getDocs(qRef);
                 const rows = [];
-                const headers = ['Turno', 'Fecha', 'Hora', 'Prioridad', 'Elemento/Tema', 'Nº Reserva', 'Habitación', 'Novedad', 'Notificado a', 'Estado', 'UserId', 'Timestamp', 'CompletadoPor', 'CompletadoEn'];
+                const headers = ['Turno', 'Fecha', 'Hora', 'Prioridad', 'Área/Elemento', 'Nº Reserva', 'Habitación', 'Novedad', 'Notificado a', 'Estado', 'UserId', 'Timestamp', 'CompletadoPor', 'CompletadoEn'];
                 rows.push(headers);
                 snapshot.forEach(docSnap => {
                     const d = docSnap.data();
@@ -1412,7 +1441,7 @@
             }
         });
 
-        // 9. Lógica del Dropdown Multiselect
+        // 9. Lógica del Dropdown Multiselect (Creación)
         function populateMultiselect() {
             multiselectDropdown.querySelectorAll('.multiselect-option-label').forEach(el => el.remove()); // Corregido el selector
             multiselectOptions.forEach(option => {
@@ -1435,7 +1464,8 @@
         }
         function updateMultiselectLabelAndSelectAll() {
             const checkedOptions = multiselectDropdown.querySelectorAll('.multiselect-option:checked');
-            const totalOptions = multiselectDropdown.querySelectorAll('.multiselect-option').length;
+            // Excluir la casilla "Seleccionar todo" de la cuenta total
+            const totalOptions = multiselectOptions.length; 
             if (checkedOptions.length === 0) {
                 multiselectLabel.textContent = 'Elige';
                 multiselectLabel.className = 'multiselect-label-default';
@@ -1473,6 +1503,9 @@
             const filter = multiselectSearch.value.toLowerCase();
             multiselectDropdown.querySelectorAll('.multiselect-option-label').forEach(container => {
                 const label = container.querySelector('span').textContent.toLowerCase();
+                // Ocultar la opción "Seleccionar todo" del filtro
+                if (container.querySelector('#multiselect-select-all')) return; 
+
                 if (label.includes(filter)) {
                     container.classList.remove('hidden');
                 } else {
@@ -1487,15 +1520,15 @@
             }
         });
         document.addEventListener('click', (e) => {
-            if (!multiselectButton.contains(e.target) && !multiselectDropdownContainer.contains(e.target)) {
+            if (!multiselectButton.contains(e.target) && !multiselectDropdownContainer.contains(e.target) && !editMultiselectButton.contains(e.target) && !editMultiselectDropdownContainer.contains(e.target)) {
                 multiselectDropdownContainer.classList.add('hidden');
+                editMultiselectDropdownContainer.classList.add('hidden');
             }
         });
         multiselectSearch.addEventListener('input', filterMultiselectOptions);
         
         // CORRECCIÓN BUG "SELECCIONAR TODO"
         multiselectSelectAll.addEventListener('change', () => {
-            // Ahora selecciona TODOS, no solo los filtrados
             const isChecked = multiselectSelectAll.checked;
             multiselectDropdown.querySelectorAll('.multiselect-option').forEach(checkbox => {
                 checkbox.checked = isChecked;
@@ -1504,7 +1537,102 @@
         });
         // FIN CORRECCIÓN
 
+        // 10. Lógica del Dropdown Multiselect (Edición - NUEVO)
+        function populateEditMultiselect() {
+            // Limpiar opciones previas (excepto la de Seleccionar todo)
+            editMultiselectDropdown.querySelectorAll('.edit-multiselect-option-label').forEach(el => {
+                // Asegurarse de no eliminar la etiqueta que contiene el "Seleccionar todo"
+                if (!el.querySelector('#edit-multiselect-select-all')) {
+                    el.remove();
+                }
+            }); 
+            
+            // Recorrer las opciones e insertarlas
+            const selectAllLabel = editMultiselectSelectAll.closest('.multiselect-option-label');
+            multiselectOptions.forEach(option => {
+                const optionId = `edit-ms-opt-${option.replace(/\s+/g, '-')}`;
+                const container = document.createElement('label');
+                container.className = 'multiselect-option-label edit-multiselect-option-label';
+                container.setAttribute('for', optionId);
+                container.innerHTML = `
+                    <input type="checkbox" id="${optionId}" value="${option}" class="multiselect-option edit-multiselect-option">
+                    <span>${option}</span>
+                `;
+                // Insertar justo después del "Seleccionar todo"
+                selectAllLabel.parentNode.insertBefore(container, selectAllLabel.nextSibling);
+            });
+            addEditOptionListeners();
+        }
+        function addEditOptionListeners() {
+            editMultiselectDropdown.querySelectorAll('.edit-multiselect-option').forEach(cb => {
+                cb.addEventListener('change', updateEditMultiselectLabelAndSelectAll);
+            });
+        }
+        function updateEditMultiselectLabelAndSelectAll() {
+            const checkedOptions = editMultiselectDropdown.querySelectorAll('.edit-multiselect-option:checked');
+            const totalOptions = multiselectOptions.length; // Usamos el array original, no contamos el "Seleccionar todo"
+            
+            if (checkedOptions.length === 0) {
+                editMultiselectLabel.textContent = 'Elige';
+                editMultiselectLabel.className = 'multiselect-label-default';
+            } else if (checkedOptions.length === totalOptions) {
+                editMultiselectLabel.textContent = 'Todos seleccionados';
+                editMultiselectLabel.className = 'multiselect-label-selected';
+            } else if (checkedOptions.length > 2) {
+                 editMultiselectLabel.textContent = `${checkedOptions.length} seleccionados`;
+                 editMultiselectLabel.className = 'multiselect-label-selected';
+            } else {
+                const labels = Array.from(checkedOptions).map(cb => cb.value).join(', ');
+                editMultiselectLabel.textContent = labels;
+                editMultiselectLabel.className = 'multiselect-label-selected';
+            }
+
+            // Manejo de la casilla "Seleccionar todo"
+            if (checkedOptions.length === totalOptions) {
+                editMultiselectSelectAll.checked = true;
+                editMultiselectSelectAll.indeterminate = false;
+            } else if (checkedOptions.length > 0) {
+                editMultiselectSelectAll.checked = false;
+                editMultiselectSelectAll.indeterminate = true;
+            } else {
+                editMultiselectSelectAll.checked = false;
+                editMultiselectSelectAll.indeterminate = false;
+            }
+        }
+        
+        editMultiselectButton.addEventListener('click', () => {
+            editMultiselectDropdownContainer.classList.toggle('hidden');
+            // Esconder el otro multiselect si está abierto
+            multiselectDropdownContainer.classList.add('hidden'); 
+            if (!editMultiselectDropdownContainer.classList.contains('hidden')) {
+                editMultiselectSearch.focus();
+            }
+        });
+        
+        editMultiselectSearch.addEventListener('input', () => {
+            const filter = editMultiselectSearch.value.toLowerCase();
+            editMultiselectDropdown.querySelectorAll('.edit-multiselect-option-label').forEach(container => {
+                const label = container.querySelector('span').textContent.toLowerCase();
+                if (label.includes(filter)) {
+                    container.classList.remove('hidden');
+                } else {
+                    container.classList.add('hidden');
+                }
+            });
+        });
+        
+        editMultiselectSelectAll.addEventListener('change', () => {
+            const isChecked = editMultiselectSelectAll.checked;
+            editMultiselectDropdown.querySelectorAll('.edit-multiselect-option').forEach(checkbox => {
+                checkbox.checked = isChecked;
+            });
+            updateEditMultiselectLabelAndSelectAll();
+        });
+
+
+        // 11. Inicializar Multiselects
         populateMultiselect();
+        populateEditMultiselect(); // Inicializar el de Edición
 
     </script>
 </body>
