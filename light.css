@@ -47,7 +47,7 @@ body {
 }
 
 .main-content {
-    max-width: 1152px;
+    max-width: 1400px; /* AUMENTADO para aprovechar mejor el espacio lateral */
     margin-left: auto;
     margin-right: auto;
 }
@@ -375,6 +375,15 @@ body {
     pointer-events: none; 
 }
 
+/* NUEVO: Estilos específicos para el botón de edición */
+.cell-edit .button-icon {
+    color: var(--color-acento-celeste); /* Color celeste para el ícono de editar */
+    border-color: #A7C5F3;
+}
+.cell-edit .button-icon:hover {
+    background-color: var(--color-acento-celeste-oscuro);
+}
+
 
 /* Spinner de carga */
 .loading-spinner {
@@ -528,7 +537,9 @@ body {
 }
 
 .novedades-table {
-    min-width: 100%;
+    /* Mínimo para asegurar que la tabla no sea demasiado estrecha */
+    min-width: 1200px; 
+    width: 100%;
     border-collapse: collapse;
 }
 
@@ -559,28 +570,58 @@ body {
 .novedades-table td {
     padding: 0.75rem;
     /* white-space: nowrap; (REMOVIDO PARA CORRECCIÓN) */
-    font-size: 0.875rem;
+    font-size: 0.775rem;
     border-bottom: 1px solid var(--color-borde-translucido);
 }
 
-.cell-checkbox { color: var(--color-texto-principal); }
-.cell-turno { font-weight: 500; color: var(--color-texto-principal); white-space: nowrap; }
-.cell-fecha { color: var(--color-texto-secundario); white-space: nowrap; }
-.cell-fecha .hora { font-size: 0.75rem; color: #6B7280; }
-.cell-area { color: var(--color-texto-secundario); white-space: nowrap; }
-.cell-reserva { color: var(--color-texto-secundario); white-space: nowrap; }
-.cell-habitacion { font-weight: 600; color: var(--color-texto-principal); white-space: nowrap; }
+/* --- ANCHOS DE COLUMNAS FIJOS/OPTIMIZADOS --- */
 
-/* --- CORRECCIÓN: Permitir salto de línea en celdas --- */
+/* Encabezados para referencias rápidas:
+   <th>Sel.</th> (Checkbox)
+   <th>Turno</th> (Mañana, Tarde, Noche)
+   <th>Fecha</th> (dd/mm/yyyy - hh:mm)
+   <th>Prioridad</th> (Badge)
+   <th>Área/Elemento</th> (Texto corto/medio)
+   <th>Nº Reserva</th> (Texto corto/medio)
+   <th>Habit.</th> (Número corto)
+   <th>Novedad</th> (Texto largo - MÁXIMO ANCHO)
+   <th>Notificado a</th> (Texto corto/medio)
+   <th>Estado</th> (Select)
+   <th>Editar</th> (Botón)
+   <th>Borrar</th> (Botón)
+*/
+
+.novedades-table th:nth-child(1), .cell-checkbox { width: 30px; min-width: 30px; text-align: center;} /* Sel. */
+.novedades-table th:nth-child(2), .cell-turno { width: 75px; min-width: 75px; } /* Turno */
+.novedades-table th:nth-child(3), .cell-fecha { width: 90px; min-width: 90px; } /* Fecha */
+.novedades-table th:nth-child(4), .cell-prioridad { width: 90px; min-width: 90px; } /* Prioridad */
+.novedades-table th:nth-child(5), .cell-area { width: 140px; min-width: 140px; } /* Área/Elemento (COMPRIMIDO) */
+.novedades-table th:nth-child(6), .cell-reserva { width: 100px; min-width: 100px; } /* Nº Reserva */
+.novedades-table th:nth-child(7), .cell-habitacion { width: 70px; min-width: 70px; } /* Habit. */
+.novedades-table th:nth-child(9), .cell-notificado { width: 150px; min-width: 150px; } /* Notificado a */
+.novedades-table th:nth-child(10), .cell-estado { width: 100px; min-width: 100px; } /* Estado */
+.novedades-table th:nth-child(11), .cell-edit { width: 50px; min-width: 50px; } /* Editar */
+.novedades-table th:nth-child(12), .cell-delete { width: 50px; min-width: 50px; } /* Borrar */
+
+/* Columna de Novedad (el resto del espacio disponible) */
+.novedades-table th:nth-child(8), .cell-novedad { 
+    max-width: 500px; /* Aumentado de 384px a 500px */
+    width: auto; /* Dejar que tome el espacio sobrante */
+    min-width: 150px; 
+    white-space: normal;
+    word-wrap: break-word;
+}
 .cell-novedad {
     color: var(--color-texto-principal);
-    max-width: 24rem; /* 384px */
-    min-width: 12rem; /* 192px */
     white-space: normal; /* PERMITIR SALTO DE LÍNEA */
-    word-wrap: break-word; /* Romper palabras largas si es necesario */
+    word-wrap: break-word; 
     cursor: pointer;
     transition: all 0.3s;
 }
+
+/* --- FIN ANCHOS OPTIMIZADOS --- */
+
+
 .cell-novedad:hover {
     background-color: var(--color-superficie-hover);
     box-shadow: 0 4px 10px rgba(0,0,0, 0.05);
@@ -588,17 +629,26 @@ body {
 
 .cell-notificado { 
     color: var(--color-texto-secundario); 
-    max-width: 15rem; /* 240px */
     white-space: normal; /* PERMITIR SALTO DE LÍNEA */
     word-wrap: break-word;
 }
 /* --- FIN CORRECCIÓN --- */
 
 
-.cell-borrar {
+/* Nueva celda de edición + celda de borrar */
+.cell-edit, .cell-delete {
     text-align: center;
+    /* width ya se definió arriba */
 }
-/* .button-icon ya está definido arriba */
+
+.cell-delete .button-icon {
+    /* Color rojo para el botón de borrar */
+    color: var(--color-acento-rojo); 
+    border-color: var(--color-borde-translucido);
+}
+.cell-delete .button-icon:hover {
+    background-color: var(--color-acento-rojo-oscuro);
+}
 
 
 /* --- Badges y Selects de Estado/Prioridad --- */
