@@ -84,6 +84,18 @@
             #company-logo { width: 36px; }
             .main-title { font-size: 1.125rem; }
         }
+        
+        /* Estilos específicos para el modal de edición */
+        #edit-modal .modal-container {
+             max-width: 40rem; /* Hacemos el modal más ancho para el formulario */
+        }
+        #edit-form .form-grid {
+             grid-template-columns: repeat(2, 1fr); /* Dos columnas en el modal */
+        }
+        #edit-form .form-group-full {
+             grid-column: 1 / -1;
+        }
+        
     </style>
 </head>
 <body class="bg-fondo">
@@ -170,10 +182,10 @@
                     <input type="text" id="habitacion" name="habitacion" class="form-input" placeholder="Ej: 319">
                 </div>
 
-                <!-- Área/Elemento -->
+                <!-- Elemento/Tema -->
                 <div class="form-group">
-                    <label for="areaElemento" class="form-label">Área/Elemento (Requerido)</label>
-                    <input type="text" id="areaElemento" name="areaElemento" required class="form-input" placeholder="Ej: Puerta - Mantenimiento">
+                    <label for="areaElemento" class="form-label">Elemento/Tema(Requerido)</label>
+                    <input type="text" id="areaElemento" name="areaElemento" required class="form-input" placeholder="Ej: Puerta/Objeto Perdido">
                 </div>
 
                 <!-- Asignado / Notificado a (Multiselect) -->
@@ -263,12 +275,13 @@
                             <th>Turno</th>
                             <th>Fecha</th>
                             <th>Prioridad</th>
-                            <th>Área/Elemento</th>
+                            <th>Elemento/Tema</th>
                             <th>Nº Reserva</th>
                             <th>Habit.</th>
                             <th>Novedad</th>
                             <th>Notificado a</th>
                             <th>Estado</th>
+                            <th>Editar</th> <!-- Nuevo encabezado -->
                             <th>Borrar</th>
                         </tr>
                     </thead>
@@ -280,6 +293,81 @@
         </div>
 
     </div>
+
+    <!-- Modal de Edición de Novedad (NUEVO) -->
+    <div id="edit-modal" class="modal-overlay hidden">
+        <div class="modal-container card">
+            <h3 class="modal-title">Editar Novedad</h3>
+            <form id="edit-form" class="form-grid">
+                
+                <input type="hidden" id="edit-id" name="id">
+
+                <!-- Prioridad -->
+                <div class="form-group">
+                    <label for="edit-prioridad" class="form-label">Prioridad</label>
+                    <select id="edit-prioridad" name="prioridad" required class="form-select">
+                        <option class="prioridad-urgente-op" value="Urgente">Urgente</option>
+                        <option class="prioridad-alta-op" value="Alta">Alta</option>
+                        <option class="prioridad-media-op" value="Media">Media</option>
+                        <option class="prioridad-baja-op" value="Baja">Baja</option>
+                    </select>
+                </div>
+
+                <!-- Nº de Reserva -->
+                <div class="form-group">
+                    <label for="edit-nReserva" class="form-label">Nº de Reserva</label>
+                    <input type="text" id="edit-nReserva" name="nReserva" class="form-input" placeholder="Ej: 25016-171152">
+                </div>
+
+                <!-- Habitación -->
+                <div class="form-group">
+                    <label for="edit-habitacion" class="form-label">Habitación</label>
+                    <input type="text" id="edit-habitacion" name="habitacion" class="form-input" placeholder="Ej: 319">
+                </div>
+
+                <!-- Elemento/Tema -->
+                <div class="form-group">
+                    <label for="edit-areaElemento" class="form-label">Elemento/Tema (Requerido)</label>
+                    <input type="text" id="edit-areaElemento" name="areaElemento" required class="form-input" placeholder="Ej: Puerta - Mantenimiento">
+                </div>
+
+                <!-- Turno (Solo lectura, ya que se establece al crear) -->
+                <div class="form-group">
+                    <label class="form-label">Turno (Original)</label>
+                    <div id="edit-turno" class="turno-display">--:--</div>
+                </div>
+
+                <!-- Asignado / Notificado a (Campo de texto simple para edición, ya que el multiselect es complejo para el modal) -->
+                <div class="form-group">
+                    <label for="edit-notificadoA" class="form-label">Notificado a</label>
+                    <input type="text" id="edit-notificadoA" name="notificadoA" class="form-input" placeholder="Ej: Mantenimiento, HSKP">
+                </div>
+
+                <!-- Detalles de la Novedad -->
+                <div class="form-group form-group-full">
+                    <label for="edit-novedad" class="form-label">Detalles de la Novedad (Requerido)</label>
+                    <textarea id="edit-novedad" name="novedad" rows="4" required class="form-textarea" placeholder="Ej: Problemas con la tarjeta de acceso..."></textarea>
+                </div>
+                
+                <!-- Info de creación/actualización (opcional) -->
+                <div class="form-group form-group-full">
+                    <p class="form-label">Creado por: <span id="edit-metadata"></span></p>
+                </div>
+
+
+                <!-- Acciones del Formulario -->
+                <div class="form-actions">
+                    <button type="button" id="cancel-edit-btn" class="button button-gray">
+                        Cancelar
+                    </button>
+                    <button type="submit" id="save-edit-btn" class="button button-primary">
+                        Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 
     <!-- Modal de Mensajes -->
     <div id="message-modal" class="modal-overlay hidden">
@@ -385,6 +473,21 @@
         const cancelDeleteAllBtn = document.getElementById('cancel-delete-all-btn');
         const deleteAllPassword = document.getElementById('delete-all-password');
         const deleteAllError = document.getElementById('delete-all-error');
+        
+        // Referencias DOM para Edición (NUEVO)
+        const editModal = document.getElementById('edit-modal');
+        const editForm = document.getElementById('edit-form');
+        const cancelEditBtn = document.getElementById('cancel-edit-btn');
+        const editIdInput = document.getElementById('edit-id');
+        const editPrioridadSelect = document.getElementById('edit-prioridad');
+        const editNReservaInput = document.getElementById('edit-nReserva');
+        const editHabitacionInput = document.getElementById('edit-habitacion');
+        const editAreaElementoInput = document.getElementById('edit-areaElemento');
+        const editNovedadTextarea = document.getElementById('edit-novedad');
+        const editNotificadoAInput = document.getElementById('edit-notificadoA');
+        const editTurnoDisplay = document.getElementById('edit-turno');
+        const editMetadataDisplay = document.getElementById('edit-metadata');
+
 
         // Referencias DOM para Login
         const loginOverlay = document.getElementById('login-overlay');
@@ -503,20 +606,24 @@
             }
         }
         
-        // CORRECCIÓN: Lógica para colorear dropdown de Prioridad
-        function updatePrioridadColor() {
-            if (!prioridadSelect) return;
-            const selectedValue = prioridadSelect.value;
+        // Lógica para colorear dropdown de Prioridad
+        function updatePrioridadColor(selectElement = prioridadSelect) {
+            if (!selectElement) return;
+            const selectedValue = selectElement.value;
             // Limpiar clases anteriores
-            prioridadSelect.classList.remove('prioridad-urgente', 'prioridad-alta', 'prioridad-media', 'prioridad-baja');
+            selectElement.classList.remove('prioridad-urgente', 'prioridad-alta', 'prioridad-media', 'prioridad-baja');
             // Añadir nueva clase
             switch (selectedValue) {
-                case 'Urgente': prioridadSelect.classList.add('prioridad-urgente'); break;
-                case 'Alta': prioridadSelect.classList.add('prioridad-alta'); break;
-                case 'Media': prioridadSelect.classList.add('prioridad-media'); break;
-                case 'Baja': prioridadSelect.classList.add('prioridad-baja'); break;
+                case 'Urgente': selectElement.classList.add('prioridad-urgente'); break;
+                case 'Alta': selectElement.classList.add('prioridad-alta'); break;
+                case 'Media': selectElement.classList.add('prioridad-media'); break;
+                case 'Baja': selectElement.classList.add('prioridad-baja'); break;
             }
         }
+        
+        // Listener para el select de edición (NUEVO)
+        editPrioridadSelect.addEventListener('change', () => updatePrioridadColor(editPrioridadSelect));
+
 
         function updateWhatsappButton() {
             const count = selectedNovedadIds.size;
@@ -629,7 +736,7 @@
             });
         }
         
-        // (Función de renderizado actualizada para usar textContent y DOM seguro)
+        // (Función de renderizado actualizada para incluir el botón de Editar)
         function renderNovedadesLog(novedades) {
             novedadesLog.innerHTML = '';
 
@@ -672,7 +779,7 @@
                 tdPrior.appendChild(spanPrior);
                 row.appendChild(tdPrior);
 
-                // Área/Elemento
+                // Elemento/Tema
                 const tdArea = document.createElement('td');
                 tdArea.className = 'cell-area';
                 tdArea.textContent = novedad.areaElemento || '-';
@@ -729,13 +836,26 @@
                 selectEstado.appendChild(optComp);
                 tdEstado.appendChild(selectEstado);
                 row.appendChild(tdEstado);
+                
+                // EDITAR (Botón - NUEVO)
+                const tdEdit = document.createElement('td');
+                tdEdit.className = 'cell-edit cell-borrar'; // Reusamos la clase de estilo 'cell-borrar' para centrado
+                const editBtn = document.createElement('button');
+                editBtn.dataset.id = novedad.id;
+                editBtn.className = 'button-icon edit-button';
+                editBtn.title = 'Editar registro';
+                editBtn.innerHTML = `<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M5.433 13.917V17.5h3.583L16.5 10.917l-3.583-3.584L5.433 13.917zm13.197-6.264a.75.75 0 000-1.06l-2.062-2.062a.75.75 0 00-1.06 0l-1.41 1.41 3.584 3.584 1.41-1.41z"/>
+                    </svg>`;
+                tdEdit.appendChild(editBtn);
+                row.appendChild(tdEdit);
 
                 // Borrar (botón)
                 const tdDelete = document.createElement('td');
-                tdDelete.className = 'cell-borrar';
+                tdDelete.className = 'cell-delete cell-borrar';
                 const delBtn = document.createElement('button');
                 delBtn.dataset.id = novedad.id;
-                delBtn.className = 'button-icon';
+                delBtn.className = 'button-icon delete-button';
                 delBtn.title = 'Eliminar registro';
                 delBtn.innerHTML = `<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75V4.5h8V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4.5A1.25 1.25 0 0111.25 3h2.5A1.25 1.25 0 0115 4.25V5.5h-5V4.25zM3.75 6A1.75 1.75 0 002 7.75v7.5A1.75 1.75 0 003.75 17h12.5A1.75 1.75 0 0018 15.25v-7.5A1.75 1.75 0 0016.25 6H3.75zM10 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 10zM13 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0113 10zM7 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 017 10z" clip-rule="evenodd" /></svg>`;
                 tdDelete.appendChild(delBtn);
@@ -748,7 +868,7 @@
             setupTableListeners();
         }
         
-        // (Función de listeners actualizada para usar Delegación)
+        // (Función de listeners actualizada para incluir el botón de Editar)
         function setupTableListeners() {
             // Clonar el nodo para limpiar listeners anteriores (necesario para la delegación)
             const oldLog = novedadesLog;
@@ -783,15 +903,110 @@
                 const target = e.target.closest('button');
                 if (!target) return;
                 
-                if (target.classList.contains('button-icon')) {
+                if (target.classList.contains('delete-button')) {
                     const id = target.dataset.id;
                     confirmDeleteBtn.dataset.id = id;
                     confirmModal.classList.remove('hidden');
+                } else if (target.classList.contains('edit-button')) { // NUEVO: Abrir modal de edición
+                    const id = target.dataset.id;
+                    openEditModal(id);
                 }
             });
 
             updateWhatsappButton();
         }
+        
+        // --- FUNCIONES DE EDICIÓN (NUEVO) ---
+
+        function openEditModal(id) {
+            const novedad = allNovedadesMap.get(id);
+            if (!novedad) {
+                showMessageModal("Error", "Registro no encontrado para edición.");
+                return;
+            }
+
+            // 1. Cargar datos en el formulario del modal
+            editIdInput.value = novedad.id;
+            editPrioridadSelect.value = novedad.prioridad || 'Media';
+            updatePrioridadColor(editPrioridadSelect); // Aplicar color al select de edición
+            editNReservaInput.value = novedad.nReserva || '';
+            editHabitacionInput.value = novedad.habitacion || '';
+            editAreaElementoInput.value = novedad.areaElemento || '';
+            editNovedadTextarea.value = novedad.novedad || '';
+            editNotificadoAInput.value = novedad.notificadoA || '';
+            editTurnoDisplay.textContent = novedad.turno || '--:--';
+
+            // 2. Metadata (opcional)
+            const createdTimestamp = novedad.timestamp && typeof novedad.timestamp.toDate === 'function' 
+                ? formatFullTimestamp(novedad.timestamp.toDate()) : 'Fecha desconocida';
+            const user = novedad.userEmail || 'Desconocido';
+            editMetadataDisplay.textContent = `${user} el ${createdTimestamp}`;
+
+            // 3. Mostrar Modal
+            editModal.classList.remove('hidden');
+        }
+
+        // Listener para cerrar el modal de edición
+        cancelEditBtn.addEventListener('click', () => {
+            editModal.classList.add('hidden');
+        });
+
+        // Listener para guardar los cambios
+        editForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const id = editIdInput.value;
+            const updatedData = {
+                prioridad: editPrioridadSelect.value.trim(),
+                nReserva: editNReservaInput.value.trim() || null,
+                habitacion: editHabitacionInput.value.trim() || null,
+                areaElemento: editAreaElementoInput.value.trim(),
+                novedad: editNovedadTextarea.value.trim(),
+                notificadoA: editNotificadoAInput.value.trim() || null,
+                // No se actualizan ni el turno ni el estado/completado por aquí.
+                // Es solo para corrección de contenido.
+                ultimaEdicion: serverTimestamp(),
+                editadoPor: userEmail
+            };
+            
+            if (!updatedData.areaElemento || !updatedData.novedad) {
+                showMessageModal("Error de Formulario", "Los campos 'Elemento/Tema' y 'Detalles de la Novedad' son requeridos.");
+                return;
+            }
+
+            await updateNovedad(id, updatedData);
+        });
+
+        async function updateNovedad(id, data) {
+            if (!db) {
+                console.error("DEBUG: updateNovedad abortado. DB no está lista.");
+                return;
+            }
+            
+            const saveBtn = document.getElementById('save-edit-btn');
+            const originalText = saveBtn.textContent;
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Guardando...';
+
+            try {
+                const collectionPath = getCollectionPath();
+                const docRef = doc(db, collectionPath, id);
+                
+                await updateDoc(docRef, data);
+                
+                editModal.classList.add('hidden');
+                showMessageModal("Éxito", "La novedad ha sido actualizada correctamente.");
+                console.log(`DEBUG: Novedad ${id} actualizada.`);
+            } catch (error) {
+                console.error("Error al actualizar la novedad:", error);
+                showMessageModal("Error de Edición", `No se pudieron guardar los cambios. Detalles: ${error.message}`);
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = originalText;
+            }
+        }
+        // --- FIN FUNCIONES DE EDICIÓN ---
+
 
         async function addNovedad(data) {
             // ... (código sin cambios) ...
@@ -838,6 +1053,10 @@
                 if (estado === 'Completado') {
                     updateData.completadoEn = serverTimestamp();
                     updateData.completadoPor = userEmail;
+                } else {
+                    // Si vuelve a "En curso", reseteamos los campos de completado
+                    updateData.completadoEn = null;
+                    updateData.completadoPor = null;
                 }
                 
                 await updateDoc(docRef, updateData);
@@ -933,6 +1152,7 @@
             }
             // Actualizar color de prioridad al cambiar tema
             updatePrioridadColor();
+            updatePrioridadColor(editPrioridadSelect); // Asegurar que el select de edición también se actualice
         }
 
         themeToggleBtn.addEventListener('click', () => {
@@ -995,10 +1215,11 @@
             updateShiftDisplay();
             setInterval(updateShiftDisplay, 60000); 
             
-            // CORRECCIÓN: Listener para color de prioridad
-            prioridadSelect.addEventListener('change', updatePrioridadColor);
+            // CORRECCIÓN: Listener para color de prioridad del formulario principal
+            prioridadSelect.addEventListener('change', () => updatePrioridadColor(prioridadSelect));
             // Aplicar color al inicio
-            updatePrioridadColor();
+            updatePrioridadColor(prioridadSelect);
+            updatePrioridadColor(editPrioridadSelect);
         }
         
         // 5. Manejo del envío del formulario
@@ -1019,7 +1240,7 @@
                 turno: calcularTurno() 
             };
             if (!data.areaElemento || !data.novedad) {
-                showMessageModal("Error de Formulario", "Los campos 'Área/Elemento' y 'Detalles de la Novedad' son requeridos.");
+                showMessageModal("Error de Formulario", "Los campos 'Elemento/Tema' y 'Detalles de la Novedad' son requeridos.");
                 return;
             }
             addNovedad(data);
@@ -1108,7 +1329,7 @@
                 const qRef = query(colRef, orderBy('timestamp', 'desc'));
                 const snapshot = await getDocs(qRef);
                 const rows = [];
-                const headers = ['Turno', 'Fecha', 'Hora', 'Prioridad', 'Área/Elemento', 'Nº Reserva', 'Habitación', 'Novedad', 'Notificado a', 'Estado', 'UserId', 'Timestamp', 'CompletadoPor', 'CompletadoEn'];
+                const headers = ['Turno', 'Fecha', 'Hora', 'Prioridad', 'Elemento/Tema', 'Nº Reserva', 'Habitación', 'Novedad', 'Notificado a', 'Estado', 'UserId', 'Timestamp', 'CompletadoPor', 'CompletadoEn'];
                 rows.push(headers);
                 snapshot.forEach(docSnap => {
                     const d = docSnap.data();
@@ -1285,6 +1506,3 @@
 
         populateMultiselect();
 
-    </script>
-</body>
-</html>
