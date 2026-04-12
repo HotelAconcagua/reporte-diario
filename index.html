@@ -240,6 +240,59 @@
         <div class="card">
             <h2 class="card-title">Novedades Registradas</h2>
             
+            <!-- SECCIÓN DE FILTROS -->
+            <div class="filters-section" style="margin-bottom: 1.5rem; border-bottom: 1px solid rgba(128, 128, 128, 0.3); padding-bottom: 1.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                     <h3 class="form-label" style="font-size: 1.05rem; margin: 0; display: flex; align-items: center; gap: 0.5rem; font-weight: bold;">
+                        <svg class="icon" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd" />
+                        </svg>
+                        Filtros
+                    </h3>
+                    <button type="button" id="clear-filters-btn" class="button button-gray" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">
+                        Limpiar Filtros
+                    </button>
+                </div>
+                
+                <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.75rem;">
+                    <div class="form-group">
+                        <label for="filter-turno" class="form-label" style="font-size: 0.8rem;">Turno</label>
+                        <select id="filter-turno" class="form-select" style="padding: 0.4rem; font-size: 0.9rem;">
+                            <option value="">Todos</option>
+                            <option value="Mañana">Mañana</option>
+                            <option value="Tarde">Tarde</option>
+                            <option value="Noche">Noche</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="filter-fecha" class="form-label" style="font-size: 0.8rem;">Fecha</label>
+                        <input type="date" id="filter-fecha" class="form-input" style="padding: 0.4rem; font-size: 0.9rem;">
+                    </div>
+                    <div class="form-group">
+                        <label for="filter-prioridad" class="form-label" style="font-size: 0.8rem;">Prioridad</label>
+                        <select id="filter-prioridad" class="form-select" style="padding: 0.4rem; font-size: 0.9rem;">
+                            <option value="">Todas</option>
+                            <option value="Urgente">Urgente</option>
+                            <option value="Alta">Alta</option>
+                            <option value="Media">Media</option>
+                            <option value="Baja">Baja</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="filter-estado" class="form-label" style="font-size: 0.8rem;">Estado</label>
+                        <select id="filter-estado" class="form-select" style="padding: 0.4rem; font-size: 0.9rem;">
+                            <option value="">Todos</option>
+                            <option value="En curso">En curso</option>
+                            <option value="Completado">Completado</option>
+                        </select>
+                    </div>
+                    <div class="form-group form-group-full">
+                        <label for="filter-text" class="form-label" style="font-size: 0.8rem;">Búsqueda (Área, Reserva, Habit., Novedad, Notificado)</label>
+                        <input type="text" id="filter-text" class="form-input" placeholder="Escribe para buscar..." style="padding: 0.4rem; font-size: 0.9rem;">
+                    </div>
+                </div>
+            </div>
+
             <div class="table-actions">
                 <div class="table-buttons-container">
                     <button id="whatsapp-copy-button" class="button button-green" disabled>
@@ -482,7 +535,6 @@
         const editCurrentShift = document.getElementById('editCurrentShift');
         const editMetadata = document.getElementById('edit-metadata');
 
-
         let novedadesLog = document.getElementById('novedades-log');
         const currentShiftDisplay = document.getElementById('current-shift');
         const userInfoDisplay = document.getElementById('user-info');
@@ -516,7 +568,7 @@
         const sunIcon = document.getElementById('theme-sun-icon');
         const moonIcon = document.getElementById('theme-moon-icon');
 
-        // Referencias del DOM para Multiselect (Formulario de Creación)
+        // Referencias DOM para Multiselect (Formulario de Creación)
         const multiselectButton = document.getElementById('multiselect-button');
         const multiselectDropdownContainer = document.getElementById('multiselect-dropdown-container');
         const multiselectSearch = document.getElementById('multiselect-search');
@@ -524,7 +576,7 @@
         const multiselectSelectAll = document.getElementById('multiselect-select-all');
         const multiselectLabel = document.getElementById('multiselect-label');
         
-        // Referencias del DOM para Multiselect (Formulario de Edición - NUEVO)
+        // Referencias DOM para Multiselect (Formulario de Edición)
         const editMultiselectButton = document.getElementById('edit-multiselect-button');
         const editMultiselectDropdownContainer = document.getElementById('edit-multiselect-dropdown-container');
         const editMultiselectSearch = document.getElementById('edit-multiselect-search');
@@ -532,16 +584,24 @@
         const editMultiselectSelectAll = document.getElementById('edit-multiselect-select-all');
         const editMultiselectLabel = document.getElementById('edit-multiselect-label');
 
-        // CORRECCIÓN: Referencia para Dropdown de Prioridad (Creación)
+        // Referencias DOM para Dropdown de Prioridad
         const prioridadSelect = document.getElementById('prioridad');
-        // CORRECCIÓN: Referencia para Dropdown de Prioridad (Edición)
         const editPrioridadSelect = document.getElementById('editPrioridad');
+
+        // Referencias DOM para los Filtros (NUEVO)
+        const filterTurno = document.getElementById('filter-turno');
+        const filterFecha = document.getElementById('filter-fecha');
+        const filterPrioridad = document.getElementById('filter-prioridad');
+        const filterEstado = document.getElementById('filter-estado');
+        const filterText = document.getElementById('filter-text');
+        const clearFiltersBtn = document.getElementById('clear-filters-btn');
 
         const multiselectOptions = [
             'Mantenimiento', 'HSKP', 'ReservasHA', 'ReservasHE', 'Front', 'Jefe Recepción', 
             'Seguridad', 'Parking', 'A.Públicas', 'Piscina', 'GerenciaO', 'GerenciaD'
         ];
 
+        let currentNovedades = []; // Array que almacena los datos reales extraídos de Firebase antes de filtrar
         let allNovedadesMap = new Map(); 
         let selectedNovedadIds = new Set(); 
         
@@ -576,13 +636,11 @@
             }
         }
 
-        // Actualiza el display del turno actual en el DOM
         function updateShiftDisplay() {
             try {
                 const turno = calcularTurno();
                 if (currentShiftDisplay) {
                     currentShiftDisplay.textContent = turno;
-                    // Mostrar hora exacta como tooltip para contexto
                     const now = new Date();
                     currentShiftDisplay.title = `Última actualización: ${now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`;
                 }
@@ -628,7 +686,6 @@
             }
         }
         
-        // Lógica para colorear dropdown de Prioridad (Creación)
         function updatePrioridadColor() {
             if (!prioridadSelect) return;
             const selectedValue = prioridadSelect.value;
@@ -641,7 +698,6 @@
             }
         }
         
-        // Lógica para colorear dropdown de Prioridad (Edición)
         function updateEditPrioridadColor() {
             if (!editPrioridadSelect) return;
             const selectedValue = editPrioridadSelect.value;
@@ -653,7 +709,6 @@
                 case 'Baja': editPrioridadSelect.classList.add('prioridad-baja'); break;
             }
         }
-
 
         function updateWhatsappButton() {
             const count = selectedNovedadIds.size;
@@ -676,8 +731,6 @@
         // --- Lógica de la Base de Datos y Autenticación ---
 
         async function setupAuthAndDB() {
-            console.log("--- DEBUG: Iniciando setupAuthAndDB ---");
-            console.log(`DEBUG: Entorno Canvas detectado: ${isCanvasEnvironment}`);
             if (isCanvasEnvironment) {
                 console.log("DEBUG: Usando configuración de Firebase de Canvas.");
             } else {
@@ -691,14 +744,11 @@
                 db = getFirestore(app);
                 await setPersistence(auth, browserSessionPersistence);
                 
-                // onAuthStateChanged ahora maneja TODA la lógica post-autenticación
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
-                        // Usuario ha iniciado sesión
                         userId = user.uid;
                         userEmail = user.email;
                         
-                        // Ocultar login, mostrar app
                         loginOverlay.classList.add('hidden');
                         mainContent.classList.remove('hidden');
 
@@ -707,19 +757,15 @@
                         submitButton.disabled = false;
                         
                         listenForNovedades(); 
-                        initializeAppComponents(); // Iniciar turno, etc.
+                        initializeAppComponents(); 
                         
-                        console.log(`Autenticado como: ${userEmail}`);
                     } else {
-                        // Usuario ha cerrado sesión o no está logueado
                         userId = null;
                         userEmail = null;
                         
-                        // Mostrar login, ocultar app
                         loginOverlay.classList.remove('hidden');
                         mainContent.classList.add('hidden');
                         
-                        console.warn("DEBUG: Estado de autenticación: Desconectado.");
                         userInfoDisplay.innerHTML = `<strong>Error de conexión</strong>`;
                         userInfoDisplay.className = 'user-info-badge status-error';
                         submitButton.disabled = true;
@@ -736,23 +782,22 @@
         
         function listenForNovedades() {
             const collectionPath = getCollectionPath();
-            console.log(`DEBUG: Escuchando novedades en la colección: ${collectionPath}`);
             const novedadesRef = collection(db, collectionPath);
             const q = query(novedadesRef, orderBy('timestamp', 'desc'));
             
             onSnapshot(q, (snapshot) => {
-                const novedades = [];
+                currentNovedades = [];
                 allNovedadesMap.clear(); 
                 snapshot.forEach(doc => {
                     const data = { id: doc.id, ...doc.data() };
-                    novedades.push(data);
+                    currentNovedades.push(data);
                     allNovedadesMap.set(doc.id, data); 
                 });
-                console.log(`DEBUG: Snapshot recibido, ${snapshot.size} documentos cargados.`);
 
-                renderNovedadesLog(novedades);
+                // Llamar a la función de filtrado (la cual a su vez renderiza)
+                applyFiltersAndRender();
 
-                if (novedades.length === 0) {
+                if (currentNovedades.length === 0) {
                     exportButton.disabled = true; 
                     deleteAllButton.disabled = true;
                 } else {
@@ -765,6 +810,77 @@
             });
         }
         
+        // NUEVA FUNCIÓN PARA APLICAR LOS FILTROS
+        function applyFiltersAndRender() {
+            const valTurno = filterTurno.value;
+            const valFecha = filterFecha.value; // Formato YYYY-MM-DD
+            const valPrioridad = filterPrioridad.value;
+            const valEstado = filterEstado.value;
+            const valText = filterText.value.toLowerCase().trim();
+
+            const filteredData = currentNovedades.filter(novedad => {
+                // Filtro Turno
+                if (valTurno && novedad.turno !== valTurno) return false;
+                
+                // Filtro Prioridad
+                if (valPrioridad && novedad.prioridad !== valPrioridad) return false;
+                
+                // Filtro Estado
+                if (valEstado && novedad.estado !== valEstado) return false;
+
+                // Filtro Fecha (Comparamos con formato YYYY-MM-DD local)
+                if (valFecha) {
+                    const tsDate = novedad.timestamp && typeof novedad.timestamp.toDate === 'function' ? novedad.timestamp.toDate() : null;
+                    if (tsDate) {
+                        const year = tsDate.getFullYear();
+                        const month = String(tsDate.getMonth() + 1).padStart(2, '0');
+                        const day = String(tsDate.getDate()).padStart(2, '0');
+                        const localDateStr = `${year}-${month}-${day}`;
+                        
+                        if (localDateStr !== valFecha) return false;
+                    } else {
+                        return false; // Si no hay timestamp válido no coincide la fecha
+                    }
+                }
+
+                // Filtro Búsqueda Libre de Texto (en múltiples columnas)
+                if (valText) {
+                    const fullTextSearch = [
+                        novedad.areaElemento || '',
+                        novedad.nReserva || '',
+                        novedad.habitacion || '',
+                        novedad.novedad || '',
+                        novedad.notificadoA || ''
+                    ].join(' ').toLowerCase();
+
+                    if (!fullTextSearch.includes(valText)) return false;
+                }
+
+                return true;
+            });
+
+            // Renderizamos solo los datos que superan los filtros
+            renderNovedadesLog(filteredData);
+        }
+
+        // Listeners para ejecutar el filtrado en cuanto cambie algún input
+        filterTurno.addEventListener('change', applyFiltersAndRender);
+        filterFecha.addEventListener('change', applyFiltersAndRender);
+        filterPrioridad.addEventListener('change', applyFiltersAndRender);
+        filterEstado.addEventListener('change', applyFiltersAndRender);
+        filterText.addEventListener('input', applyFiltersAndRender);
+
+        // Limpiar Filtros
+        clearFiltersBtn.addEventListener('click', () => {
+            filterTurno.value = '';
+            filterFecha.value = '';
+            filterPrioridad.value = '';
+            filterEstado.value = '';
+            filterText.value = '';
+            applyFiltersAndRender();
+        });
+
+
         function renderNovedadesLog(novedades) {
             novedadesLog.innerHTML = '';
 
@@ -867,20 +983,18 @@
                 tdEstado.appendChild(selectEstado);
                 row.appendChild(tdEstado);
                 
-                // Editar (NUEVO)
+                // Editar
                 const tdEdit = document.createElement('td');
                 tdEdit.className = 'cell-edit';
                 const editBtn = document.createElement('button');
                 editBtn.dataset.id = novedad.id;
                 editBtn.className = 'button-icon edit-novedad-btn';
                 editBtn.title = 'Editar registro';
-                // ÍCONO DE LÁPIZ CORREGIDO
                 editBtn.innerHTML = `<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M5.433 13.917V17.5h3.583L16.5 10.917l-3.583-3.584L5.433 13.917zm13.197-6.264a.75.75 0 000-1.06l-2.062-2.062a.75.75 0 00-1.06 0l-1.41 1.41 3.584 3.584 1.41-1.41z"/></svg>`;
                 tdEdit.appendChild(editBtn);
                 row.appendChild(tdEdit);
 
-
-                // Borrar (botón)
+                // Borrar
                 const tdDelete = document.createElement('td');
                 tdDelete.className = 'cell-delete';
                 const delBtn = document.createElement('button');
@@ -894,11 +1008,10 @@
                 novedadesLog.appendChild(row);
             });
             
-            // Re-adjuntar listeners usando delegación (más eficiente)
+            // Re-adjuntar listeners usando delegación
             setupTableListeners();
         }
         
-        // (Función de listeners actualizada para usar Delegación)
         function setupTableListeners() {
             // Clonar el nodo para limpiar listeners anteriores (necesario para la delegación)
             const oldLog = novedadesLog;
@@ -919,7 +1032,6 @@
                     const nuevoEstado = target.value;
                     updateEstado(id, nuevoEstado);
                     
-                    // Actualizar clase y tooltip
                     target.className = getStatusClasses(nuevoEstado);
                     if (nuevoEstado === 'Completado') {
                         target.title = `Completado por ${userEmail} (ahora)`;
@@ -973,7 +1085,6 @@
             updateEditPrioridadColor(); 
             
             // 1. Inicializar Multiselect de Edición
-            // Limpiar selección previa y cargar opciones
             populateEditMultiselect(); 
             
             // 2. Preseleccionar opciones
@@ -1005,7 +1116,6 @@
 
         async function addNovedad(data) {
             if (!db || !userId) {
-                console.error("DEBUG: addNovedad abortado. DB o UserID no están listos.");
                 return;
             }
             submitButton.disabled = true;
@@ -1023,7 +1133,7 @@
                 await addDoc(novedadesRef, newNovedad);
                 form.reset(); 
                 resetMultiselect();
-                updatePrioridadColor(); // Resetear color de prioridad
+                updatePrioridadColor(); 
             } catch (error) {
                 console.error("Error al añadir la novedad:", error);
                 showMessageModal("Error", `No se pudo registrar la novedad. Detalles: ${error.message}`);
@@ -1034,10 +1144,7 @@
         }
         
         async function updateNovedad() {
-            if (!db) {
-                console.error("DEBUG: updateNovedad abortado. DB no está lista.");
-                return;
-            }
+            if (!db) return;
             
             const id = editId.value;
             if (!id) {
@@ -1045,13 +1152,11 @@
                 return;
             }
 
-            // 1. Obtener opciones seleccionadas del multiselect de edición
             const selectedNotificadoA = [];
             editMultiselectDropdown.querySelectorAll('.edit-multiselect-option:checked').forEach(cb => {
                 selectedNotificadoA.push(cb.value);
             });
             
-            // 2. Recolectar datos del formulario
             const updatedData = {
                 prioridad: editPrioridad.value.trim(),
                 nReserva: editNReserva.value.trim() || null,
@@ -1060,8 +1165,6 @@
                 novedad: editNovedad.value.trim(),
                 notificadoA: selectedNotificadoA.join(', ') || null,
                 
-                // Nota: No actualizamos 'turno' ni 'timestamp' al editar, solo se corrige el contenido.
-                // Guardamos quién y cuándo se editó por última vez (para auditoría)
                 lastEditedBy: userEmail,
                 lastEditedAt: serverTimestamp() 
             };
@@ -1085,10 +1188,7 @@
         }
 
         async function updateEstado(id, estado) {
-            if (!db) {
-                console.error("DEBUG: updateEstado abortado. DB no está lista.");
-                return;
-            }
+            if (!db) return;
             try {
                 const collectionPath = getCollectionPath();
                 const docRef = doc(db, collectionPath, id);
@@ -1100,7 +1200,6 @@
                 }
                 
                 await updateDoc(docRef, updateData);
-                console.log(`DEBUG: Estado de novedad ${id} actualizado a ${estado}`);
             } catch (error) {
                 console.error("Error al actualizar el estado:", error);
                 showMessageModal("Error de Actualización", `No se pudo cambiar el estado. Detalles: ${error.message}`);
@@ -1108,10 +1207,7 @@
         }
 
         async function deleteNovedad(id) {
-            if (!db) {
-                console.error("DEBUG: deleteNovedad abortado. DB no está lista.");
-                return;
-            }
+            if (!db) return;
             try {
                 const collectionPath = getCollectionPath();
                 const docRef = doc(db, collectionPath, id);
@@ -1133,7 +1229,6 @@
                 return;
             }
             
-            console.log("Iniciando borrado total...");
             confirmDeleteAllBtn.disabled = true;
             confirmDeleteAllBtn.innerText = "Eliminando...";
 
@@ -1154,7 +1249,6 @@
                     const batch = writeBatch(db);
                     chunk.forEach(d => batch.delete(d.ref));
                     await batch.commit();
-                    console.log(`DEBUG: Eliminados ${chunk.length} documentos.`);
                 }
                 
                 showMessageModal("Éxito", `Se han eliminado todos los ${docs.length} registros.`);
@@ -1175,7 +1269,6 @@
         
         // --- Lógica de Inicio ---
 
-        // 1. Lógica de Cambio de Tema
         function applyTheme(theme) {
             if (theme === 'light') {
                 themeStylesheet.href = 'light.css';
@@ -1188,7 +1281,6 @@
                 moonIcon.style.display = 'none';
                 if (themeToggleBtn) themeToggleBtn.classList.add('sun-active');
             }
-            // Actualizar color de prioridad al cambiar tema
             updatePrioridadColor();
             updateEditPrioridadColor();
         }
@@ -1200,12 +1292,10 @@
             applyTheme(newTheme);
         });
 
-        // Aplicar tema al cargar
         const savedTheme = localStorage.getItem('theme') || 'dark';
         applyTheme(savedTheme);
 
 
-        // 2. Lógica de Login
         loginButton.addEventListener('click', async () => {
             const email = loginEmail.value;
             const password = loginPassword.value;
@@ -1219,7 +1309,6 @@
             
             try {
                 await signInWithEmailAndPassword(auth, email, password);
-                // onAuthStateChanged se encargará de mostrar el contenido
             } catch (error) {
                 console.error("Error de inicio de sesión:", error.code);
                 if (error.code === 'auth/invalid-credential' || error.code === 'auth/invalid-email' || error.code === 'auth/wrong-password') {
@@ -1242,27 +1331,21 @@
         
         logoutButton.addEventListener('click', async () => {
             await signOut(auth);
-            // onAuthStateChanged se encargará de mostrar el login
         });
 
-        // 3. Inicializar Firebase (esto activa onAuthStateChanged)
         setupAuthAndDB();
 
-        // 4. Componentes de la App (se llaman desde onAuthStateChanged)
         function initializeAppComponents() {
             updateShiftDisplay();
             setInterval(updateShiftDisplay, 60000); 
             
-            // Listeners para color de prioridad
             prioridadSelect.addEventListener('change', updatePrioridadColor);
             editPrioridadSelect.addEventListener('change', updateEditPrioridadColor);
             
-            // Aplicar color al inicio
             updatePrioridadColor();
             updateEditPrioridadColor();
         }
         
-        // 5. Manejo del envío del formulario (Creación)
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             const formData = new FormData(form);
@@ -1286,7 +1369,6 @@
             addNovedad(data);
         });
 
-        // 6. Lógica del Botón de Copiar a WhatsApp
         whatsappCopyButton.addEventListener('click', async () => {
             if (selectedNovedadIds.size === 0) {
                 showMessageModal("Atención", "Por favor, selecciona al menos una novedad para copiar.");
@@ -1322,7 +1404,6 @@
                 }
             }
             const textToCopy = finalMessageParts.join('\n').trim();
-            console.log("DEBUG: Texto a copiar a WhatsApp:", textToCopy);
             try {
                 const textArea = document.createElement("textarea");
                 textArea.value = textToCopy;
@@ -1345,7 +1426,6 @@
             }
         });
 
-        // 7. Lógica del Botón de Exportar
         function ensureXLSXLoaded() {
             if (window.XLSX) return Promise.resolve();
             return new Promise((resolve, reject) => {
@@ -1356,6 +1436,7 @@
                 document.head.appendChild(s);
             });
         }
+        
         async function exportAllToXLSX() {
             if (!db) {
                 showMessageModal("Error", "La base de datos no está lista. Espera a que la app se conecte.");
@@ -1364,6 +1445,9 @@
             exportButton.disabled = true;
             exportButton.innerHTML = `<svg class="loading-spinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Exportando...`;
             try {
+                // Al exportar, usamos los datos actuales filtrados si queremos (aquí mantenemos todo)
+                // O podemos exportar solo la vista filtrada actual usando currentNovedades
+                // Para mantener la lógica original del código viejo, se exportaba todo:
                 const collectionPath = getCollectionPath();
                 const colRef = collection(db, collectionPath);
                 const qRef = query(colRef, orderBy('timestamp', 'desc'));
@@ -1424,7 +1508,6 @@
         }
         exportButton.addEventListener('click', exportAllToXLSX);
 
-        // 8. Listeners para Modales de Borrado
         cancelDeleteBtn.addEventListener('click', () => {
             confirmModal.classList.add('hidden');
         });
@@ -1452,9 +1535,8 @@
             }
         });
 
-        // 9. Lógica del Dropdown Multiselect (Creación)
         function populateMultiselect() {
-            multiselectDropdown.querySelectorAll('.multiselect-option-label').forEach(el => el.remove()); // Corregido el selector
+            multiselectDropdown.querySelectorAll('.multiselect-option-label').forEach(el => el.remove()); 
             multiselectOptions.forEach(option => {
                 const optionId = `ms-opt-${option.replace(/\s+/g, '-')}`;
                 const container = document.createElement('label');
@@ -1475,7 +1557,6 @@
         }
         function updateMultiselectLabelAndSelectAll() {
             const checkedOptions = multiselectDropdown.querySelectorAll('.multiselect-option:checked');
-            // Excluir la casilla "Seleccionar todo" de la cuenta total
             const totalOptions = multiselectOptions.length; 
             if (checkedOptions.length === 0) {
                 multiselectLabel.textContent = 'Elige';
@@ -1514,7 +1595,6 @@
             const filter = multiselectSearch.value.toLowerCase();
             multiselectDropdown.querySelectorAll('.multiselect-option-label').forEach(container => {
                 const label = container.querySelector('span').textContent.toLowerCase();
-                // Ocultar la opción "Seleccionar todo" del filtro
                 if (container.querySelector('#multiselect-select-all')) return; 
 
                 if (label.includes(filter)) {
@@ -1538,7 +1618,6 @@
         });
         multiselectSearch.addEventListener('input', filterMultiselectOptions);
         
-        // CORRECCIÓN BUG "SELECCIONAR TODO"
         multiselectSelectAll.addEventListener('change', () => {
             const isChecked = multiselectSelectAll.checked;
             multiselectDropdown.querySelectorAll('.multiselect-option').forEach(checkbox => {
@@ -1546,19 +1625,14 @@
             });
             updateMultiselectLabelAndSelectAll();
         });
-        // FIN CORRECCIÓN
 
-        // 10. Lógica del Dropdown Multiselect (Edición - NUEVO)
         function populateEditMultiselect() {
-            // Limpiar opciones previas (excepto la de Seleccionar todo)
             editMultiselectDropdown.querySelectorAll('.edit-multiselect-option-label').forEach(el => {
-                // Asegurarse de no eliminar la etiqueta que contiene el "Seleccionar todo"
                 if (!el.querySelector('#edit-multiselect-select-all')) {
                     el.remove();
                 }
             }); 
             
-            // Recorrer las opciones e insertarlas
             const selectAllLabel = editMultiselectSelectAll.closest('.multiselect-option-label');
             multiselectOptions.forEach(option => {
                 const optionId = `edit-ms-opt-${option.replace(/\s+/g, '-')}`;
@@ -1569,7 +1643,6 @@
                     <input type="checkbox" id="${optionId}" value="${option}" class="multiselect-option edit-multiselect-option">
                     <span>${option}</span>
                 `;
-                // Insertar justo después del "Seleccionar todo"
                 selectAllLabel.parentNode.insertBefore(container, selectAllLabel.nextSibling);
             });
             addEditOptionListeners();
@@ -1581,7 +1654,7 @@
         }
         function updateEditMultiselectLabelAndSelectAll() {
             const checkedOptions = editMultiselectDropdown.querySelectorAll('.edit-multiselect-option:checked');
-            const totalOptions = multiselectOptions.length; // Usamos el array original, no contamos el "Seleccionar todo"
+            const totalOptions = multiselectOptions.length; 
             
             if (checkedOptions.length === 0) {
                 editMultiselectLabel.textContent = 'Elige';
@@ -1598,7 +1671,6 @@
                 editMultiselectLabel.className = 'multiselect-label-selected';
             }
 
-            // Manejo de la casilla "Seleccionar todo"
             if (checkedOptions.length === totalOptions) {
                 editMultiselectSelectAll.checked = true;
                 editMultiselectSelectAll.indeterminate = false;
@@ -1613,7 +1685,6 @@
         
         editMultiselectButton.addEventListener('click', () => {
             editMultiselectDropdownContainer.classList.toggle('hidden');
-            // Esconder el otro multiselect si está abierto
             multiselectDropdownContainer.classList.add('hidden'); 
             if (!editMultiselectDropdownContainer.classList.contains('hidden')) {
                 editMultiselectSearch.focus();
@@ -1640,10 +1711,8 @@
             updateEditMultiselectLabelAndSelectAll();
         });
 
-
-        // 11. Inicializar Multiselects
         populateMultiselect();
-        populateEditMultiselect(); // Inicializar el de Edición
+        populateEditMultiselect(); 
 
     </script>
 </body>
