@@ -148,6 +148,63 @@
             font-weight: 500;
         }
 
+        /* --- Estilos del Tablero Superior (Filtros + Botón Agregar) --- */
+        .top-dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 260px;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+            align-items: stretch;
+        }
+        .btn-massive-add {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            background: linear-gradient(135deg, var(--color-primario), #4f46e5); /* Degradado llamativo */
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 1.5rem;
+            font-size: 1.15rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s, filter 0.2s;
+            height: 100%;
+            width: 100%;
+            text-align: center;
+            letter-spacing: 0.5px;
+        }
+        .btn-massive-add:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.25), 0 10px 10px -5px rgba(0, 0, 0, 0.15);
+            filter: brightness(1.1);
+        }
+        .btn-massive-add:active {
+            transform: translateY(0);
+        }
+        .btn-massive-add svg {
+            width: 3rem;
+            height: 3rem;
+            stroke-width: 2.5;
+        }
+
+        @media (max-width: 768px) {
+            .top-dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            .btn-massive-add {
+                padding: 1rem;
+                flex-direction: row;
+                justify-content: center;
+            }
+            .btn-massive-add svg {
+                width: 2rem;
+                height: 2rem;
+            }
+        }
         @media (max-width: 480px) {
             #company-logo { width: 36px; }
             .main-title { font-size: 1.125rem; }
@@ -193,10 +250,9 @@
             </div>
             <!-- Botones de Encabezado -->
             <div class="header-buttons">
-                <!-- NUEVO: Botón de Tema Sol/Luna -->
+                <!-- Botón de Tema Sol/Luna -->
                 <button id="theme-toggle-btn" class="button-icon" title="Cambiar tema">
-                  
-                    <!-- Los iconos se mostrarán/ocultarán con JS (usar imágenes pequeñas) -->
+                    <!-- Los iconos se mostrarán/ocultarán con JS -->
                     <img id="theme-sun-icon" class="icon" src="sol.png" alt="Sol" />
                     <img id="theme-moon-icon" class="icon" src="luna.png" alt="Luna" />
                 </button>
@@ -209,20 +265,158 @@
                     Cerrar Sesión
                 </button>
                 <!-- Botón Check List Diario -->
-
                 <a href="checklist.html" target="_blank" class="button button-secondary button-link" title="Abrir Check List Diario">
-                <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M9 2a2 2 0 00-2 2v8a2 2 0 002 2h6a2 2 0 002-2V6.414A2 2 0 0016.586 5L13.5 1.914A2 2 0 0012.086 1.5H9z" />
-                <path d="M11 2.5a.5.5 0 01.5-.5h.586a1 1 0 01.707.293l2.914 2.914a1 1 0 01.293.707V12a2 2 0 01-2 2H9a2 2 0 01-2-2V4a2 2 0 012-2h2v.5z" />
-                </svg>
-                <span class="btn-text">Check List</span>
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M9 2a2 2 0 00-2 2v8a2 2 0 002 2h6a2 2 0 002-2V6.414A2 2 0 0016.586 5L13.5 1.914A2 2 0 0012.086 1.5H9z" />
+                        <path d="M11 2.5a.5.5 0 01.5-.5h.586a1 1 0 01.707.293l2.914 2.914a1 1 0 01.293.707V12a2 2 0 01-2 2H9a2 2 0 01-2-2V4a2 2 0 012-2h2v.5z" />
+                    </svg>
+                    <span class="btn-text">Check List</span>
                 </a>
             </div>
         </header>
 
-        <!-- Formulario de Registro de Novedades -->
+        <!-- NUEVO DISEÑO: TABLERO SUPERIOR (Filtros a la izquierda, Botón a la derecha) -->
+        <div class="top-dashboard-grid">
+            
+            <!-- Columna Izquierda: Filtros -->
+            <div class="card" style="margin-bottom: 0;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                     <h3 class="form-label" style="font-size: 1.05rem; margin: 0; display: flex; align-items: center; gap: 0.5rem; font-weight: bold;">
+                        <svg class="icon" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd" />
+                        </svg>
+                        Filtros de Búsqueda
+                    </h3>
+                    <button type="button" id="clear-filters-btn" class="button button-gray" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">
+                        Limpiar Filtros
+                    </button>
+                </div>
+                
+                <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.75rem;">
+                    <div class="form-group">
+                        <label for="filter-turno" class="form-label" style="font-size: 0.8rem;">Turno</label>
+                        <select id="filter-turno" class="form-select" style="padding: 0.4rem; font-size: 0.9rem;">
+                            <option value="">Todos</option>
+                            <option value="Mañana">Mañana</option>
+                            <option value="Tarde">Tarde</option>
+                            <option value="Noche">Noche</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="filter-fecha" class="form-label" style="font-size: 0.8rem;">Fecha</label>
+                        <input type="date" id="filter-fecha" class="form-input" style="padding: 0.4rem; font-size: 0.9rem;">
+                    </div>
+                    <div class="form-group">
+                        <label for="filter-prioridad" class="form-label" style="font-size: 0.8rem;">Prioridad</label>
+                        <select id="filter-prioridad" class="form-select" style="padding: 0.4rem; font-size: 0.9rem;">
+                            <option value="">Todas</option>
+                            <option value="Urgente">Urgente</option>
+                            <option value="Alta">Alta</option>
+                            <option value="Media">Media</option>
+                            <option value="Baja">Baja</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="filter-estado" class="form-label" style="font-size: 0.8rem;">Estado</label>
+                        <select id="filter-estado" class="form-select" style="padding: 0.4rem; font-size: 0.9rem;">
+                            <option value="">Todos</option>
+                            <option value="En curso">En curso</option>
+                            <option value="Completado">Completado</option>
+                        </select>
+                    </div>
+                    <div class="form-group form-group-full">
+                        <label for="filter-text" class="form-label" style="font-size: 0.8rem;">Búsqueda (Área, Reserva, Habit., Novedad, Notificado)</label>
+                        <input type="text" id="filter-text" class="form-input" placeholder="Escribe para buscar..." style="padding: 0.4rem; font-size: 0.9rem;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Columna Derecha: Botón Gigante Agregar Novedad -->
+            <div>
+                <button type="button" id="open-add-modal-btn" class="btn-massive-add" title="Crear un nuevo registro">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    <span>Agregar Novedad</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Tabla de Novedades Registradas -->
         <div class="card">
-            <h2 class="card-title">Nueva Novedad</h2>
+            
+            <div class="table-actions" style="margin-bottom: 1rem;">
+                <div class="table-buttons-container">
+                    <button id="whatsapp-copy-button" class="button button-green" disabled>
+                        <svg class="icon" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7.973 1.127l-2.76-2.76a1 1 0 00-1.53.136l-.37.986 1.83 4.956 4.956 1.83.986-.37a1 1 0 00.136-1.53l-2.76-2.76z" clip-rule="evenodd"></path>
+                        </svg>
+                        Whatsapp (0)
+                    </button>
+                    <button id="export-button" class="button button-orange" title="Exportar todo el historial a XLSX" disabled>
+                        <svg class="icon" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V7.414A2 2 0 0016.586 6L13 2.414A2 2 0 0011.586 2H4zM12 3.5L15.5 7H13a1 1 0 01-1-1V3.5zM7 9h6v2H7V9zm0 4h6v2H7v-2z"></path>
+                        </svg>
+                        Exportar
+                    </button>
+                    <button type="button" id="delete-all-btn" class="button button-danger-outline" disabled>
+                         <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75V4.5h8V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4.5A1.25 1.25 0 0111.25 3h2.5A1.25 1.25 0 0115 4.25V5.5h-5V4.25zM3.75 6A1.75 1.75 0 002 7.75v7.5A1.75 1.75 0 003.75 17h12.5A1.75 1.75 0 0018 15.25v-7.5A1.75 1.75 0 0016.25 6H3.75zM10 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 10zM13 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0113 10zM7 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 017 10z" clip-rule="evenodd" />
+                        </svg>
+                        Borrar Todo
+                    </button>
+                </div>
+            </div>
+
+            <!-- Contenedor de tabla -->
+            <div class="scrollable-table-container">
+                <table class="novedades-table">
+                    <thead>
+                        <tr>
+                            <th>Sel.</th>
+                            <th>Turno</th>
+                            <th>Fecha</th>
+                            <th>Prioridad</th>
+                            <th>Área/Elemento</th>
+                            <th>Nº Reserva</th>
+                            <th>Habit.</th>
+                            <th>Novedad</th>
+                            <th>Notificado a</th>
+                            <th>Estado</th>
+                            <th>Respuestas</th>
+                            <th>Editar</th>
+                            <th>Borrar</th>
+                        </tr>
+                    </thead>
+                    <tbody id="novedades-log">
+                        <!-- Filas de novedades -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Controles de Paginación -->
+            <div id="pagination-controls" class="pagination-container">
+                <!-- Se generan dinámicamente con JS -->
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modal de Mensajes Genéricos -->
+    <div id="message-modal" class="modal-overlay hidden">
+        <div class="modal-container card">
+            <h3 id="modal-title" class="modal-title">Mensaje</h3>
+            <p id="modal-content" class="modal-content">Contenido del mensaje.</p>
+            <div class="modal-actions">
+                <button id="modal-close" class="button button-primary">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NUEVO: MODAL PARA AGREGAR NOVEDAD (Extraído del documento principal) -->
+    <div id="add-modal" class="modal-overlay hidden">
+        <div class="modal-container card" style="max-width: 42rem;">
+            <h3 class="modal-title">Nueva Novedad</h3>
             <form id="novedad-form" class="form-grid">
 
                 <!-- Prioridad -->
@@ -293,7 +487,8 @@
                 </div>
 
                 <!-- Acciones del Formulario -->
-                <div class="form-actions">
+                <div class="form-actions" style="margin-top: 1rem; width: 100%; display: flex; justify-content: flex-end; gap: 0.75rem;">
+                    <button type="button" id="cancel-add-btn" class="button button-gray">Cancelar</button>
                     <button type="submit" id="submit-button" class="button button-primary" disabled>
                         <svg id="loading-spinner" class="loading-spinner hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -304,133 +499,9 @@
                 </div>
             </form>
         </div>
-
-        <!-- Tabla de Novedades Registradas -->
-        <div class="card">
-            <h2 class="card-title">Novedades Registradas</h2>
-            
-            <!-- SECCIÓN DE FILTROS -->
-            <div class="filters-section" style="margin-bottom: 1.5rem; border-bottom: 1px solid rgba(128, 128, 128, 0.3); padding-bottom: 1.5rem;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                     <h3 class="form-label" style="font-size: 1.05rem; margin: 0; display: flex; align-items: center; gap: 0.5rem; font-weight: bold;">
-                        <svg class="icon" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd" />
-                        </svg>
-                        Filtros
-                    </h3>
-                    <button type="button" id="clear-filters-btn" class="button button-gray" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">
-                        Limpiar Filtros
-                    </button>
-                </div>
-                
-                <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.75rem;">
-                    <div class="form-group">
-                        <label for="filter-turno" class="form-label" style="font-size: 0.8rem;">Turno</label>
-                        <select id="filter-turno" class="form-select" style="padding: 0.4rem; font-size: 0.9rem;">
-                            <option value="">Todos</option>
-                            <option value="Mañana">Mañana</option>
-                            <option value="Tarde">Tarde</option>
-                            <option value="Noche">Noche</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="filter-fecha" class="form-label" style="font-size: 0.8rem;">Fecha</label>
-                        <input type="date" id="filter-fecha" class="form-input" style="padding: 0.4rem; font-size: 0.9rem;">
-                    </div>
-                    <div class="form-group">
-                        <label for="filter-prioridad" class="form-label" style="font-size: 0.8rem;">Prioridad</label>
-                        <select id="filter-prioridad" class="form-select" style="padding: 0.4rem; font-size: 0.9rem;">
-                            <option value="">Todas</option>
-                            <option value="Urgente">Urgente</option>
-                            <option value="Alta">Alta</option>
-                            <option value="Media">Media</option>
-                            <option value="Baja">Baja</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="filter-estado" class="form-label" style="font-size: 0.8rem;">Estado</label>
-                        <select id="filter-estado" class="form-select" style="padding: 0.4rem; font-size: 0.9rem;">
-                            <option value="">Todos</option>
-                            <option value="En curso">En curso</option>
-                            <option value="Completado">Completado</option>
-                        </select>
-                    </div>
-                    <div class="form-group form-group-full">
-                        <label for="filter-text" class="form-label" style="font-size: 0.8rem;">Búsqueda (Área, Reserva, Habit., Novedad, Notificado)</label>
-                        <input type="text" id="filter-text" class="form-input" placeholder="Escribe para buscar..." style="padding: 0.4rem; font-size: 0.9rem;">
-                    </div>
-                </div>
-            </div>
-
-            <div class="table-actions">
-                <div class="table-buttons-container">
-                    <button id="whatsapp-copy-button" class="button button-green" disabled>
-                        <svg class="icon" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7.973 1.127l-2.76-2.76a1 1 0 00-1.53.136l-.37.986 1.83 4.956 4.956 1.83.986-.37a1 1 0 00.136-1.53l-2.76-2.76z" clip-rule="evenodd"></path>
-                        </svg>
-                        Whatsapp (0)
-                    </button>
-                    <button id="export-button" class="button button-orange" title="Exportar todo el historial a XLSX" disabled>
-                        <svg class="icon" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                            <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V7.414A2 2 0 0016.586 6L13 2.414A2 2 0 0011.586 2H4zM12 3.5L15.5 7H13a1 1 0 01-1-1V3.5zM7 9h6v2H7V9zm0 4h6v2H7v-2z"></path>
-                        </svg>
-                        Exportar
-                    </button>
-                    <button type="button" id="delete-all-btn" class="button button-danger-outline" disabled>
-                         <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75V4.5h8V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4.5A1.25 1.25 0 0111.25 3h2.5A1.25 1.25 0 0115 4.25V5.5h-5V4.25zM3.75 6A1.75 1.75 0 002 7.75v7.5A1.75 1.75 0 003.75 17h12.5A1.75 1.75 0 0018 15.25v-7.5A1.75 1.75 0 0016.25 6H3.75zM10 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 10zM13 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0113 10zM7 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 017 10z" clip-rule="evenodd" />
-                        </svg>
-                        Borrar Todo
-                    </button>
-                </div>
-            </div>
-
-            <!-- Contenedor de tabla -->
-            <div class="scrollable-table-container">
-                <table class="novedades-table">
-                    <thead>
-                        <tr>
-                            <th>Sel.</th>
-                            <th>Turno</th>
-                            <th>Fecha</th>
-                            <th>Prioridad</th>
-                            <th>Área/Elemento</th>
-                            <th>Nº Reserva</th>
-                            <th>Habit.</th>
-                            <th>Novedad</th>
-                            <th>Notificado a</th>
-                            <th>Estado</th>
-                            <th>Respuestas</th>
-                            <th>Editar</th>
-                            <th>Borrar</th>
-                        </tr>
-                    </thead>
-                    <tbody id="novedades-log">
-                        <!-- Filas de novedades -->
-                    </tbody>
-                </table>
-            </div>
-            
-            <!-- Controles de Paginación -->
-            <div id="pagination-controls" class="pagination-container">
-                <!-- Se generan dinámicamente con JS -->
-            </div>
-        </div>
-
     </div>
 
-    <!-- Modal de Mensajes -->
-    <div id="message-modal" class="modal-overlay hidden">
-        <div class="modal-container card">
-            <h3 id="modal-title" class="modal-title">Mensaje</h3>
-            <p id="modal-content" class="modal-content">Contenido del mensaje.</p>
-            <div class="modal-actions">
-                <button id="modal-close" class="button button-primary">Cerrar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- NUEVO: Modal de Comentarios / Respuestas -->
+    <!-- Modal de Comentarios / Respuestas -->
     <div id="comments-modal" class="modal-overlay hidden">
         <div class="modal-container card" style="max-width: 42rem;">
             <h3 class="modal-title">Seguimiento de Novedad</h3>
@@ -627,14 +698,17 @@
             }
         }
 
-        // --- Variables de Paginación (NUEVO) ---
+        // --- Variables de Paginación ---
         let currentPage = 1;
         const itemsPerPage = 20;
-        let filteredNovedades = []; // Guardará el resultado actual de los filtros
+        let filteredNovedades = []; 
         const paginationControls = document.getElementById('pagination-controls');
 
         // --- Referencias del DOM y Estado Global ---
-        // Nuevo Formulario
+        // Modal para Agregar Nueva Novedad (NUEVO)
+        const openAddModalBtn = document.getElementById('open-add-modal-btn');
+        const addModal = document.getElementById('add-modal');
+        const cancelAddBtn = document.getElementById('cancel-add-btn');
         const form = document.getElementById('novedad-form');
         const submitButton = document.getElementById('submit-button');
         
@@ -741,6 +815,21 @@
         document.getElementById('modal-close').addEventListener('click', () => {
             document.getElementById('message-modal').classList.add('hidden');
         });
+
+        // NUEVO: Control del Modal de Nueva Novedad
+        openAddModalBtn.addEventListener('click', () => {
+            addModal.classList.remove('hidden');
+            // Hacer foco en el campo Área/Elemento para agilizar tipeo
+            setTimeout(() => { document.getElementById('areaElemento').focus(); }, 100);
+        });
+
+        cancelAddBtn.addEventListener('click', () => {
+            addModal.classList.add('hidden');
+            form.reset();
+            resetMultiselect();
+            updatePrioridadColor();
+        });
+
 
         function calcularTurno() {
             const now = new Date();
@@ -943,7 +1032,6 @@
             });
         }
         
-        // --- NUEVO: Lógica de Paginación Integrada a los Filtros ---
         function applyFiltersAndRender() {
             const valTurno = filterTurno.value;
             const valFecha = filterFecha.value;
@@ -1260,7 +1348,7 @@
             updateWhatsappButton();
         }
 
-        // --- Lógica del Modal de Comentarios (NUEVO) ---
+        // --- Lógica del Modal de Comentarios ---
         function openCommentsModal(novedad) {
             commentNovedadId.value = novedad.id;
             
@@ -1409,9 +1497,13 @@
                     comentarios: [] // Inicializar array vacío para nuevos registros
                 };
                 await addDoc(novedadesRef, newNovedad);
+                
+                // Limpiar y Ocultar modal al tener éxito
                 form.reset(); 
                 resetMultiselect();
                 updatePrioridadColor(); 
+                addModal.classList.add('hidden');
+
             } catch (error) {
                 console.error("Error al añadir la novedad:", error);
                 showMessageModal("Error", `No se pudo registrar la novedad. Detalles: ${error.message}`);
