@@ -679,6 +679,19 @@
             setLogLevel, getDocs, deleteDoc, writeBatch, arrayUnion 
         } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
+        // --- Micro-utilidades (Sintaxis más limpia) ---
+        const $ = id => document.getElementById(id);
+        const $$ = selector => document.querySelectorAll(selector);
+        
+        // --- Optimización: Efecto Debounce ---
+        const debounce = (fn, delay) => {
+            let timeout;
+            return (...args) => {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => fn(...args), delay);
+            };
+        };
+
         // --- Configuración DUAL de Firebase ---
         const isCanvasEnvironment = typeof __app_id !== 'undefined';
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-hotel-app'; 
@@ -701,50 +714,50 @@
         let currentPage = 1, itemsPerPage = 20, filteredNovedades = []; 
         let currentNovedades = [], allNovedadesMap = new Map(), selectedNovedadIds = new Set(); 
         
-        // --- Referencias DOM ---
-        const openAddModalBtn = document.getElementById('open-add-modal-btn');
-        const novedadModal = document.getElementById('novedad-modal');
-        const novedadModalTitle = document.getElementById('novedad-modal-title');
-        const novedadForm = document.getElementById('novedad-form');
-        const novedadId = document.getElementById('novedad-id');
-        const prioridadSelect = document.getElementById('prioridad');
-        const currentShiftDisplay = document.getElementById('current-shift');
-        const novedadMetadata = document.getElementById('novedad-metadata');
-        const submitButton = document.getElementById('submit-button');
-        const loadingSpinner = document.getElementById('loading-spinner');
+        // --- Referencias DOM usando el alias $() ---
+        const openAddModalBtn = $('open-add-modal-btn');
+        const novedadModal = $('novedad-modal');
+        const novedadModalTitle = $('novedad-modal-title');
+        const novedadForm = $('novedad-form');
+        const novedadId = $('novedad-id');
+        const prioridadSelect = $('prioridad');
+        const currentShiftDisplay = $('current-shift');
+        const novedadMetadata = $('novedad-metadata');
+        const submitButton = $('submit-button');
+        const loadingSpinner = $('loading-spinner');
 
-        const novedadesLog = document.getElementById('novedades-log');
-        const paginationControls = document.getElementById('pagination-controls');
-        const whatsappCopyButton = document.getElementById('whatsapp-copy-button');
-        const exportButton = document.getElementById('export-button');
+        const novedadesLog = $('novedades-log');
+        const paginationControls = $('pagination-controls');
+        const whatsappCopyButton = $('whatsapp-copy-button');
+        const exportButton = $('export-button');
         
         // --- Multiselect y Filtros DOM ---
-        const multiselectButton = document.getElementById('multiselect-button');
-        const multiselectDropdownContainer = document.getElementById('multiselect-dropdown-container');
-        const multiselectSearch = document.getElementById('multiselect-search');
+        const multiselectButton = $('multiselect-button');
+        const multiselectDropdownContainer = $('multiselect-dropdown-container');
+        const multiselectSearch = $('multiselect-search');
         const multiselectDropdown = multiselectDropdownContainer.querySelector('.multiselect-dropdown');
-        const multiselectSelectAll = document.getElementById('multiselect-select-all');
-        const multiselectLabel = document.getElementById('multiselect-label');
-        const filterControls = ['turno', 'fecha', 'prioridad', 'estado', 'text'].map(id => document.getElementById(`filter-${id}`));
-        const clearFiltersBtn = document.getElementById('clear-filters-btn');
+        const multiselectSelectAll = $('multiselect-select-all');
+        const multiselectLabel = $('multiselect-label');
+        const filterControls = ['turno', 'fecha', 'prioridad', 'estado', 'text'].map(id => $(`filter-${id}`));
+        const clearFiltersBtn = $('clear-filters-btn');
 
         // --- Auth DOM ---
-        const loginOverlay = document.getElementById('login-overlay'), loginEmail = document.getElementById('login-email');
-        const loginPassword = document.getElementById('login-password'), loginButton = document.getElementById('login-button');
-        const loginError = document.getElementById('login-error'), mainContent = document.getElementById('main-content');
-        const userInfoDisplay = document.getElementById('user-info'), logoutButton = document.getElementById('logout-button');
+        const loginOverlay = $('login-overlay'), loginEmail = $('login-email');
+        const loginPassword = $('login-password'), loginButton = $('login-button');
+        const loginError = $('login-error'), mainContent = $('main-content');
+        const userInfoDisplay = $('user-info'), logoutButton = $('logout-button');
 
         const multiselectOptions = ['Mantenimiento', 'HSKP', 'ReservasHA', 'ReservasHE', 'Front', 'Jefe Recepción', 'Seguridad', 'Parking', 'A.Públicas', 'Piscina', 'GerenciaO', 'GerenciaD'];
 
         // --- Utilidades Básicas ---
         function showMessageModal(title, content) {
-            document.getElementById('modal-title').textContent = title;
-            document.getElementById('modal-content').textContent = content;
-            document.getElementById('message-modal').classList.remove('hidden');
+            $('modal-title').textContent = title;
+            $('modal-content').textContent = content;
+            $('message-modal').classList.remove('hidden');
         }
 
-        // Cierre Centralizado de Modales
-        document.querySelectorAll('.btn-cerrar-modal').forEach(btn => {
+        // Cierre Centralizado de Modales usando $$()
+        $$('.btn-cerrar-modal').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const modal = e.target.closest('.modal-overlay');
                 if (modal) modal.classList.add('hidden');
@@ -817,12 +830,12 @@
                     allNovedadesMap.set(doc.id, data); 
                 });
                 
-                if(!document.getElementById('comments-modal').classList.contains('hidden')){
-                    const cId = document.getElementById('comment-novedad-id').value;
+                if(!$('comments-modal').classList.contains('hidden')){
+                    const cId = $('comment-novedad-id').value;
                     if(allNovedadesMap.has(cId)) renderComments(allNovedadesMap.get(cId).comentarios || []);
                 }
                 
-                exportButton.disabled = document.getElementById('delete-all-btn').disabled = !currentNovedades.length;
+                exportButton.disabled = $('delete-all-btn').disabled = !currentNovedades.length;
                 applyFiltersAndRender();
             });
         }
@@ -844,7 +857,17 @@
             renderCurrentPage();
         }
 
-        filterControls.forEach(el => el.addEventListener(el.id==='filter-text'?'input':'change', applyFiltersAndRender));
+        // Uso del Debounce para la barra de búsqueda de texto general
+        const applyFiltersDebounced = debounce(applyFiltersAndRender, 300);
+        
+        filterControls.forEach(el => {
+            if (el.id === 'filter-text') {
+                el.addEventListener('input', applyFiltersDebounced); // Aplica debounce al escribir
+            } else {
+                el.addEventListener('change', applyFiltersAndRender); // Aplica instantáneamente para selects/fechas
+            }
+        });
+        
         clearFiltersBtn.addEventListener('click', () => { filterControls.forEach(el => el.value=''); applyFiltersAndRender(); });
 
         // --- Optimización: Plantillas Literales para la Tabla ---
@@ -897,8 +920,8 @@
         novedadesLog.addEventListener('click', e => {
             const btn = e.target.closest('button');
             if (btn?.classList.contains('delete-novedad-btn')) {
-                document.getElementById('confirm-delete-btn').dataset.id = btn.dataset.id;
-                document.getElementById('confirm-modal').classList.remove('hidden');
+                $('confirm-delete-btn').dataset.id = btn.dataset.id;
+                $('confirm-modal').classList.remove('hidden');
             } else if (btn?.classList.contains('edit-novedad-btn')) {
                 openNovedadModal(allNovedadesMap.get(btn.dataset.id));
             } else if (btn?.classList.contains('comments-novedad-btn')) {
@@ -927,8 +950,8 @@
                 <button class="page-btn" ${currentPage===pages?'disabled':''} id="btn-next">Siguiente &raquo;</button>
             ` : '';
             if(!pages) return;
-            document.getElementById('btn-prev').onclick = () => { currentPage--; renderCurrentPage(); };
-            document.getElementById('btn-next').onclick = () => { currentPage++; renderCurrentPage(); };
+            $('btn-prev').onclick = () => { currentPage--; renderCurrentPage(); };
+            $('btn-next').onclick = () => { currentPage++; renderCurrentPage(); };
         }
 
         // --- Formulario Unificado (Crear/Editar) ---
@@ -942,10 +965,10 @@
                 novedadModalTitle.textContent = 'Editar Novedad';
                 novedadId.value = novedad.id;
                 prioridadSelect.value = novedad.prioridad || 'Media';
-                document.getElementById('nReserva').value = novedad.nReserva || '';
-                document.getElementById('habitacion').value = novedad.habitacion || '';
-                document.getElementById('areaElemento').value = novedad.areaElemento || '';
-                document.getElementById('novedad').value = novedad.novedad || '';
+                $('nReserva').value = novedad.nReserva || '';
+                $('habitacion').value = novedad.habitacion || '';
+                $('areaElemento').value = novedad.areaElemento || '';
+                $('novedad').value = novedad.novedad || '';
                 currentShiftDisplay.textContent = novedad.turno || '--:--';
                 
                 novedadMetadata.classList.remove('hidden');
@@ -963,7 +986,7 @@
             
             actualizarColorPrioridad(prioridadSelect);
             novedadModal.classList.remove('hidden');
-            setTimeout(() => document.getElementById('areaElemento').focus(), 100);
+            setTimeout(() => $('areaElemento').focus(), 100);
         }
 
         prioridadSelect.addEventListener('change', () => actualizarColorPrioridad(prioridadSelect));
@@ -1003,7 +1026,7 @@
                 multiselectDropdown.insertAdjacentHTML('beforeend', `<label class="multiselect-option-label" for="ms-${opt}"><input type="checkbox" id="ms-${opt}" value="${opt}" class="multiselect-option"><span>${opt}</span></label>`);
             });
             multiselectDropdown.querySelectorAll('.multiselect-option').forEach(cb => cb.addEventListener('change', updateMultiselectLabelAndSelectAll));
-            document.getElementById('multiselect-select-all').addEventListener('change', (e) => {
+            $('multiselect-select-all').addEventListener('change', (e) => {
                 multiselectDropdown.querySelectorAll('.multiselect-option').forEach(cb => cb.checked = e.target.checked);
                 updateMultiselectLabelAndSelectAll();
             });
@@ -1013,8 +1036,8 @@
             const total = multiselectOptions.length;
             multiselectLabel.textContent = !checked.length ? 'Elige' : checked.length===total ? 'Todos seleccionados' : checked.length>2 ? `${checked.length} seleccionados` : Array.from(checked).map(c=>c.value).join(', ');
             multiselectLabel.className = checked.length ? 'multiselect-label-selected' : 'multiselect-label-default';
-            document.getElementById('multiselect-select-all').checked = checked.length === total;
-            document.getElementById('multiselect-select-all').indeterminate = checked.length > 0 && checked.length < total;
+            $('multiselect-select-all').checked = checked.length === total;
+            $('multiselect-select-all').indeterminate = checked.length > 0 && checked.length < total;
         }
         function resetMultiselect() {
             multiselectDropdown.querySelectorAll('input[type="checkbox"]').forEach(c=>c.checked=false);
@@ -1031,13 +1054,13 @@
 
         // --- Comentarios ---
         function openComments(nov) {
-            document.getElementById('comment-novedad-id').value = nov.id;
-            document.getElementById('comments-context').innerHTML = `${nov.areaElemento?`<b>Área:</b> ${escapeHTML(nov.areaElemento)}<br>`:''} "${escapeHTML(nov.novedad)}"`;
+            $('comment-novedad-id').value = nov.id;
+            $('comments-context').innerHTML = `${nov.areaElemento?`<b>Área:</b> ${escapeHTML(nov.areaElemento)}<br>`:''} "${escapeHTML(nov.novedad)}"`;
             renderComments(nov.comentarios || []);
-            document.getElementById('comments-modal').classList.remove('hidden');
+            $('comments-modal').classList.remove('hidden');
         }
         function renderComments(arr) {
-            const list = document.getElementById('comments-list');
+            const list = $('comments-list');
             list.innerHTML = arr.length ? arr.map(c => `
                 <div class="comment-bubble">
                     <div class="comment-meta"><strong>${escapeHTML((c.user||'').split('@')[0])}</strong><span>${new Date(c.timestamp).toLocaleString('es-ES',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</span></div>
@@ -1045,41 +1068,41 @@
                 </div>`).join('') : '<p class="text-center">No hay respuestas.</p>';
             list.scrollTop = list.scrollHeight;
         }
-        document.getElementById('add-comment-form').addEventListener('submit', async e => {
+        $('add-comment-form').addEventListener('submit', async e => {
             e.preventDefault();
-            const btn = document.getElementById('save-comment-btn');
+            const btn = $('save-comment-btn');
             btn.disabled = true;
             try {
-                await updateDoc(doc(db, getPath(COLLECTION_NAME), document.getElementById('comment-novedad-id').value), {
-                    comentarios: arrayUnion({ text: document.getElementById('new-comment-text').value.trim(), user: userEmail, timestamp: new Date().toISOString() })
+                await updateDoc(doc(db, getPath(COLLECTION_NAME), $('comment-novedad-id').value), {
+                    comentarios: arrayUnion({ text: $('new-comment-text').value.trim(), user: userEmail, timestamp: new Date().toISOString() })
                 });
-                document.getElementById('new-comment-text').value = '';
+                $('new-comment-text').value = '';
             } catch(e) { showMessageModal("Error", "Fallo al comentar."); }
             finally { btn.disabled = false; }
         });
 
         // --- Acciones Masivas y Borrado ---
-        document.getElementById('confirm-delete-btn').addEventListener('click', async e => {
+        $('confirm-delete-btn').addEventListener('click', async e => {
             await deleteDoc(doc(db, getPath(COLLECTION_NAME), e.target.dataset.id));
-            document.getElementById('confirm-modal').classList.add('hidden');
+            $('confirm-modal').classList.add('hidden');
             selectedNovedadIds.delete(e.target.dataset.id);
         });
 
-        document.getElementById('delete-all-btn').addEventListener('click', () => {
-            document.getElementById('delete-all-password').value = '';
-            document.getElementById('delete-all-error').classList.add('hidden');
-            document.getElementById('delete-all-modal').classList.remove('hidden');
+        $('delete-all-btn').addEventListener('click', () => {
+            $('delete-all-password').value = '';
+            $('delete-all-error').classList.add('hidden');
+            $('delete-all-modal').classList.remove('hidden');
         });
         
-        document.getElementById('confirm-delete-all-btn').addEventListener('click', async () => {
-            if(document.getElementById('delete-all-password').value !== 'hotel545') return document.getElementById('delete-all-error').classList.remove('hidden');
-            document.getElementById('confirm-delete-all-btn').disabled = true;
+        $('confirm-delete-all-btn').addEventListener('click', async () => {
+            if($('delete-all-password').value !== 'hotel545') return $('delete-all-error').classList.remove('hidden');
+            $('confirm-delete-all-btn').disabled = true;
             const snap = await getDocs(collection(db, getPath(COLLECTION_NAME)));
             const batch = writeBatch(db);
             snap.docs.forEach(d => batch.delete(d.ref));
             await batch.commit();
-            document.getElementById('delete-all-modal').classList.add('hidden');
-            document.getElementById('confirm-delete-all-btn').disabled = false;
+            $('delete-all-modal').classList.add('hidden');
+            $('confirm-delete-all-btn').disabled = false;
         });
 
         whatsappCopyButton.addEventListener('click', () => {
@@ -1107,7 +1130,7 @@
         }
 
         function renderAlarmsList() {
-            const list = document.getElementById('active-alarms-list');
+            const list = $('active-alarms-list');
             if (!currentAlarms.length) {
                 list.innerHTML = '<p style="padding: 1rem; text-align: center; color: var(--color-texto-secundario); font-size: 0.85rem;">No hay alarmas configuradas.</p>';
                 return;
@@ -1132,7 +1155,7 @@
             }).join('');
         }
 
-        document.getElementById('active-alarms-list').addEventListener('click', async e => {
+        $('active-alarms-list').addEventListener('click', async e => {
             const btn = e.target.closest('.delete-alarm-btn');
             if (btn) await deleteDoc(doc(db, getPath(ALARMS_COLLECTION_NAME), btn.dataset.id));
         });
@@ -1176,8 +1199,8 @@
                     let ring = (a.type === 'once' && a.date === dt) || a.type === 'daily' || (a.type === 'weekly' && a.day == now.getDay()) || (a.type === 'monthly' && (a.monthDays||'').split(',').map(n=>+n).includes(now.getDate()));
                     if (ring && !triggeredAlarmsCache.has(`${a.id}-${dt}-${t}`)) {
                         triggeredAlarmsCache.add(`${a.id}-${dt}-${t}`);
-                        document.getElementById('alarm-trigger-message').textContent = a.message;
-                        document.getElementById('alarm-trigger-modal').classList.remove('hidden');
+                        $('alarm-trigger-message').textContent = a.message;
+                        $('alarm-trigger-modal').classList.remove('hidden');
                         playAlarmSound();
                         if (a.type === 'once') deleteDoc(doc(db, getPath(ALARMS_COLLECTION_NAME), a.id));
                     }
@@ -1185,27 +1208,27 @@
             });
         }
         
-        document.getElementById('open-reminder-modal-btn').addEventListener('click', () => { document.getElementById('reminder-date').value = new Date().toISOString().split('T')[0]; document.getElementById('reminder-modal').classList.remove('hidden'); });
-        document.getElementById('reminder-type').addEventListener('change', e => {
-            ['date','day','month-days'].forEach(id => document.getElementById(`reminder-${id}-group`).classList.toggle('hidden', e.target.value !== id.split('-')[0] && !(e.target.value==='monthly' && id==='month-days')));
+        $('open-reminder-modal-btn').addEventListener('click', () => { $('reminder-date').value = new Date().toISOString().split('T')[0]; $('reminder-modal').classList.remove('hidden'); });
+        $('reminder-type').addEventListener('change', e => {
+            ['date','day','month-days'].forEach(id => $(`reminder-${id}-group`).classList.toggle('hidden', e.target.value !== id.split('-')[0] && !(e.target.value==='monthly' && id==='month-days')));
         });
-        document.getElementById('reminder-form').addEventListener('submit', async e => {
+        $('reminder-form').addEventListener('submit', async e => {
             e.preventDefault();
             const btn = e.target.querySelector('button[type="submit"]'); btn.disabled = true;
             try {
-                await addDoc(collection(db, getPath(ALARMS_COLLECTION_NAME)), { message: document.getElementById('reminder-message').value, type: document.getElementById('reminder-type').value, time: document.getElementById('reminder-time').value, date: document.getElementById('reminder-date').value, day: document.getElementById('reminder-day').value, monthDays: document.getElementById('reminder-month-days').value, timestamp: serverTimestamp() });
-                e.target.reset(); document.getElementById('reminder-modal').classList.add('hidden');
+                await addDoc(collection(db, getPath(ALARMS_COLLECTION_NAME)), { message: $('reminder-message').value, type: $('reminder-type').value, time: $('reminder-time').value, date: $('reminder-date').value, day: $('reminder-day').value, monthDays: $('reminder-month-days').value, timestamp: serverTimestamp() });
+                e.target.reset(); $('reminder-modal').classList.add('hidden');
             } finally { btn.disabled = false; }
         });
 
         // Config Init
         populateMultiselect();
-        document.getElementById('theme-toggle-btn').addEventListener('click', () => {
+        $('theme-toggle-btn').addEventListener('click', () => {
             const t = localStorage.getItem('theme')==='dark' ? 'light' : 'dark';
             localStorage.setItem('theme', t);
-            document.getElementById('theme-stylesheet').href = `${t}.css`;
-            document.getElementById('theme-sun-icon').style.display = t==='dark'?'block':'none';
-            document.getElementById('theme-moon-icon').style.display = t==='light'?'block':'none';
+            $('theme-stylesheet').href = `${t}.css`;
+            $('theme-sun-icon').style.display = t==='dark'?'block':'none';
+            $('theme-moon-icon').style.display = t==='light'?'block':'none';
         });
         loginButton.addEventListener('click', () => signInWithEmailAndPassword(auth, loginEmail.value, loginPassword.value).catch(e => { loginError.textContent="Error de acceso"; loginError.classList.remove('hidden'); }));
         logoutButton.addEventListener('click', () => signOut(auth));
