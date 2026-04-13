@@ -60,12 +60,13 @@
         /* --- MEJORA MÓVIL PARA LA TABLA (Listado Compacto + Modal) --- */
         @media (max-width: 1024px) {
             .novedades-table thead { display: none; }
+            .scrollable-table-container { overflow-x: hidden !important; } /* Previene scroll horizontal */
             .novedades-table, .novedades-table tbody { display: block; width: 100%; }
             
             .novedad-row {
                 display: flex;
-                align-items: center;
-                justify-content: space-between;
+                align-items: flex-start; /* Alinea los elementos arriba */
+                justify-content: flex-start; /* Evita que se separen a los extremos */
                 margin-bottom: 0.75rem;
                 padding: 1rem;
                 border-radius: 8px;
@@ -74,25 +75,35 @@
                 box-shadow: 0 2px 4px rgba(0,0,0,0.05);
                 cursor: pointer;
                 transition: background-color 0.2s;
+                width: 100%;
+                box-sizing: border-box;
             }
             .novedad-row:active { background-color: rgba(128, 128, 128, 0.15); }
             
-            /* Ocultar todas las columnas por defecto en móvil */
-            .novedad-row td { display: none; border: none; padding: 0; }
+            /* Ocultar todas las columnas por defecto en móvil y quitar 'nowrap' de estilos externos */
+            .novedad-row td { display: none !important; border: none; padding: 0; white-space: normal !important; }
             
             /* Mostrar únicamente el checkbox y el texto de la novedad */
-            .novedad-row td.cell-checkbox { display: block; margin-right: 1rem; }
+            .novedad-row td.cell-checkbox { 
+                display: block !important; 
+                margin-right: 0.75rem !important; /* Espacio mínimo con el texto */
+                flex-shrink: 0; 
+                padding-top: 2px; /* Alineación con la primera línea de texto */
+            }
             .novedad-row td.cell-novedad {
-                display: -webkit-box;
+                display: -webkit-box !important;
                 -webkit-line-clamp: 2; /* Limita a dos líneas de texto */
                 -webkit-box-orient: vertical;
                 overflow: hidden;
                 text-overflow: ellipsis;
-                white-space: normal;
-                flex: 1;
+                white-space: normal !important; /* Fuerza a romper el texto en varias líneas */
+                word-wrap: break-word !important;
+                overflow-wrap: break-word !important;
+                flex-grow: 1; /* Rellena el centro */
                 text-align: left;
                 font-weight: 500;
                 font-size: 0.95rem;
+                line-height: 1.4;
             }
             
             /* Flecha indicadora de apertura */
@@ -100,8 +111,11 @@
                 content: '▶';
                 font-size: 0.8rem;
                 color: var(--color-texto-secundario);
-                margin-left: 0.75rem;
+                margin-left: auto; /* Empuja la flecha hacia la derecha del todo */
+                padding-left: 0.5rem;
                 opacity: 0.5;
+                flex-shrink: 0;
+                align-self: center; /* Se centra verticalmente */
             }
             
             .top-dashboard-grid { grid-template-columns: 1fr; }
@@ -1176,11 +1190,28 @@
         }
 
         function checkAlarms() {
-            const now = new Date(), t = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+            const now = new Date();
+            const t = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
             const dt = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+            
             currentAlarms.forEach(a => {
                 if (a.time === t) {
-                    let ring = (a.type === 'once' && a.date === dt) || a.type === 'daily' || (a.type === 'weekly' && a.day == now.getDay()) || (a.type === 'monthly' && (a.monthDays||'').split(',').map(n=>+n).includes(now.getDate()));
+                    let ring = false;
+                    
+                    if (a.type === 'once' && a.date === dt) {
+                        ring = true;
+                    } else if (a.type === 'daily') {
+                        ring = true;
+                    } else if (a.type === 'weekly' && String(a.day) === String(now.getDay())) {
+                        ring = true;
+                    } else if (a.type === 'monthly') {
+                        // FIX: Extrae exactamente los números introducidos, omitiendo cualquier otra cosa (espacios, letras o comas).
+                        const diasConfigurados = (a.monthDays || '').match(/\d+/g)?.map(Number) || [];
+                        if (diasConfigurados.includes(now.getDate())) {
+                            ring = true;
+                        }
+                    }
+
                     if (ring && !triggeredAlarmsCache.has(`${a.id}-${dt}-${t}`)) {
                         triggeredAlarmsCache.add(`${a.id}-${dt}-${t}`);
                         $('alarm-trigger-message').textContent = a.message;
