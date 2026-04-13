@@ -78,6 +78,40 @@
             text-align: center;
             width: auto;
         }
+        
+        /* --- Estilos para Comentarios / Respuestas --- */
+        .comment-bubble {
+            background-color: rgba(128, 128, 128, 0.1);
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.75rem;
+            border: 1px solid rgba(128, 128, 128, 0.2);
+            word-wrap: break-word;
+        }
+        .comment-meta {
+            font-size: 0.75rem;
+            color: inherit;
+            opacity: 0.7;
+            margin-bottom: 0.4rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .comment-text {
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+        .comments-novedad-btn {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        .comments-novedad-btn:hover {
+            background-color: rgba(128, 128, 128, 0.15);
+        }
+
         @media (max-width: 480px) {
             #company-logo { width: 36px; }
             .main-title { font-size: 1.125rem; }
@@ -140,13 +174,13 @@
                 </button>
                 <!-- Botón Check List Diario -->
 
-<a href="checklist.html" target="_blank" class="button button-secondary button-link" title="Abrir Check List Diario">
-<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-<path d="M9 2a2 2 0 00-2 2v8a2 2 0 002 2h6a2 2 0 002-2V6.414A2 2 0 0016.586 5L13.5 1.914A2 2 0 0012.086 1.5H9z" />
-<path d="M11 2.5a.5.5 0 01.5-.5h.586a1 1 0 01.707.293l2.914 2.914a1 1 0 01.293.707V12a2 2 0 01-2 2H9a2 2 0 01-2-2V4a2 2 0 012-2h2v.5z" />
-</svg>
-<span class="btn-text">Check List</span>
-</a>
+                <a href="checklist.html" target="_blank" class="button button-secondary button-link" title="Abrir Check List Diario">
+                <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M9 2a2 2 0 00-2 2v8a2 2 0 002 2h6a2 2 0 002-2V6.414A2 2 0 0016.586 5L13.5 1.914A2 2 0 0012.086 1.5H9z" />
+                <path d="M11 2.5a.5.5 0 01.5-.5h.586a1 1 0 01.707.293l2.914 2.914a1 1 0 01.293.707V12a2 2 0 01-2 2H9a2 2 0 01-2-2V4a2 2 0 012-2h2v.5z" />
+                </svg>
+                <span class="btn-text">Check List</span>
+                </a>
             </div>
         </header>
 
@@ -158,7 +192,6 @@
                 <!-- Prioridad -->
                 <div class="form-group">
                     <label for="prioridad" class="form-label">Prioridad</label>
-                    <!-- CORRECCIÓN: Clases añadidas a las opciones -->
                     <select id="prioridad" name="prioridad" required class="form-select">
                         <option class="prioridad-urgente-op" value="Urgente">Urgente</option>
                         <option class="prioridad-alta-op" value="Alta">Alta</option>
@@ -331,6 +364,7 @@
                             <th>Novedad</th>
                             <th>Notificado a</th>
                             <th>Estado</th>
+                            <th>Respuestas</th>
                             <th>Editar</th>
                             <th>Borrar</th>
                         </tr>
@@ -355,7 +389,42 @@
         </div>
     </div>
 
-    <!-- Modal de Edición de Novedad (NUEVO) -->
+    <!-- NUEVO: Modal de Comentarios / Respuestas -->
+    <div id="comments-modal" class="modal-overlay hidden">
+        <div class="modal-container card" style="max-width: 42rem;">
+            <h3 class="modal-title">Seguimiento de Novedad</h3>
+            
+            <!-- Contexto de la novedad -->
+            <div id="comments-context-container" style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(128,128,128,0.2);">
+                <p class="form-label" style="margin-bottom: 0.25rem;">Novedad original:</p>
+                <div id="comments-context" style="font-style: italic; font-size: 0.95rem; line-height: 1.4;">
+                    <!-- Aquí va la novedad -->
+                </div>
+            </div>
+            
+            <!-- Lista de comentarios -->
+            <div id="comments-list" style="max-height: 300px; overflow-y: auto; margin-bottom: 1.5rem; padding-right: 0.5rem;">
+                <!-- Comentarios se renderizan aquí -->
+            </div>
+
+            <!-- Formulario para nuevo comentario -->
+            <form id="add-comment-form">
+                <input type="hidden" id="comment-novedad-id">
+                <div class="form-group form-group-full">
+                    <label for="new-comment-text" class="form-label">Añadir Respuesta</label>
+                    <textarea id="new-comment-text" class="form-textarea" rows="2" placeholder="Ej: Mantenimiento dice que no tiene solución rápida, hay que cambiar de habitación..." required></textarea>
+                </div>
+                <div class="modal-actions" style="margin-top: 0.5rem;">
+                    <button type="button" id="close-comments-btn" class="button button-gray">Cerrar</button>
+                    <button type="submit" id="save-comment-btn" class="button button-primary">
+                        Enviar Respuesta
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de Edición de Novedad -->
     <div id="edit-modal" class="modal-overlay hidden">
         <div class="modal-container card" style="max-width: 38rem;">
             <h3 class="modal-title">Editar Novedad</h3>
@@ -478,7 +547,7 @@
         import { 
             getFirestore, doc, setDoc, onSnapshot, collection, query, 
             orderBy, serverTimestamp, updateDoc, addDoc, 
-            setLogLevel, getDocs, deleteDoc, writeBatch 
+            setLogLevel, getDocs, deleteDoc, writeBatch, arrayUnion 
         } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
         // --- Configuración DUAL de Firebase ---
@@ -522,7 +591,7 @@
         const form = document.getElementById('novedad-form');
         const submitButton = document.getElementById('submit-button');
         
-        // Formulario de Edición (NUEVO)
+        // Formulario de Edición
         const editModal = document.getElementById('edit-modal');
         const editForm = document.getElementById('edit-novedad-form');
         const cancelEditBtn = document.getElementById('cancel-edit-btn');
@@ -534,6 +603,16 @@
         const editNovedad = document.getElementById('editNovedad');
         const editCurrentShift = document.getElementById('editCurrentShift');
         const editMetadata = document.getElementById('edit-metadata');
+
+        // Formulario y Modal de Comentarios (NUEVO)
+        const commentsModal = document.getElementById('comments-modal');
+        const closeCommentsBtn = document.getElementById('close-comments-btn');
+        const addCommentForm = document.getElementById('add-comment-form');
+        const commentsList = document.getElementById('comments-list');
+        const commentsContext = document.getElementById('comments-context');
+        const commentNovedadId = document.getElementById('comment-novedad-id');
+        const newCommentText = document.getElementById('new-comment-text');
+        const saveCommentBtn = document.getElementById('save-comment-btn');
 
         let novedadesLog = document.getElementById('novedades-log');
         const currentShiftDisplay = document.getElementById('current-shift');
@@ -568,7 +647,7 @@
         const sunIcon = document.getElementById('theme-sun-icon');
         const moonIcon = document.getElementById('theme-moon-icon');
 
-        // Referencias DOM para Multiselect (Formulario de Creación)
+        // Referencias DOM para Multiselect
         const multiselectButton = document.getElementById('multiselect-button');
         const multiselectDropdownContainer = document.getElementById('multiselect-dropdown-container');
         const multiselectSearch = document.getElementById('multiselect-search');
@@ -576,7 +655,6 @@
         const multiselectSelectAll = document.getElementById('multiselect-select-all');
         const multiselectLabel = document.getElementById('multiselect-label');
         
-        // Referencias DOM para Multiselect (Formulario de Edición)
         const editMultiselectButton = document.getElementById('edit-multiselect-button');
         const editMultiselectDropdownContainer = document.getElementById('edit-multiselect-dropdown-container');
         const editMultiselectSearch = document.getElementById('edit-multiselect-search');
@@ -588,7 +666,7 @@
         const prioridadSelect = document.getElementById('prioridad');
         const editPrioridadSelect = document.getElementById('editPrioridad');
 
-        // Referencias DOM para los Filtros (NUEVO)
+        // Referencias DOM para los Filtros
         const filterTurno = document.getElementById('filter-turno');
         const filterFecha = document.getElementById('filter-fecha');
         const filterPrioridad = document.getElementById('filter-prioridad');
@@ -601,7 +679,7 @@
             'Seguridad', 'Parking', 'A.Públicas', 'Piscina', 'GerenciaO', 'GerenciaD'
         ];
 
-        let currentNovedades = []; // Array que almacena los datos reales extraídos de Firebase antes de filtrar
+        let currentNovedades = []; 
         let allNovedadesMap = new Map(); 
         let selectedNovedadIds = new Set(); 
         
@@ -794,8 +872,16 @@
                     allNovedadesMap.set(doc.id, data); 
                 });
 
-                // Llamar a la función de filtrado (la cual a su vez renderiza)
                 applyFiltersAndRender();
+
+                // Si el modal de comentarios está abierto, recargar los comentarios en vivo
+                if (!commentsModal.classList.contains('hidden')) {
+                    const activeId = commentNovedadId.value;
+                    const activeNovedad = allNovedadesMap.get(activeId);
+                    if (activeNovedad) {
+                        renderComments(activeNovedad.comentarios || []);
+                    }
+                }
 
                 if (currentNovedades.length === 0) {
                     exportButton.disabled = true; 
@@ -810,25 +896,17 @@
             });
         }
         
-        // NUEVA FUNCIÓN PARA APLICAR LOS FILTROS
         function applyFiltersAndRender() {
             const valTurno = filterTurno.value;
-            const valFecha = filterFecha.value; // Formato YYYY-MM-DD
+            const valFecha = filterFecha.value;
             const valPrioridad = filterPrioridad.value;
             const valEstado = filterEstado.value;
             const valText = filterText.value.toLowerCase().trim();
 
             const filteredData = currentNovedades.filter(novedad => {
-                // Filtro Turno
                 if (valTurno && novedad.turno !== valTurno) return false;
-                
-                // Filtro Prioridad
                 if (valPrioridad && novedad.prioridad !== valPrioridad) return false;
-                
-                // Filtro Estado
                 if (valEstado && novedad.estado !== valEstado) return false;
-
-                // Filtro Fecha (Comparamos con formato YYYY-MM-DD local)
                 if (valFecha) {
                     const tsDate = novedad.timestamp && typeof novedad.timestamp.toDate === 'function' ? novedad.timestamp.toDate() : null;
                     if (tsDate) {
@@ -836,14 +914,11 @@
                         const month = String(tsDate.getMonth() + 1).padStart(2, '0');
                         const day = String(tsDate.getDate()).padStart(2, '0');
                         const localDateStr = `${year}-${month}-${day}`;
-                        
                         if (localDateStr !== valFecha) return false;
                     } else {
-                        return false; // Si no hay timestamp válido no coincide la fecha
+                        return false; 
                     }
                 }
-
-                // Filtro Búsqueda Libre de Texto (en múltiples columnas)
                 if (valText) {
                     const fullTextSearch = [
                         novedad.areaElemento || '',
@@ -859,18 +934,15 @@
                 return true;
             });
 
-            // Renderizamos solo los datos que superan los filtros
             renderNovedadesLog(filteredData);
         }
 
-        // Listeners para ejecutar el filtrado en cuanto cambie algún input
         filterTurno.addEventListener('change', applyFiltersAndRender);
         filterFecha.addEventListener('change', applyFiltersAndRender);
         filterPrioridad.addEventListener('change', applyFiltersAndRender);
         filterEstado.addEventListener('change', applyFiltersAndRender);
         filterText.addEventListener('input', applyFiltersAndRender);
 
-        // Limpiar Filtros
         clearFiltersBtn.addEventListener('click', () => {
             filterTurno.value = '';
             filterFecha.value = '';
@@ -915,9 +987,9 @@
                 tdFecha.innerHTML = `${fecha}<br><span class="hora">${hora}</span>`;
                 row.appendChild(tdFecha);
 
-                // Prioridad (badge)
+                // Prioridad
                 const tdPrior = document.createElement('td');
-                tdPrior.className = 'cell-prioridad'; // Clase para control de ancho
+                tdPrior.className = 'cell-prioridad';
                 const spanPrior = document.createElement('span');
                 spanPrior.className = getPriorityClasses(novedad.prioridad);
                 spanPrior.textContent = novedad.prioridad || '';
@@ -955,14 +1027,13 @@
                 tdNot.textContent = novedad.notificadoA || '-';
                 row.appendChild(tdNot);
 
-                // Estado (select)
+                // Estado
                 const tdEstado = document.createElement('td');
                 tdEstado.className = 'cell-estado';
                 const selectEstado = document.createElement('select');
                 selectEstado.dataset.id = novedad.id;
                 selectEstado.className = getStatusClasses(novedad.estado);
                 
-                // Tooltip de "Completado"
                 if (novedad.estado === 'Completado' && novedad.completadoPor) {
                     const completadoTimestamp = novedad.completadoEn ? formatFullTimestamp(novedad.completadoEn.toDate()) : '';
                     selectEstado.title = `Completado por ${novedad.completadoPor} el ${completadoTimestamp}`;
@@ -982,6 +1053,26 @@
                 selectEstado.appendChild(optComp);
                 tdEstado.appendChild(selectEstado);
                 row.appendChild(tdEstado);
+
+                // --- NUEVO: Celda Respuestas/Comentarios ---
+                const tdComments = document.createElement('td');
+                tdComments.className = 'cell-comments';
+                const commentsBtn = document.createElement('button');
+                commentsBtn.dataset.id = novedad.id;
+                const commentsCount = novedad.comentarios ? novedad.comentarios.length : 0;
+                // Colorear botón si hay respuestas
+                const btnColorClass = commentsCount > 0 ? 'button-primary' : 'button-secondary';
+                commentsBtn.className = `button-icon comments-novedad-btn ${btnColorClass}`;
+                commentsBtn.title = 'Ver/Agregar respuestas';
+                
+                commentsBtn.innerHTML = `
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style="width: 1.1rem; height: 1.1rem;">
+                        <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd" />
+                    </svg>
+                    <span style="font-size: 0.8rem; font-weight: bold; margin-left: 2px;">${commentsCount}</span>
+                `;
+                tdComments.appendChild(commentsBtn);
+                row.appendChild(tdComments);
                 
                 // Editar
                 const tdEdit = document.createElement('td');
@@ -1008,20 +1099,17 @@
                 novedadesLog.appendChild(row);
             });
             
-            // Re-adjuntar listeners usando delegación
             setupTableListeners();
         }
         
         function setupTableListeners() {
-            // Clonar el nodo para limpiar listeners anteriores (necesario para la delegación)
             const oldLog = novedadesLog;
-            novedadesLog = oldLog.cloneNode(false); // Clonar vacío
+            novedadesLog = oldLog.cloneNode(false);
             while (oldLog.firstChild) {
                 novedadesLog.appendChild(oldLog.firstChild);
             }
             oldLog.parentNode.replaceChild(novedadesLog, oldLog);
             
-            // Delegación de eventos para toda la tabla
             novedadesLog.addEventListener('change', (e) => {
                 const target = e.target;
                 if (target.classList.contains('novedad-checkbox')) {
@@ -1057,18 +1145,112 @@
                     } else {
                         showMessageModal("Error", "No se encontró el registro para editar.");
                     }
+                } else if (target.classList.contains('comments-novedad-btn')) {
+                    const id = target.dataset.id;
+                    const novedad = allNovedadesMap.get(id);
+                    if (novedad) {
+                        openCommentsModal(novedad);
+                    }
                 }
             });
 
             updateWhatsappButton();
         }
+
+        // --- Lógica del Modal de Comentarios (NUEVO) ---
+        function openCommentsModal(novedad) {
+            commentNovedadId.value = novedad.id;
+            
+            // Construir el contexto para que sea claro a qué se está respondiendo
+            const areaContext = novedad.areaElemento ? `<strong>Área/Elem:</strong> ${novedad.areaElemento} <br>` : '';
+            const habitContext = novedad.habitacion ? `<strong>Habitación:</strong> ${novedad.habitacion} <br>` : '';
+            commentsContext.innerHTML = `${areaContext} ${habitContext} "${novedad.novedad}"`;
+            
+            renderComments(novedad.comentarios || []);
+            commentsModal.classList.remove('hidden');
+            setTimeout(() => newCommentText.focus(), 100);
+        }
+
+        function renderComments(comentarios) {
+            commentsList.innerHTML = '';
+            
+            if (!comentarios || comentarios.length === 0) {
+                commentsList.innerHTML = '<p style="color: var(--color-texto-secundario); font-size: 0.9rem; text-align: center; margin-top: 1rem;">No hay respuestas aún. Sé el primero en actualizar esta novedad.</p>';
+                return;
+            }
+
+            comentarios.forEach(c => {
+                const div = document.createElement('div');
+                div.className = 'comment-bubble';
+                
+                const d = new Date(c.timestamp);
+                const dateStr = d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
+                const timeStr = d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                
+                // Formatear email para mostrar solo el nombre antes del @
+                const username = c.user ? c.user.split('@')[0] : 'Usuario';
+
+                div.innerHTML = `
+                    <div class="comment-meta">
+                        <strong>${username}</strong>
+                        <span>${dateStr} - ${timeStr}</span>
+                    </div>
+                    <div class="comment-text">${c.text}</div>
+                `;
+                commentsList.appendChild(div);
+            });
+
+            // Scroll automático hacia abajo para ver el último comentario
+            commentsList.scrollTop = commentsList.scrollHeight;
+        }
+
+        closeCommentsBtn.addEventListener('click', () => {
+            commentsModal.classList.add('hidden');
+            newCommentText.value = '';
+        });
+
+        addCommentForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const text = newCommentText.value.trim();
+            const id = commentNovedadId.value;
+            
+            if (!text || !id) return;
+            
+            saveCommentBtn.disabled = true;
+            saveCommentBtn.innerHTML = 'Enviando...';
+
+            try {
+                const collectionPath = getCollectionPath();
+                const docRef = doc(db, collectionPath, id);
+                
+                const newComment = {
+                    text: text,
+                    user: userEmail,
+                    timestamp: new Date().toISOString()
+                };
+
+                // arrayUnion agrega el objeto al arreglo 'comentarios' sin sobreescribir el resto
+                await updateDoc(docRef, {
+                    comentarios: arrayUnion(newComment)
+                });
+
+                newCommentText.value = '';
+                // La UI se actualizará automáticamente gracias al onSnapshot
+                
+            } catch (error) {
+                console.error("Error al agregar respuesta:", error);
+                showMessageModal("Error", "No se pudo guardar la respuesta. Intenta de nuevo.");
+            } finally {
+                saveCommentBtn.disabled = false;
+                saveCommentBtn.innerHTML = 'Enviar Respuesta';
+            }
+        });
         
-        // --- Lógica del Modal de Edición (NUEVO) ---
+        // --- Lógica del Modal de Edición ---
         
         function openEditModal(novedad) {
             editId.value = novedad.id;
             
-            // Cargar datos estáticos/simples
             editPrioridad.value = novedad.prioridad || 'Media';
             editNReserva.value = novedad.nReserva || '';
             editHabitacion.value = novedad.habitacion || '';
@@ -1076,27 +1258,19 @@
             editNovedad.value = novedad.novedad || '';
             editCurrentShift.textContent = novedad.turno || '--:--';
 
-            // Cargar Metadatos
             const createdDate = novedad.timestamp && typeof novedad.timestamp.toDate === 'function' ? formatFullTimestamp(novedad.timestamp.toDate()) : 'Fecha Inválida';
             const user = novedad.userEmail || 'Desconocido';
             editMetadata.textContent = `Creado por: ${user} el ${createdDate}`;
 
-            // Aplicar color de prioridad
             updateEditPrioridadColor(); 
-            
-            // 1. Inicializar Multiselect de Edición
             populateEditMultiselect(); 
             
-            // 2. Preseleccionar opciones
             const selectedOptions = (novedad.notificadoA || '').split(', ').filter(s => s.trim() !== '');
             editMultiselectDropdown.querySelectorAll('.edit-multiselect-option').forEach(cb => {
                 cb.checked = selectedOptions.includes(cb.value);
             });
 
-            // 3. Actualizar etiqueta y estado
             updateEditMultiselectLabelAndSelectAll();
-
-            // Mostrar el modal
             editModal.classList.remove('hidden');
         }
 
@@ -1128,7 +1302,8 @@
                     timestamp: serverTimestamp(),
                     userId: userId, 
                     userEmail: userEmail,
-                    estado: 'En curso' 
+                    estado: 'En curso',
+                    comentarios: [] // Inicializar array vacío para nuevos registros
                 };
                 await addDoc(novedadesRef, newNovedad);
                 form.reset(); 
@@ -1445,25 +1620,36 @@
             exportButton.disabled = true;
             exportButton.innerHTML = `<svg class="loading-spinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Exportando...`;
             try {
-                // Al exportar, usamos los datos actuales filtrados si queremos (aquí mantenemos todo)
-                // O podemos exportar solo la vista filtrada actual usando currentNovedades
-                // Para mantener la lógica original del código viejo, se exportaba todo:
                 const collectionPath = getCollectionPath();
                 const colRef = collection(db, collectionPath);
                 const qRef = query(colRef, orderBy('timestamp', 'desc'));
                 const snapshot = await getDocs(qRef);
                 const rows = [];
-                const headers = ['Turno', 'Fecha', 'Hora', 'Prioridad', 'Área/Elemento', 'Nº Reserva', 'Habitación', 'Novedad', 'Notificado a', 'Estado', 'UserId', 'Timestamp', 'CompletadoPor', 'CompletadoEn'];
+                // Se agregó 'Respuestas' al header del excel
+                const headers = ['Turno', 'Fecha', 'Hora', 'Prioridad', 'Área/Elemento', 'Nº Reserva', 'Habitación', 'Novedad', 'Respuestas (Historial)', 'Notificado a', 'Estado', 'UserId', 'Timestamp', 'CompletadoPor', 'CompletadoEn'];
                 rows.push(headers);
+                
                 snapshot.forEach(docSnap => {
                     const d = docSnap.data();
                     const ts = d.timestamp && d.timestamp.toDate ? d.timestamp.toDate() : (d.timestamp ? new Date(d.timestamp) : new Date());
                     const tsComp = d.completadoEn && d.completadoEn.toDate ? d.completadoEn.toDate() : null;
                     const fecha = formatDate(ts);
                     const hora = ts.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                    
+                    // Formatear comentarios para el Excel
+                    let comentariosStr = '';
+                    if (d.comentarios && d.comentarios.length > 0) {
+                        comentariosStr = d.comentarios.map(c => {
+                            const cDate = new Date(c.timestamp).toLocaleString('es-ES', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
+                            const user = c.user ? c.user.split('@')[0] : 'Usuario';
+                            return `[${cDate}] ${user}: ${c.text}`;
+                        }).join('\n | ');
+                    }
+
                     rows.push([
                         d.turno || '', fecha, hora, d.prioridad || '', d.areaElemento || '',
                         d.nReserva || '', d.habitacion || '', (d.novedad || '').replace(/\r?\n/g, ' '),
+                        comentariosStr,
                         d.notificadoA || '', d.estado || '', d.userId || '', ts.toISOString(),
                         d.completadoPor || '', tsComp ? tsComp.toISOString() : ''
                     ]);
@@ -1472,8 +1658,8 @@
                 const ws = XLSX.utils.aoa_to_sheet(rows);
                 const colWidths = [
                     { wch: 10 }, { wch: 12 }, { wch: 8 }, { wch: 10 }, { wch: 25 },
-                    { wch: 20 }, { wch: 10 }, { wch: 80 }, { wch: 25 }, { wch: 12 },
-                    { wch: 28 }, { wch: 25 }, { wch: 25 }, { wch: 25 }
+                    { wch: 20 }, { wch: 10 }, { wch: 80 }, { wch: 60 }, { wch: 25 }, 
+                    { wch: 12 }, { wch: 28 }, { wch: 25 }, { wch: 25 }, { wch: 25 }
                 ];
                 ws['!cols'] = colWidths;
                 const wb = { Sheets: { 'Novedades': ws }, SheetNames: ['Novedades'] };
