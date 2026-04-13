@@ -744,7 +744,6 @@
                 const priorClass = { 'Urgente':'badge-urgente', 'Alta':'badge-alta', 'Media':'badge-media' }[n.prioridad] || 'badge-baja';
                 const count = n.comentarios?.length || 0;
 
-                // Añadimos data-id al tr para capturarlo en móvil
                 return `
                 <tr class="novedad-row" data-id="${n.id}">
                     <td class="cell-checkbox"><input type="checkbox" data-id="${n.id}" class="novedad-checkbox" ${isChecked}></td>
@@ -782,18 +781,15 @@
 
         // --- Event Delegation Global de Tabla + Lógica Modal Móvil ---
         novedadesLog.addEventListener('click', e => {
-            // Lógica para detectar clic en toda la fila en dispositivos móviles
             if (window.innerWidth <= 1024) {
                 const row = e.target.closest('.novedad-row');
-                // Evita abrir el modal si el clic fue en el checkbox o sus alrededores
                 if (row && !e.target.closest('.cell-checkbox')) {
                     const id = row.dataset.id;
                     abrirModalDetalleMovil(allNovedadesMap.get(id));
-                    return; // Detenemos la ejecución aquí
+                    return;
                 }
             }
 
-            // Lógica estándar para escritorio
             const btn = e.target.closest('button');
             if (btn?.classList.contains('delete-novedad-btn')) {
                 $('confirm-delete-btn').dataset.id = btn.dataset.id;
@@ -805,13 +801,11 @@
             }
         });
 
-        // --- Lógica de Apertura y Funcionalidad del Modal Móvil ---
         function abrirModalDetalleMovil(n) {
             if (!n) return;
             const d = n.timestamp?.toDate ? n.timestamp.toDate() : new Date();
             const priorClass = { 'Urgente':'badge-urgente', 'Alta':'badge-alta', 'Media':'badge-media' }[n.prioridad] || 'badge-baja';
 
-            // Rellenar la información
             $('mobile-detail-content').innerHTML = `
                 <div><strong style="color:var(--color-texto-secundario); font-size:0.8rem; text-transform:uppercase;">Novedad:</strong><br><span style="font-size:1.05rem; font-weight:bold;">${escapeHTML(n.novedad)}</span></div>
                 
@@ -836,11 +830,9 @@
                 </div>
             `;
 
-            // Configurar funcionalidad de los botones
             const btnEstado = $('mobile-btn-estado');
             btnEstado.dataset.id = n.id;
             btnEstado.textContent = n.estado === 'Completado' ? 'Marcar En Curso' : 'Marcar Completado';
-            // Cambio de diseño dinámico para el botón de estado
             if(n.estado === 'Completado') {
                 btnEstado.className = 'button button-orange';
             } else {
@@ -860,7 +852,6 @@
             $('mobile-detail-modal').classList.remove('hidden');
         }
 
-        // Eventos para los botones del modal móvil
         $('mobile-btn-estado').addEventListener('click', e => {
             const id = e.target.dataset.id;
             const n = allNovedadesMap.get(id);
@@ -888,7 +879,6 @@
             $('confirm-modal').classList.remove('hidden');
         });
 
-        // Evento general para checkbox y select de escritorio
         novedadesLog.addEventListener('change', e => {
             if (e.target.classList.contains('novedad-checkbox')) {
                 e.target.checked ? selectedNovedadIds.add(e.target.dataset.id) : selectedNovedadIds.delete(e.target.dataset.id);
@@ -914,13 +904,11 @@
             $('btn-next').onclick = () => { currentPage++; renderCurrentPage(); };
         }
 
-        // --- Formulario Unificado (Crear/Editar) ---
         openAddModalBtn.addEventListener('click', () => openNovedadModal());
 
         function openNovedadModal(novedad = null) {
             novedadForm.reset();
             resetMultiselect();
-            
             if (novedad) {
                 novedadModalTitle.textContent = 'Editar Novedad';
                 novedadId.value = novedad.id;
@@ -930,10 +918,8 @@
                 $('areaElemento').value = novedad.areaElemento || '';
                 $('novedad').value = novedad.novedad || '';
                 currentShiftDisplay.textContent = novedad.turno || '--:--';
-                
                 novedadMetadata.classList.remove('hidden');
                 novedadMetadata.textContent = `Creado por: ${novedad.userEmail||'--'} el ${formatFullTimestamp(novedad.timestamp?.toDate?.())}`;
-
                 const selArr = (novedad.notificadoA || '').split(',').map(s=>s.trim());
                 multiselectDropdown.querySelectorAll('.multiselect-option').forEach(cb => cb.checked = selArr.includes(cb.value));
                 updateMultiselectLabelAndSelectAll();
@@ -943,7 +929,6 @@
                 novedadMetadata.classList.add('hidden');
                 currentShiftDisplay.textContent = calcularTurno();
             }
-            
             actualizarColorPrioridad(prioridadSelect);
             novedadModal.classList.remove('hidden');
             setTimeout(() => $('areaElemento').focus(), 100);
@@ -955,10 +940,8 @@
             e.preventDefault();
             submitButton.disabled = true;
             loadingSpinner.classList.remove('hidden');
-            
             const fd = new FormData(novedadForm);
             const notif = Array.from(multiselectDropdown.querySelectorAll('.multiselect-option:checked')).map(cb=>cb.value).join(', ');
-            
             const payload = {
                 prioridad: fd.get('prioridad').trim(),
                 nReserva: fd.get('nReserva').trim() || null,
@@ -967,11 +950,10 @@
                 novedad: fd.get('novedad').trim(),
                 notificadoA: notif || null
             };
-
             try {
-                if (novedadId.value) { // Update
+                if (novedadId.value) {
                     await updateDoc(doc(db, getPath(COLLECTION_NAME), novedadId.value), { ...payload, lastEditedBy: userEmail, lastEditedAt: serverTimestamp() });
-                } else { // Create
+                } else {
                     await addDoc(collection(db, getPath(COLLECTION_NAME)), { ...payload, turno: calcularTurno(), timestamp: serverTimestamp(), userId, userEmail, estado: 'En curso', comentarios: [] });
                 }
                 novedadModal.classList.add('hidden');
@@ -979,7 +961,6 @@
             finally { submitButton.disabled = false; loadingSpinner.classList.add('hidden'); }
         });
 
-        // --- Multiselect Consolidado ---
         function populateMultiselect() {
             multiselectDropdown.innerHTML = `<label class="multiselect-option-label"><input type="checkbox" id="multiselect-select-all"><span class="font-semibold">(Seleccionar todo)</span></label>`;
             multiselectOptions.forEach(opt => {
@@ -1012,7 +993,6 @@
         });
         document.addEventListener('click', e => { if(!e.target.closest('.relative')) multiselectDropdownContainer.classList.add('hidden'); });
 
-        // --- Comentarios ---
         function openComments(nov) {
             $('comment-novedad-id').value = nov.id;
             $('comments-context').innerHTML = `${nov.areaElemento?`<b>Área:</b> ${escapeHTML(nov.areaElemento)}<br>`:''} "${escapeHTML(nov.novedad)}"`;
@@ -1041,22 +1021,18 @@
             finally { btn.disabled = false; }
         });
 
-        // --- Exportación a Excel ---
         exportButton.addEventListener('click', () => {
             if (typeof XLSX === 'undefined') {
-                showMessageModal("Error", "La librería para generar el Excel no se ha cargado. Por favor, revisa tu conexión a internet.");
+                showMessageModal("Error", "La librería para generar el Excel no se ha cargado.");
                 return;
             }
-
             const dataToExport = filteredNovedades.map(n => {
                 const d = n.timestamp?.toDate ? n.timestamp.toDate() : new Date();
-                
                 const respuestasTexto = (n.comentarios || []).map(c => {
                     const cDate = new Date(c.timestamp).toLocaleString('es-ES', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
                     const cUser = (c.user||'').split('@')[0];
                     return `[${cDate} | ${cUser}]: ${c.text}`;
                 }).join('\n');
-
                 return {
                     "Turno": n.turno || '-',
                     "Fecha": formatDate(d),
@@ -1071,7 +1047,6 @@
                     "Respuestas": respuestasTexto || 'Sin respuestas'
                 };
             });
-
             const worksheet = XLSX.utils.json_to_sheet(dataToExport);
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "Novedades");
@@ -1079,7 +1054,6 @@
             XLSX.writeFile(workbook, fileName);
         });
 
-        // --- Acciones Masivas y Borrado ---
         $('confirm-delete-btn').addEventListener('click', async e => {
             await deleteDoc(doc(db, getPath(COLLECTION_NAME), e.target.dataset.id));
             $('confirm-modal').classList.add('hidden');
@@ -1115,7 +1089,6 @@
             }).catch(()=>showMessageModal("Error", "No se pudo copiar."));
         });
 
-        // --- Motor Optimizado de Alarmas ---
         let currentAlarms = [];
         let triggeredAlarmsCache = new Set();
         
@@ -1134,17 +1107,21 @@
                 return;
             }
             const diasStr = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+            const tiposMap = { 'once': 'Una vez', 'daily': 'Diaria', 'weekly': 'Semanal', 'monthly': 'Mensual' };
+            
             list.innerHTML = currentAlarms.map(a => {
                 let details = '';
-                if (a.type === 'once') details = `Fecha: ${a.date.split('-').reverse().join('/')} a las ${a.time}`;
-                else if (a.type === 'daily') details = `Todos los días a las ${a.time}`;
-                else if (a.type === 'weekly') details = `Todos los ${diasStr[a.day]} a las ${a.time}`;
-                else if (a.type === 'monthly') details = `Los días ${a.monthDays} de cada mes a las ${a.time}`;
+                if (a.type === 'once') details = `${a.date.split('-').reverse().join('/')} a las ${a.time}`;
+                else if (a.type === 'daily') details = `A las ${a.time}`;
+                else if (a.type === 'weekly') details = `Los ${diasStr[a.day]} a las ${a.time}`;
+                else if (a.type === 'monthly') details = `Días: ${a.monthDays} a las ${a.time}`;
                 
                 return `<div class="alarm-list-item">
                     <div class="alarm-info">
                         <strong style="color: var(--color-texto); font-size: 0.95rem;">${escapeHTML(a.message)}</strong>
-                        <span style="color: var(--color-texto-secundario); font-size: 0.8rem;">${details}</span>
+                        <span style="color: var(--color-texto-secundario); font-size: 0.8rem;">
+                            <b style="color:#FA780C;">[${tiposMap[a.type] || '?'}]</b> ${details}
+                        </span>
                     </div>
                     <button class="button-icon delete-alarm-btn" data-id="${a.id}" title="Eliminar Alarma" style="color: #ef4444;">
                         <svg class="icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75V4.5h8V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4.5A1.25 1.25 0 0111.25 3h2.5A1.25 1.25 0 0115 4.25V5.5h-5V4.25zM3.75 6A1.75 1.75 0 002 7.75v7.5A1.75 1.75 0 003.75 17h12.5A1.75 1.75 0 0018 15.25v-7.5A1.75 1.75 0 0016.25 6H3.75zM10 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 10zM13 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0113 10zM7 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 017 10z" clip-rule="evenodd" /></svg>
@@ -1185,7 +1162,7 @@
                 const msToNext = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
                 window.alarmTimeout = setTimeout(() => { checkAlarms(); scheduleNext(); }, msToNext);
             }
-            checkAlarms(); // check immediate
+            checkAlarms();
             scheduleNext();
         }
 
@@ -1197,7 +1174,6 @@
             currentAlarms.forEach(a => {
                 if (a.time === t) {
                     let ring = false;
-                    
                     if (a.type === 'once' && a.date === dt) {
                         ring = true;
                     } else if (a.type === 'daily') {
@@ -1205,7 +1181,6 @@
                     } else if (a.type === 'weekly' && String(a.day) === String(now.getDay())) {
                         ring = true;
                     } else if (a.type === 'monthly') {
-                        // FIX: Extrae exactamente los números introducidos, omitiendo cualquier otra cosa (espacios, letras o comas).
                         const diasConfigurados = (a.monthDays || '').match(/\d+/g)?.map(Number) || [];
                         if (diasConfigurados.includes(now.getDate())) {
                             ring = true;
@@ -1224,9 +1199,16 @@
         }
         
         $('open-reminder-modal-btn').addEventListener('click', () => { $('reminder-date').value = new Date().toISOString().split('T')[0]; $('reminder-modal').classList.remove('hidden'); });
+        
+        // --- FIX BUG VISIBILIDAD DE FECHA ---
         $('reminder-type').addEventListener('change', e => {
-            ['date','day','month-days'].forEach(id => $(`reminder-${id}-group`).classList.toggle('hidden', e.target.value !== id.split('-')[0] && !(e.target.value==='monthly' && id==='month-days')));
+            const val = e.target.value;
+            // Mostramos/Ocultamos explícitamente cada grupo según el valor seleccionado
+            $('reminder-date-group').classList.toggle('hidden', val !== 'once');
+            $('reminder-day-group').classList.toggle('hidden', val !== 'weekly');
+            $('reminder-month-days-group').classList.toggle('hidden', val !== 'monthly');
         });
+
         $('reminder-form').addEventListener('submit', async e => {
             e.preventDefault();
             const btn = e.target.querySelector('button[type="submit"]'); btn.disabled = true;
@@ -1236,7 +1218,6 @@
             } finally { btn.disabled = false; }
         });
 
-        // Config Init
         populateMultiselect();
         $('theme-toggle-btn').addEventListener('click', () => {
             const t = localStorage.getItem('theme')==='dark' ? 'light' : 'dark';
