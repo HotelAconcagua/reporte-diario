@@ -79,7 +79,7 @@
             width: auto;
         }
         
-        /* --- Ajustes para Info Usuario y Alarma (Misml Alto) --- */
+        /* --- Ajustes para Info Usuario y Alarma (Mismo Alto y Alineación Forzada) --- */
         .header-actions-container {
             display: flex;
             align-items: center;
@@ -89,27 +89,27 @@
             z-index: 10;
         }
         
-        .user-info-badge {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 32px; /* Alto fijo */
-            padding: 0 0.8rem;
-            font-size: 0.85rem;
-            border-radius: 6px;
-            box-sizing: border-box;
+        /* Se unifican ambos elementos para que el navegador los renderice idénticos */
+        .user-info-badge, #open-reminder-modal-btn {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            height: 34px !important; /* Alto fijo estricto para ambos */
+            padding: 0 0.8rem !important;
+            font-size: 0.85rem !important;
+            border-radius: 6px !important;
+            box-sizing: border-box !important;
+            margin: 0 !important; /* Anula cualquier margen residual de clases globales */
+            line-height: 1 !important; /* Centra el texto perfectamente */
         }
         
         #open-reminder-modal-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 32px; /* Mismo alto fijo */
-            padding: 0 0.8rem;
-            font-size: 0.85rem;
-            gap: 4px;
-            border-radius: 6px;
-            box-sizing: border-box;
+            gap: 6px;
+        }
+
+        #open-reminder-modal-btn svg {
+            margin: 0 !important; /* Anula márgenes del icono que puedan empujar el texto */
+            display: block;
         }
 
         /* --- Estilos para Comentarios / Respuestas --- */
