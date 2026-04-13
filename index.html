@@ -5,19 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registro Diario</title>
     
-    <!-- Librería SheetJS para exportar a Excel -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
-    <!-- 
-      El CSS se carga aquí. 
-      El JavaScript al final de la página cambiará el 'href' a 'dark.css' o 'light.css' 
-      según la preferencia guardada o el default.
-    -->
     <link id="theme-stylesheet" rel="stylesheet" href="dark.css">
     
-    <!-- 
-      Estilos base (solo para 'hidden', estructura mínima y mejoras móviles).
-    -->
     <style>
         .hidden { display: none; }
         /* Ocultar scrollbar estándar */
@@ -66,69 +57,58 @@
         .btn-massive-add:active { transform: translateY(0); }
         .btn-massive-add svg { width: 3rem; height: 3rem; stroke-width: 2.5; }
 
-        /* --- MEJORA MÓVIL PARA LA TABLA (Tarjetas / Cards) --- */
+        /* --- MEJORA MÓVIL PARA LA TABLA (Listado Compacto + Modal) --- */
         @media (max-width: 1024px) {
-            .novedades-table thead {
-                display: none; /* Ocultar encabezados originales */
-            }
-            .novedades-table, .novedades-table tbody, .novedades-table tr, .novedades-table td {
-                display: block;
-                width: 100%;
-                box-sizing: border-box;
-            }
+            .novedades-table thead { display: none; }
+            .novedades-table, .novedades-table tbody { display: block; width: 100%; }
+            
             .novedad-row {
-                margin-bottom: 1.5rem;
-                border: 1px solid rgba(128, 128, 128, 0.3) !important;
-                border-radius: 8px;
-                padding: 0.5rem;
-                background-color: rgba(128, 128, 128, 0.05);
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            }
-            .novedades-table td {
                 display: flex;
-                justify-content: space-between;
                 align-items: center;
-                border: none !important;
-                border-bottom: 1px solid rgba(128, 128, 128, 0.1) !important;
-                padding: 0.75rem 0.5rem;
-                text-align: right;
+                justify-content: space-between;
+                margin-bottom: 0.75rem;
+                padding: 1rem;
+                border-radius: 8px;
+                background-color: rgba(128, 128, 128, 0.05);
+                border: 1px solid rgba(128,128,128,0.2);
+                box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+                cursor: pointer;
+                transition: background-color 0.2s;
             }
-            .novedades-table td:last-child { border-bottom: none !important; }
-            /* Generar el label de la columna */
-            .novedades-table td::before {
-                content: attr(data-label);
-                font-weight: bold;
-                text-align: left;
-                flex: 0 0 40%;
-                padding-right: 1rem;
-                color: var(--color-texto-secundario, inherit);
-                opacity: 0.8;
-            }
-            /* Alinear el contenido a la derecha */
-            .novedades-table td > span, .novedades-table td > select, .novedades-table td > input, .novedades-table td > button, .novedades-table td > div, .novedades-table td > br {
+            .novedad-row:active { background-color: rgba(128, 128, 128, 0.15); }
+            
+            /* Ocultar todas las columnas por defecto en móvil */
+            .novedad-row td { display: none; border: none; padding: 0; }
+            
+            /* Mostrar únicamente el checkbox y el texto de la novedad */
+            .novedad-row td.cell-checkbox { display: block; margin-right: 1rem; }
+            .novedad-row td.cell-novedad {
+                display: -webkit-box;
+                -webkit-line-clamp: 2; /* Limita a dos líneas de texto */
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: normal;
                 flex: 1;
-                display: flex;
-                justify-content: flex-end;
-                text-align: right;
+                text-align: left;
+                font-weight: 500;
+                font-size: 0.95rem;
             }
-            .novedades-table td.cell-fecha { flex-direction: row; flex-wrap: wrap; justify-content: flex-end;}
-            .novedades-table td.cell-fecha br { display: none; }
-            .novedades-table td.cell-fecha .hora { margin-left: 8px; }
-            /* Para textos largos (la novedad) */
-            .cell-novedad {
-                flex-direction: column !important;
-                align-items: flex-start !important;
-                text-align: left !important;
+            
+            /* Flecha indicadora de apertura */
+            .novedad-row::after {
+                content: '▶';
+                font-size: 0.8rem;
+                color: var(--color-texto-secundario);
+                margin-left: 0.75rem;
+                opacity: 0.5;
             }
-            .cell-novedad::before { margin-bottom: 0.5rem; flex: 100% !important; }
-            /* Ajustes estéticos */
-            .cell-checkbox { align-items: center; }
-            .estado-select { width: auto; max-width: 150px; }
             
             .top-dashboard-grid { grid-template-columns: 1fr; }
             .btn-massive-add { padding: 1rem; flex-direction: row; justify-content: center; }
             .btn-massive-add svg { width: 2rem; height: 2rem; }
         }
+        
         @media (max-width: 480px) {
             #company-logo { width: 36px; }
             .main-title { font-size: 1.125rem; }
@@ -138,7 +118,6 @@
 </head>
 <body class="bg-fondo">
 
-    <!-- Pantalla de Login -->
     <div id="login-overlay" class="login-overlay">
         <div class="login-container card">
             <h2 class="login-title">Iniciar Sesión</h2>
@@ -160,7 +139,6 @@
         </div>
     </div>
     
-    <!-- Contenido Principal (Oculto por defecto) -->
     <div id="main-content" class="main-content hidden">
         
         <header class="main-header card">
@@ -178,7 +156,6 @@
                     </button>
                 </div>
             </div>
-            <!-- Botones de Encabezado -->
             <div class="header-buttons">
                 <button id="theme-toggle-btn" class="button-icon" title="Cambiar tema">
                     <img id="theme-sun-icon" class="icon" src="sol.png" alt="Sol" />
@@ -201,7 +178,6 @@
             </div>
         </header>
 
-        <!-- TABLERO SUPERIOR -->
         <div class="top-dashboard-grid">
             <div class="card" style="margin-bottom: 0;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
@@ -265,7 +241,6 @@
             </div>
         </div>
 
-        <!-- Tabla de Novedades -->
         <div class="card">
             <div class="table-actions" style="margin-bottom: 1rem;">
                 <div class="table-buttons-container">
@@ -275,7 +250,6 @@
                         </svg>
                         Whatsapp (0)
                     </button>
-                    <!-- Botón de Exportar (Habilitado ahora mediante JS) -->
                     <button id="export-button" class="button button-orange" title="Exportar todo el historial mostrado a XLSX" disabled>
                         <svg class="icon" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                             <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V7.414A2 2 0 0016.586 6L13 2.414A2 2 0 0011.586 2H4zM12 3.5L15.5 7H13a1 1 0 01-1-1V3.5zM7 9h6v2H7V9zm0 4h6v2H7v-2z"></path>
@@ -311,8 +285,7 @@
                         </tr>
                     </thead>
                     <tbody id="novedades-log">
-                        <!-- Filas dinámicas -->
-                    </tbody>
+                        </tbody>
                 </table>
             </div>
             
@@ -320,7 +293,6 @@
         </div>
     </div>
 
-    <!-- Modales de Uso General -->
     <div id="message-modal" class="modal-overlay hidden">
         <div class="modal-container card">
             <h3 id="modal-title" class="modal-title">Mensaje</h3>
@@ -331,7 +303,6 @@
         </div>
     </div>
 
-    <!-- Modal Formulario Unificado (Agregar y Editar) -->
     <div id="novedad-modal" class="modal-overlay hidden">
         <div class="modal-container card" style="max-width: 42rem;">
             <h3 id="novedad-modal-title" class="modal-title">Nueva Novedad</h3>
@@ -363,7 +334,6 @@
                     <input type="text" id="areaElemento" name="areaElemento" required class="form-input" placeholder="Ej: Puerta - Mantenimiento">
                 </div>
 
-                <!-- Multiselect Consolidado -->
                 <div class="form-group relative">
                     <label for="multiselect-button" class="form-label">Notificado a</label>
                     <button type="button" id="multiselect-button" class="multiselect-toggle">
@@ -413,7 +383,25 @@
         </div>
     </div>
 
-    <!-- Modal de Comentarios -->
+    <div id="mobile-detail-modal" class="modal-overlay hidden" style="z-index: 9999;">
+        <div class="modal-container card" style="width: 92%; max-width: 400px; padding: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid rgba(128,128,128,0.2); padding-bottom: 0.5rem;">
+                <h3 class="modal-title" style="margin: 0; font-size: 1.2rem;">Detalle del Registro</h3>
+                <button type="button" class="btn-cerrar-modal" style="background: none; border: none; font-size: 1.8rem; line-height: 1; cursor: pointer; color: var(--color-texto-secundario); padding: 0;">&times;</button>
+            </div>
+            
+            <div id="mobile-detail-content" style="font-size: 0.95rem; line-height: 1.6; margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 0.6rem;">
+                </div>
+            
+            <div class="modal-actions" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                <button id="mobile-btn-estado" class="button button-secondary" style="grid-column: span 2; padding: 0.8rem; font-weight: bold; border: 2px solid var(--color-texto-secundario);">Cambiar Estado</button>
+                <button id="mobile-btn-respuestas" class="button button-primary">Respuestas</button>
+                <button id="mobile-btn-editar" class="button button-orange">Editar</button>
+                <button id="mobile-btn-borrar" class="button button-danger" style="grid-column: span 2;">Borrar Registro</button>
+            </div>
+        </div>
+    </div>
+
     <div id="comments-modal" class="modal-overlay hidden">
         <div class="modal-container card" style="max-width: 42rem;">
             <h3 class="modal-title">Seguimiento de Novedad</h3>
@@ -437,7 +425,6 @@
         </div>
     </div>
 
-    <!-- Confirmaciones de Borrado -->
     <div id="confirm-modal" class="modal-overlay hidden">
         <div class="modal-container card">
             <h3 class="modal-title modal-title-danger">Confirmar Eliminación</h3>
@@ -463,7 +450,6 @@
         </div>
     </div>
 
-    <!-- Modal de Alarmas -->
     <div id="reminder-modal" class="modal-overlay hidden">
         <div class="modal-container card" style="max-width: 35rem;">
             <h3 class="modal-title" style="display: flex; align-items: center; gap: 8px;">
@@ -523,8 +509,7 @@
         </div>
     </div>
 
-    <!-- Trigger de Alarma -->
-    <div id="alarm-trigger-modal" class="modal-overlay hidden" style="z-index: 9999;">
+    <div id="alarm-trigger-modal" class="modal-overlay hidden" style="z-index: 10001;">
         <div class="modal-container card alarm-modal-active" style="text-align: center; max-width: 30rem;">
             <svg class="icon" fill="#FA780C" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" style="width: 4rem; height: 4rem; margin: 0 auto 1rem auto;">
                 <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"></path>
@@ -735,7 +720,6 @@
         
         clearFiltersBtn.addEventListener('click', () => { filterControls.forEach(el => el.value=''); applyFiltersAndRender(); });
 
-        // --- Optimización: Plantillas Literales para la Tabla con soporte de Cartas Responsivas ---
         function renderCurrentPage() {
             const pageData = filteredNovedades.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
             
@@ -746,34 +730,34 @@
                 const priorClass = { 'Urgente':'badge-urgente', 'Alta':'badge-alta', 'Media':'badge-media' }[n.prioridad] || 'badge-baja';
                 const count = n.comentarios?.length || 0;
 
-                // Implementando data-label para el CSS Móvil en Tarjetas
+                // Añadimos data-id al tr para capturarlo en móvil
                 return `
-                <tr class="novedad-row">
-                    <td class="cell-checkbox" data-label="Seleccionar"><input type="checkbox" data-id="${n.id}" class="novedad-checkbox" ${isChecked}></td>
-                    <td class="cell-turno" data-label="Turno">${escapeHTML(n.turno)}</td>
-                    <td class="cell-fecha" data-label="Fecha">${formatDate(d)}<br><span class="hora">${d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})}</span></td>
-                    <td class="cell-prioridad" data-label="Prioridad"><span class="badge ${priorClass}">${escapeHTML(n.prioridad)}</span></td>
-                    <td class="cell-area" data-label="Área/Elemento">${escapeHTML(n.areaElemento || '-')}</td>
-                    <td class="cell-reserva" data-label="Nº Reserva">${escapeHTML(n.nReserva || '-')}</td>
-                    <td class="cell-habitacion" data-label="Habitación">${escapeHTML(n.habitacion || '-')}</td>
-                    <td class="cell-novedad" data-label="Novedad" title="${escapeHTML(n.novedad)}">${escapeHTML(n.novedad)}</td>
-                    <td class="cell-notificado" data-label="Notificado a">${escapeHTML(n.notificadoA || '-')}</td>
-                    <td class="cell-estado" data-label="Estado">
+                <tr class="novedad-row" data-id="${n.id}">
+                    <td class="cell-checkbox"><input type="checkbox" data-id="${n.id}" class="novedad-checkbox" ${isChecked}></td>
+                    <td class="cell-turno">${escapeHTML(n.turno)}</td>
+                    <td class="cell-fecha">${formatDate(d)}<br><span class="hora">${d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})}</span></td>
+                    <td class="cell-prioridad"><span class="badge ${priorClass}">${escapeHTML(n.prioridad)}</span></td>
+                    <td class="cell-area">${escapeHTML(n.areaElemento || '-')}</td>
+                    <td class="cell-reserva">${escapeHTML(n.nReserva || '-')}</td>
+                    <td class="cell-habitacion">${escapeHTML(n.habitacion || '-')}</td>
+                    <td class="cell-novedad" title="${escapeHTML(n.novedad)}">${escapeHTML(n.novedad)}</td>
+                    <td class="cell-notificado">${escapeHTML(n.notificadoA || '-')}</td>
+                    <td class="cell-estado">
                         <select data-id="${n.id}" class="estado-select ${n.estado==='Completado'?'status-completado':'status-encurso'}" title="${compTit}">
                             <option value="En curso" ${n.estado!=='Completado'?'selected':''}>En curso</option>
                             <option value="Completado" ${n.estado==='Completado'?'selected':''}>Completado</option>
                         </select>
                     </td>
-                    <td class="cell-comments" data-label="Respuestas">
+                    <td class="cell-comments">
                         <button data-id="${n.id}" class="button-icon comments-novedad-btn ${count>0?'button-primary':'button-secondary'}" title="Respuestas">
                             <svg class="icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd" /></svg>
                             <span style="font-size:0.8rem;font-weight:bold;margin-left:2px;">${count}</span>
                         </button>
                     </td>
-                    <td class="cell-edit" data-label="Editar">
+                    <td class="cell-edit">
                         <button data-id="${n.id}" class="button-icon edit-novedad-btn" title="Editar"><svg class="icon" viewBox="0 0 20 20" fill="currentColor"><path d="M5.433 13.917V17.5h3.583L16.5 10.917l-3.583-3.584L5.433 13.917zm13.197-6.264a.75.75 0 000-1.06l-2.062-2.062a.75.75 0 00-1.06 0l-1.41 1.41 3.584 3.584 1.41-1.41z"/></svg></button>
                     </td>
-                    <td class="cell-delete" data-label="Borrar">
+                    <td class="cell-delete">
                         <button data-id="${n.id}" class="button-icon delete-novedad-btn" title="Borrar"><svg class="icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75V4.5h8V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4.5A1.25 1.25 0 0111.25 3h2.5A1.25 1.25 0 0115 4.25V5.5h-5V4.25zM3.75 6A1.75 1.75 0 002 7.75v7.5A1.75 1.75 0 003.75 17h12.5A1.75 1.75 0 0018 15.25v-7.5A1.75 1.75 0 0016.25 6H3.75zM10 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 10zM13 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0113 10zM7 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 017 10z" clip-rule="evenodd"/></svg></button>
                     </td>
                 </tr>`;
@@ -782,8 +766,20 @@
             renderPagination();
         }
 
-        // --- Event Delegation Global de Tabla ---
+        // --- Event Delegation Global de Tabla + Lógica Modal Móvil ---
         novedadesLog.addEventListener('click', e => {
+            // Lógica para detectar clic en toda la fila en dispositivos móviles
+            if (window.innerWidth <= 1024) {
+                const row = e.target.closest('.novedad-row');
+                // Evita abrir el modal si el clic fue en el checkbox o sus alrededores
+                if (row && !e.target.closest('.cell-checkbox')) {
+                    const id = row.dataset.id;
+                    abrirModalDetalleMovil(allNovedadesMap.get(id));
+                    return; // Detenemos la ejecución aquí
+                }
+            }
+
+            // Lógica estándar para escritorio
             const btn = e.target.closest('button');
             if (btn?.classList.contains('delete-novedad-btn')) {
                 $('confirm-delete-btn').dataset.id = btn.dataset.id;
@@ -795,6 +791,90 @@
             }
         });
 
+        // --- Lógica de Apertura y Funcionalidad del Modal Móvil ---
+        function abrirModalDetalleMovil(n) {
+            if (!n) return;
+            const d = n.timestamp?.toDate ? n.timestamp.toDate() : new Date();
+            const priorClass = { 'Urgente':'badge-urgente', 'Alta':'badge-alta', 'Media':'badge-media' }[n.prioridad] || 'badge-baja';
+
+            // Rellenar la información
+            $('mobile-detail-content').innerHTML = `
+                <div><strong style="color:var(--color-texto-secundario); font-size:0.8rem; text-transform:uppercase;">Novedad:</strong><br><span style="font-size:1.05rem; font-weight:bold;">${escapeHTML(n.novedad)}</span></div>
+                
+                <div style="display: flex; justify-content: space-between; margin-top: 0.5rem; border-top: 1px solid rgba(128,128,128,0.1); padding-top: 0.5rem;">
+                    <div><strong style="color:var(--color-texto-secundario); font-size:0.8rem; text-transform:uppercase;">Fecha:</strong><br>${formatDate(d)} ${d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})}</div>
+                    <div style="text-align:right;"><strong style="color:var(--color-texto-secundario); font-size:0.8rem; text-transform:uppercase;">Turno:</strong><br>${escapeHTML(n.turno)}</div>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; border-top: 1px solid rgba(128,128,128,0.1); padding-top: 0.5rem;">
+                    <div><strong style="color:var(--color-texto-secundario); font-size:0.8rem; text-transform:uppercase;">Prioridad:</strong><br><span class="badge ${priorClass}" style="margin-top:2px; display:inline-block;">${escapeHTML(n.prioridad)}</span></div>
+                    <div style="text-align:right;"><strong style="color:var(--color-texto-secundario); font-size:0.8rem; text-transform:uppercase;">Estado:</strong><br><strong style="color:${n.estado==='Completado'?'#10b981':'#f59e0b'}">${escapeHTML(n.estado)}</strong></div>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; border-top: 1px solid rgba(128,128,128,0.1); padding-top: 0.5rem;">
+                    <div><strong style="color:var(--color-texto-secundario); font-size:0.8rem; text-transform:uppercase;">Área / Elemento:</strong><br>${escapeHTML(n.areaElemento || '-')}</div>
+                    <div style="text-align:right;"><strong style="color:var(--color-texto-secundario); font-size:0.8rem; text-transform:uppercase;">Habitación:</strong><br>${escapeHTML(n.habitacion || '-')}</div>
+                </div>
+                
+                <div style="border-top: 1px solid rgba(128,128,128,0.1); padding-top: 0.5rem;">
+                    <div><strong style="color:var(--color-texto-secundario); font-size:0.8rem; text-transform:uppercase;">Nº Reserva:</strong> ${escapeHTML(n.nReserva || '-')}</div>
+                    <div style="margin-top: 0.2rem;"><strong style="color:var(--color-texto-secundario); font-size:0.8rem; text-transform:uppercase;">Notificado a:</strong> ${escapeHTML(n.notificadoA || '-')}</div>
+                </div>
+            `;
+
+            // Configurar funcionalidad de los botones
+            const btnEstado = $('mobile-btn-estado');
+            btnEstado.dataset.id = n.id;
+            btnEstado.textContent = n.estado === 'Completado' ? 'Marcar En Curso' : 'Marcar Completado';
+            // Cambio de diseño dinámico para el botón de estado
+            if(n.estado === 'Completado') {
+                btnEstado.className = 'button button-orange';
+            } else {
+                btnEstado.className = 'button button-secondary';
+                btnEstado.style.backgroundColor = '#10b981';
+                btnEstado.style.borderColor = '#10b981';
+                btnEstado.style.color = 'white';
+            }
+            
+            const btnRespuestas = $('mobile-btn-respuestas');
+            btnRespuestas.dataset.id = n.id;
+            btnRespuestas.innerHTML = `Respuestas (${n.comentarios?.length || 0})`;
+            
+            $('mobile-btn-editar').dataset.id = n.id;
+            $('mobile-btn-borrar').dataset.id = n.id;
+
+            $('mobile-detail-modal').classList.remove('hidden');
+        }
+
+        // Eventos para los botones del modal móvil
+        $('mobile-btn-estado').addEventListener('click', e => {
+            const id = e.target.dataset.id;
+            const n = allNovedadesMap.get(id);
+            const nuevoEstado = n.estado === 'Completado' ? 'En curso' : 'Completado';
+            updateDoc(doc(db, getPath(COLLECTION_NAME), id), { 
+                estado: nuevoEstado, 
+                ...(nuevoEstado === 'Completado' ? { completadoEn: serverTimestamp(), completadoPor: userEmail } : {}) 
+            });
+            $('mobile-detail-modal').classList.add('hidden');
+        });
+
+        $('mobile-btn-respuestas').addEventListener('click', e => {
+            $('mobile-detail-modal').classList.add('hidden');
+            openComments(allNovedadesMap.get(e.target.dataset.id));
+        });
+
+        $('mobile-btn-editar').addEventListener('click', e => {
+            $('mobile-detail-modal').classList.add('hidden');
+            openNovedadModal(allNovedadesMap.get(e.target.dataset.id));
+        });
+
+        $('mobile-btn-borrar').addEventListener('click', e => {
+            $('mobile-detail-modal').classList.add('hidden');
+            $('confirm-delete-btn').dataset.id = e.target.dataset.id;
+            $('confirm-modal').classList.remove('hidden');
+        });
+
+        // Evento general para checkbox y select de escritorio
         novedadesLog.addEventListener('change', e => {
             if (e.target.classList.contains('novedad-checkbox')) {
                 e.target.checked ? selectedNovedadIds.add(e.target.dataset.id) : selectedNovedadIds.delete(e.target.dataset.id);
@@ -954,11 +1034,9 @@
                 return;
             }
 
-            // Mapeamos solo la data que queremos en el Excel
             const dataToExport = filteredNovedades.map(n => {
                 const d = n.timestamp?.toDate ? n.timestamp.toDate() : new Date();
                 
-                // Formatear todas las respuestas en un solo bloque de texto
                 const respuestasTexto = (n.comentarios || []).map(c => {
                     const cDate = new Date(c.timestamp).toLocaleString('es-ES', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
                     const cUser = (c.user||'').split('@')[0];
@@ -980,17 +1058,10 @@
                 };
             });
 
-            // Creamos la hoja de cálculo y el libro de trabajo
             const worksheet = XLSX.utils.json_to_sheet(dataToExport);
             const workbook = XLSX.utils.book_new();
-            
-            // Añadimos la hoja al libro
             XLSX.utils.book_append_sheet(workbook, worksheet, "Novedades");
-            
-            // Nombre del archivo de salida con la fecha de hoy
             const fileName = `Registro_Diario_${new Date().toISOString().split('T')[0]}.xlsx`;
-            
-            // Forzamos la descarga del archivo Excel
             XLSX.writeFile(workbook, fileName);
         });
 
