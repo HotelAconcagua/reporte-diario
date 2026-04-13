@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registro Diario</title>
     
+    <!-- Librería SheetJS para exportar a Excel -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
     <!-- 
       El CSS se carga aquí. 
       El JavaScript al final de la página cambiará el 'href' a 'dark.css' o 'light.css' 
@@ -13,12 +16,10 @@
     <link id="theme-stylesheet" rel="stylesheet" href="dark.css">
     
     <!-- 
-      Estilos base (solo para 'hidden' y estructura mínima).
+      Estilos base (solo para 'hidden', estructura mínima y mejoras móviles).
     -->
     <style>
-        .hidden {
-            display: none;
-        }
+        .hidden { display: none; }
         /* Ocultar scrollbar estándar */
         .multiselect-dropdown::-webkit-scrollbar { width: 8px; }
         .multiselect-dropdown::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
@@ -26,244 +27,107 @@
         .multiselect-dropdown::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
         
         /* --- CORRECCIÓN DE ICONOS --- */
-        /* Ocultar iconos de tema por defecto */
         #theme-sun-icon, #theme-moon-icon { display: none; }
+        .icon { width: 1.25rem; height: 1.25rem; display: inline-block; object-fit: contain; vertical-align: middle; }
+        #theme-sun-icon, #theme-moon-icon { background-color: transparent; border-radius: 9999px; padding: 0.15rem; display: inline-block; }
+        .multiselect-toggle-icon { width: 1.25rem; height: 1.25rem; }
+        .button-icon.sun-active { background-color: rgba(0,0,0,0.65) !important; border-color: rgba(218, 208, 208, 0.158) !important; color: #FFFFFF !important; box-shadow: none !important; }
         
-        /* Definir tamaño base de los iconos para que no se rompan */
-        .icon {
-            width: 1.25rem; /* 20px */
-            height: 1.25rem; /* 20px */
-            display: inline-block;
-            object-fit: contain;
-            vertical-align: middle;
-        }
-        /* Iconos del tema: mismos tamaños y padding para mantener proporciones iguales */
-        #theme-sun-icon, #theme-moon-icon {
-            background-color: transparent;
-            border-radius: 9999px;
-            padding: 0.15rem; /* mismo padding para ambos */
-            display: inline-block;
-        }
-        .multiselect-toggle-icon {
-             width: 1.25rem; /* 20px */
-            height: 1.25rem; /* 20px */
-        }
-        /* Cuando el sol esté activo, el botón debe tener fondo oscuro completo */
-        .button-icon.sun-active {
-            background-color: rgba(0,0,0,0.65) !important;
-            border-color: rgba(218, 208, 208, 0.158) !important;
-            color: #FFFFFF !important;
-            box-shadow: none !important;
-        }
-        /* --- FIN CORRECCIÓN --- */
-        /* Header: centrar el título y ajustar logo dentro del header */
+        /* Header y Alineaciones */
         .main-header { position: relative; }
-        /* Logo en el header (reemplaza la posición fija anterior) */
-        #company-logo {
-            width: 48px;
-            height: auto;
-            display: inline-block;
-            vertical-align: middle;
-            margin-right: 0.5rem;
-            border-radius: 6px;
-        }
-        /* Centrar el título en el header (horizontal y vertical) */
-        .main-title {
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            margin: 0;
-            z-index: 5;
-            text-align: center;
-            width: auto;
-        }
-        
-        /* --- Ajustes para Info Usuario y Alarma (Mismo Alto y Alineación Forzada) --- */
-        .header-actions-container {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-left: 1rem;
-            position: relative;
-            z-index: 10;
-        }
-        
-        /* Se unifican ambos elementos para que el navegador los renderice idénticos */
-        .user-info-badge, #open-reminder-modal-btn {
-            display: inline-flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            height: 34px !important; /* Alto fijo estricto para ambos */
-            padding: 0 0.8rem !important;
-            font-size: 0.85rem !important;
-            border-radius: 6px !important;
-            box-sizing: border-box !important;
-            margin: 0 !important; /* Anula cualquier margen residual de clases globales */
-            line-height: 1 !important; /* Centra el texto perfectamente */
-        }
-        
-        #open-reminder-modal-btn {
-            gap: 6px;
-        }
+        #company-logo { width: 48px; height: auto; display: inline-block; vertical-align: middle; margin-right: 0.5rem; border-radius: 6px; }
+        .main-title { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); margin: 0; z-index: 5; text-align: center; width: auto; }
+        .header-actions-container { display: flex; align-items: center; gap: 0.5rem; margin-left: 1rem; position: relative; z-index: 10; }
+        .user-info-badge, #open-reminder-modal-btn { display: inline-flex !important; align-items: center !important; justify-content: center !important; height: 34px !important; padding: 0 0.8rem !important; font-size: 0.85rem !important; border-radius: 6px !important; box-sizing: border-box !important; margin: 0 !important; line-height: 1 !important; }
+        #open-reminder-modal-btn { gap: 6px; }
+        #open-reminder-modal-btn svg { margin: 0 !important; display: block; }
 
-        #open-reminder-modal-btn svg {
-            margin: 0 !important; /* Anula márgenes del icono que puedan empujar el texto */
-            display: block;
-        }
+        /* Comentarios y Paginación */
+        .comment-bubble { background-color: rgba(128, 128, 128, 0.1); padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 0.75rem; border: 1px solid rgba(128, 128, 128, 0.2); word-wrap: break-word; }
+        .comment-meta { font-size: 0.75rem; color: inherit; opacity: 0.7; margin-bottom: 0.4rem; display: flex; justify-content: space-between; align-items: center; }
+        .comment-text { font-size: 0.9rem; line-height: 1.4; }
+        .comments-novedad-btn { display: flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 4px; }
+        .comments-novedad-btn:hover { background-color: rgba(128, 128, 128, 0.15); }
+        .pagination-container { display: flex; justify-content: center; align-items: center; gap: 0.75rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(128, 128, 128, 0.2); flex-wrap: wrap; }
+        .page-btn { padding: 0.4rem 0.8rem; border: 1px solid rgba(128, 128, 128, 0.3); background-color: transparent; color: inherit; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: 500; transition: all 0.2s; }
+        .page-btn:hover:not(:disabled) { background-color: rgba(128, 128, 128, 0.1); }
+        .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .page-info { font-size: 0.9rem; color: var(--color-texto-secundario); margin: 0 0.5rem; font-weight: 500; }
 
-        /* --- Estilos para Comentarios / Respuestas --- */
-        .comment-bubble {
-            background-color: rgba(128, 128, 128, 0.1);
-            padding: 0.75rem;
-            border-radius: 0.5rem;
-            margin-bottom: 0.75rem;
-            border: 1px solid rgba(128, 128, 128, 0.2);
-            word-wrap: break-word;
-        }
-        .comment-meta {
-            font-size: 0.75rem;
-            color: inherit;
-            opacity: 0.7;
-            margin-bottom: 0.4rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .comment-text {
-            font-size: 0.9rem;
-            line-height: 1.4;
-        }
-        .comments-novedad-btn {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            padding: 4px 8px;
-            border-radius: 4px;
-        }
-        .comments-novedad-btn:hover {
-            background-color: rgba(128, 128, 128, 0.15);
-        }
+        /* Alarmas y Botón Massive Add */
+        @keyframes alarmPulse { 0% { box-shadow: 0 0 0 0 rgba(250, 120, 12, 0.7); transform: scale(1); } 70% { box-shadow: 0 0 0 20px rgba(250, 120, 12, 0); transform: scale(1.02); } 100% { box-shadow: 0 0 0 0 rgba(250, 120, 12, 0); transform: scale(1); } }
+        .alarm-modal-active { border: 4px solid #FA780C !important; animation: alarmPulse 1.5s infinite; }
+        .alarm-list-item { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; border-bottom: 1px solid rgba(128,128,128,0.2); font-size: 0.9rem; }
+        .alarm-list-item:last-child { border-bottom: none; }
+        .alarm-info { display: flex; flex-direction: column; gap: 2px; }
+        .top-dashboard-grid { display: grid; grid-template-columns: 1fr 260px; gap: 1.5rem; margin-bottom: 1.5rem; align-items: stretch; }
+        .btn-massive-add { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.75rem; background: #FA780C; color: white !important; border: none; border-radius: 12px; padding: 1.5rem; font-size: 1.15rem; font-weight: 700; cursor: pointer; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1); transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s, filter 0.2s; height: 100%; width: 100%; text-align: center; letter-spacing: 0.5px; }
+        .btn-massive-add:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.25), 0 10px 10px -5px rgba(0, 0, 0, 0.15); filter: brightness(1.05); }
+        .btn-massive-add:active { transform: translateY(0); }
+        .btn-massive-add svg { width: 3rem; height: 3rem; stroke-width: 2.5; }
 
-        /* --- Estilos para Paginación --- */
-        .pagination-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 0.75rem;
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 1px solid rgba(128, 128, 128, 0.2);
-            flex-wrap: wrap;
-        }
-        .page-btn {
-            padding: 0.4rem 0.8rem;
-            border: 1px solid rgba(128, 128, 128, 0.3);
-            background-color: transparent;
-            color: inherit;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-        .page-btn:hover:not(:disabled) {
-            background-color: rgba(128, 128, 128, 0.1);
-        }
-        .page-btn:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
-        .page-info {
-            font-size: 0.9rem;
-            color: var(--color-texto-secundario);
-            margin: 0 0.5rem;
-            font-weight: 500;
-        }
-
-        /* --- Estilos para Alarmas / Recordatorios --- */
-        @keyframes alarmPulse {
-            0% { box-shadow: 0 0 0 0 rgba(250, 120, 12, 0.7); transform: scale(1); }
-            70% { box-shadow: 0 0 0 20px rgba(250, 120, 12, 0); transform: scale(1.02); }
-            100% { box-shadow: 0 0 0 0 rgba(250, 120, 12, 0); transform: scale(1); }
-        }
-        .alarm-modal-active {
-            border: 4px solid #FA780C !important;
-            animation: alarmPulse 1.5s infinite;
-        }
-        .alarm-list-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.75rem;
-            border-bottom: 1px solid rgba(128,128,128,0.2);
-            font-size: 0.9rem;
-        }
-        .alarm-list-item:last-child {
-            border-bottom: none;
-        }
-        .alarm-info {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
-
-        /* --- Estilos del Tablero Superior (Filtros + Botón Agregar) --- */
-        .top-dashboard-grid {
-            display: grid;
-            grid-template-columns: 1fr 260px;
-            gap: 1.5rem;
-            margin-bottom: 1.5rem;
-            align-items: stretch;
-        }
-        .btn-massive-add {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 0.75rem;
-            background: #FA780C; /* Color Naranja fijado */
-            color: white !important; /* Letras siempre blancas */
-            border: none;
-            border-radius: 12px;
-            padding: 1.5rem;
-            font-size: 1.15rem;
-            font-weight: 700;
-            cursor: pointer;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s, filter 0.2s;
-            height: 100%;
-            width: 100%;
-            text-align: center;
-            letter-spacing: 0.5px;
-        }
-        .btn-massive-add:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.25), 0 10px 10px -5px rgba(0, 0, 0, 0.15);
-            filter: brightness(1.05); /* Efecto de brillo al pasar el mouse */
-        }
-        .btn-massive-add:active {
-            transform: translateY(0);
-        }
-        .btn-massive-add svg {
-            width: 3rem;
-            height: 3rem;
-            stroke-width: 2.5;
-        }
-
-        @media (max-width: 768px) {
-            .top-dashboard-grid {
-                grid-template-columns: 1fr;
+        /* --- MEJORA MÓVIL PARA LA TABLA (Tarjetas / Cards) --- */
+        @media (max-width: 1024px) {
+            .novedades-table thead {
+                display: none; /* Ocultar encabezados originales */
             }
-            .btn-massive-add {
-                padding: 1rem;
-                flex-direction: row;
-                justify-content: center;
+            .novedades-table, .novedades-table tbody, .novedades-table tr, .novedades-table td {
+                display: block;
+                width: 100%;
+                box-sizing: border-box;
             }
-            .btn-massive-add svg {
-                width: 2rem;
-                height: 2rem;
+            .novedad-row {
+                margin-bottom: 1.5rem;
+                border: 1px solid rgba(128, 128, 128, 0.3) !important;
+                border-radius: 8px;
+                padding: 0.5rem;
+                background-color: rgba(128, 128, 128, 0.05);
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             }
+            .novedades-table td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border: none !important;
+                border-bottom: 1px solid rgba(128, 128, 128, 0.1) !important;
+                padding: 0.75rem 0.5rem;
+                text-align: right;
+            }
+            .novedades-table td:last-child { border-bottom: none !important; }
+            /* Generar el label de la columna */
+            .novedades-table td::before {
+                content: attr(data-label);
+                font-weight: bold;
+                text-align: left;
+                flex: 0 0 40%;
+                padding-right: 1rem;
+                color: var(--color-texto-secundario, inherit);
+                opacity: 0.8;
+            }
+            /* Alinear el contenido a la derecha */
+            .novedades-table td > span, .novedades-table td > select, .novedades-table td > input, .novedades-table td > button, .novedades-table td > div, .novedades-table td > br {
+                flex: 1;
+                display: flex;
+                justify-content: flex-end;
+                text-align: right;
+            }
+            .novedades-table td.cell-fecha { flex-direction: row; flex-wrap: wrap; justify-content: flex-end;}
+            .novedades-table td.cell-fecha br { display: none; }
+            .novedades-table td.cell-fecha .hora { margin-left: 8px; }
+            /* Para textos largos (la novedad) */
+            .cell-novedad {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                text-align: left !important;
+            }
+            .cell-novedad::before { margin-bottom: 0.5rem; flex: 100% !important; }
+            /* Ajustes estéticos */
+            .cell-checkbox { align-items: center; }
+            .estado-select { width: auto; max-width: 150px; }
+            
+            .top-dashboard-grid { grid-template-columns: 1fr; }
+            .btn-massive-add { padding: 1rem; flex-direction: row; justify-content: center; }
+            .btn-massive-add svg { width: 2rem; height: 2rem; }
         }
         @media (max-width: 480px) {
             #company-logo { width: 36px; }
@@ -411,11 +275,12 @@
                         </svg>
                         Whatsapp (0)
                     </button>
-                    <button id="export-button" class="button button-orange" title="Exportar todo el historial a XLSX" disabled>
+                    <!-- Botón de Exportar (Habilitado ahora mediante JS) -->
+                    <button id="export-button" class="button button-orange" title="Exportar todo el historial mostrado a XLSX" disabled>
                         <svg class="icon" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                             <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V7.414A2 2 0 0016.586 6L13 2.414A2 2 0 0011.586 2H4zM12 3.5L15.5 7H13a1 1 0 01-1-1V3.5zM7 9h6v2H7V9zm0 4h6v2H7v-2z"></path>
                         </svg>
-                        Exportar
+                        Exportar a Excel
                     </button>
                     <button type="button" id="delete-all-btn" class="button button-danger-outline" disabled>
                          <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -870,7 +735,7 @@
         
         clearFiltersBtn.addEventListener('click', () => { filterControls.forEach(el => el.value=''); applyFiltersAndRender(); });
 
-        // --- Optimización: Plantillas Literales para la Tabla ---
+        // --- Optimización: Plantillas Literales para la Tabla con soporte de Cartas Responsivas ---
         function renderCurrentPage() {
             const pageData = filteredNovedades.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
             
@@ -881,33 +746,34 @@
                 const priorClass = { 'Urgente':'badge-urgente', 'Alta':'badge-alta', 'Media':'badge-media' }[n.prioridad] || 'badge-baja';
                 const count = n.comentarios?.length || 0;
 
+                // Implementando data-label para el CSS Móvil en Tarjetas
                 return `
                 <tr class="novedad-row">
-                    <td class="cell-checkbox"><input type="checkbox" data-id="${n.id}" class="novedad-checkbox" ${isChecked}></td>
-                    <td class="cell-turno">${escapeHTML(n.turno)}</td>
-                    <td class="cell-fecha">${formatDate(d)}<br><span class="hora">${d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})}</span></td>
-                    <td class="cell-prioridad"><span class="badge ${priorClass}">${escapeHTML(n.prioridad)}</span></td>
-                    <td class="cell-area">${escapeHTML(n.areaElemento || '-')}</td>
-                    <td class="cell-reserva">${escapeHTML(n.nReserva || '-')}</td>
-                    <td class="cell-habitacion">${escapeHTML(n.habitacion || '-')}</td>
-                    <td class="cell-novedad" title="${escapeHTML(n.novedad)}">${escapeHTML(n.novedad)}</td>
-                    <td class="cell-notificado">${escapeHTML(n.notificadoA || '-')}</td>
-                    <td class="cell-estado">
+                    <td class="cell-checkbox" data-label="Seleccionar"><input type="checkbox" data-id="${n.id}" class="novedad-checkbox" ${isChecked}></td>
+                    <td class="cell-turno" data-label="Turno">${escapeHTML(n.turno)}</td>
+                    <td class="cell-fecha" data-label="Fecha">${formatDate(d)}<br><span class="hora">${d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})}</span></td>
+                    <td class="cell-prioridad" data-label="Prioridad"><span class="badge ${priorClass}">${escapeHTML(n.prioridad)}</span></td>
+                    <td class="cell-area" data-label="Área/Elemento">${escapeHTML(n.areaElemento || '-')}</td>
+                    <td class="cell-reserva" data-label="Nº Reserva">${escapeHTML(n.nReserva || '-')}</td>
+                    <td class="cell-habitacion" data-label="Habitación">${escapeHTML(n.habitacion || '-')}</td>
+                    <td class="cell-novedad" data-label="Novedad" title="${escapeHTML(n.novedad)}">${escapeHTML(n.novedad)}</td>
+                    <td class="cell-notificado" data-label="Notificado a">${escapeHTML(n.notificadoA || '-')}</td>
+                    <td class="cell-estado" data-label="Estado">
                         <select data-id="${n.id}" class="estado-select ${n.estado==='Completado'?'status-completado':'status-encurso'}" title="${compTit}">
                             <option value="En curso" ${n.estado!=='Completado'?'selected':''}>En curso</option>
                             <option value="Completado" ${n.estado==='Completado'?'selected':''}>Completado</option>
                         </select>
                     </td>
-                    <td class="cell-comments">
+                    <td class="cell-comments" data-label="Respuestas">
                         <button data-id="${n.id}" class="button-icon comments-novedad-btn ${count>0?'button-primary':'button-secondary'}" title="Respuestas">
                             <svg class="icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd" /></svg>
                             <span style="font-size:0.8rem;font-weight:bold;margin-left:2px;">${count}</span>
                         </button>
                     </td>
-                    <td class="cell-edit">
+                    <td class="cell-edit" data-label="Editar">
                         <button data-id="${n.id}" class="button-icon edit-novedad-btn" title="Editar"><svg class="icon" viewBox="0 0 20 20" fill="currentColor"><path d="M5.433 13.917V17.5h3.583L16.5 10.917l-3.583-3.584L5.433 13.917zm13.197-6.264a.75.75 0 000-1.06l-2.062-2.062a.75.75 0 00-1.06 0l-1.41 1.41 3.584 3.584 1.41-1.41z"/></svg></button>
                     </td>
-                    <td class="cell-delete">
+                    <td class="cell-delete" data-label="Borrar">
                         <button data-id="${n.id}" class="button-icon delete-novedad-btn" title="Borrar"><svg class="icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75V4.5h8V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4.5A1.25 1.25 0 0111.25 3h2.5A1.25 1.25 0 0115 4.25V5.5h-5V4.25zM3.75 6A1.75 1.75 0 002 7.75v7.5A1.75 1.75 0 003.75 17h12.5A1.75 1.75 0 0018 15.25v-7.5A1.75 1.75 0 0016.25 6H3.75zM10 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 10zM13 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0113 10zM7 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 017 10z" clip-rule="evenodd"/></svg></button>
                     </td>
                 </tr>`;
@@ -1079,6 +945,53 @@
                 $('new-comment-text').value = '';
             } catch(e) { showMessageModal("Error", "Fallo al comentar."); }
             finally { btn.disabled = false; }
+        });
+
+        // --- Exportación a Excel ---
+        exportButton.addEventListener('click', () => {
+            if (typeof XLSX === 'undefined') {
+                showMessageModal("Error", "La librería para generar el Excel no se ha cargado. Por favor, revisa tu conexión a internet.");
+                return;
+            }
+
+            // Mapeamos solo la data que queremos en el Excel
+            const dataToExport = filteredNovedades.map(n => {
+                const d = n.timestamp?.toDate ? n.timestamp.toDate() : new Date();
+                
+                // Formatear todas las respuestas en un solo bloque de texto
+                const respuestasTexto = (n.comentarios || []).map(c => {
+                    const cDate = new Date(c.timestamp).toLocaleString('es-ES', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+                    const cUser = (c.user||'').split('@')[0];
+                    return `[${cDate} | ${cUser}]: ${c.text}`;
+                }).join('\n');
+
+                return {
+                    "Turno": n.turno || '-',
+                    "Fecha": formatDate(d),
+                    "Hora": d.toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'}),
+                    "Prioridad": n.prioridad || '-',
+                    "Área/Elemento": n.areaElemento || '-',
+                    "Nº Reserva": n.nReserva || '-',
+                    "Habitación": n.habitacion || '-',
+                    "Novedad": n.novedad || '-',
+                    "Notificado a": n.notificadoA || '-',
+                    "Estado": n.estado || '-',
+                    "Respuestas": respuestasTexto || 'Sin respuestas'
+                };
+            });
+
+            // Creamos la hoja de cálculo y el libro de trabajo
+            const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+            const workbook = XLSX.utils.book_new();
+            
+            // Añadimos la hoja al libro
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Novedades");
+            
+            // Nombre del archivo de salida con la fecha de hoy
+            const fileName = `Registro_Diario_${new Date().toISOString().split('T')[0]}.xlsx`;
+            
+            // Forzamos la descarga del archivo Excel
+            XLSX.writeFile(workbook, fileName);
         });
 
         // --- Acciones Masivas y Borrado ---
