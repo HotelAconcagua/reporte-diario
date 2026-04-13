@@ -79,6 +79,39 @@
             width: auto;
         }
         
+        /* --- Ajustes para Info Usuario y Alarma (Misml Alto) --- */
+        .header-actions-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-left: 1rem;
+            position: relative;
+            z-index: 10;
+        }
+        
+        .user-info-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 32px; /* Alto fijo */
+            padding: 0 0.8rem;
+            font-size: 0.85rem;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+        
+        #open-reminder-modal-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 32px; /* Mismo alto fijo */
+            padding: 0 0.8rem;
+            font-size: 0.85rem;
+            gap: 4px;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
         /* --- Estilos para Comentarios / Respuestas --- */
         .comment-bubble {
             background-color: rgba(128, 128, 128, 0.1);
@@ -272,12 +305,12 @@
                 <img id="company-logo" src="logo1.png" alt="Logo empresa" />
                 <h1 class="main-title">Registro Diario</h1>
                 
-                <!-- Contenedor para Info de Usuario y Botón de Alarma -->
-                <div style="display: flex; align-items: center; gap: 0.5rem; margin-left: 1rem; position: relative; z-index: 10;">
+                <!-- Contenedor para Info de Usuario y Botón de Alarma (Alineados) -->
+                <div class="header-actions-container">
                     <div id="user-info" class="user-info-badge status-loading">
                         Cargando usuario...
                     </div>
-                    <button id="open-reminder-modal-btn" class="button button-orange hidden" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; display: flex; align-items: center; gap: 4px; border-radius: 6px;">
+                    <button id="open-reminder-modal-btn" class="button button-orange hidden">
                         <svg class="icon" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" style="width: 16px; height: 16px;"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"></path></svg>
                         Crear Alarma
                     </button>
@@ -709,6 +742,7 @@
                         <option value="once">Una sola vez (Fecha específica)</option>
                         <option value="daily">Todos los días</option>
                         <option value="weekly">Semanal (Un día de la semana)</option>
+                        <option value="monthly">Mensual (Días específicos del mes)</option>
                     </select>
                 </div>
 
@@ -730,6 +764,12 @@
                         <option value="6">Sábado</option>
                         <option value="0">Domingo</option>
                     </select>
+                </div>
+
+                <!-- Días del mes (Solo para 'Mensual') -->
+                <div class="form-group hidden form-group-full" id="reminder-month-days-group">
+                    <label for="reminder-month-days" class="form-label">Días del mes (separados por coma, ej: 10, 14, 20)</label>
+                    <input type="text" id="reminder-month-days" class="form-input" placeholder="Ej: 10, 14, 20">
                 </div>
 
                 <!-- Hora Exacta -->
@@ -886,6 +926,8 @@
         const reminderDateGroup = document.getElementById('reminder-date-group');
         const reminderDayGroup = document.getElementById('reminder-day-group');
         const reminderDate = document.getElementById('reminder-date');
+        const reminderMonthDaysGroup = document.getElementById('reminder-month-days-group');
+        const reminderMonthDays = document.getElementById('reminder-month-days');
         const activeAlarmsList = document.getElementById('active-alarms-list');
         const alarmTriggerModal = document.getElementById('alarm-trigger-modal');
         const alarmTriggerMessage = document.getElementById('alarm-trigger-message');
@@ -2293,6 +2335,7 @@
                 if (alarm.type === 'once') details = `Fecha: ${alarm.date.split('-').reverse().join('/')} a las ${alarm.time}`;
                 if (alarm.type === 'daily') details = `Todos los días a las ${alarm.time}`;
                 if (alarm.type === 'weekly') details = `Todos los ${diasStr[alarm.day]} a las ${alarm.time}`;
+                if (alarm.type === 'monthly') details = `Los días ${alarm.monthDays} de cada mes a las ${alarm.time}`;
 
                 div.innerHTML = `
                     <div class="alarm-info">
@@ -2342,6 +2385,13 @@
                     if (alarm.type === 'once' && alarm.date === currentDate) shouldRing = true;
                     if (alarm.type === 'daily') shouldRing = true;
                     if (alarm.type === 'weekly' && alarm.day === currentDay) shouldRing = true;
+                    
+                    // NUEVO: Mensual
+                    if (alarm.type === 'monthly' && alarm.monthDays) {
+                        const daysArr = alarm.monthDays.split(',').map(d => parseInt(d.trim()));
+                        const todayInt = now.getDate();
+                        if (daysArr.includes(todayInt)) shouldRing = true;
+                    }
 
                     // El cache evita que suene 6 veces en el mismo minuto (ya que revisamos cada 10 seg)
                     const cacheKey = `${alarm.id}-${currentDate}-${currentTime}`;
@@ -2408,19 +2458,25 @@
         cancelReminderBtn.addEventListener('click', () => {
             reminderModal.classList.add('hidden');
             document.getElementById('reminder-form').reset();
+            reminderDateGroup.classList.remove('hidden');
+            reminderDayGroup.classList.add('hidden');
+            reminderMonthDaysGroup.classList.add('hidden');
         });
 
         reminderType.addEventListener('change', (e) => {
             const val = e.target.value;
+            reminderDateGroup.classList.add('hidden');
+            reminderDayGroup.classList.add('hidden');
+            reminderMonthDaysGroup.classList.add('hidden');
+
             if (val === 'once') {
                 reminderDateGroup.classList.remove('hidden');
-                reminderDayGroup.classList.add('hidden');
             } else if (val === 'daily') {
-                reminderDateGroup.classList.add('hidden');
-                reminderDayGroup.classList.add('hidden');
+                // No mostrar nada extra
             } else if (val === 'weekly') {
-                reminderDateGroup.classList.add('hidden');
                 reminderDayGroup.classList.remove('hidden');
+            } else if (val === 'monthly') {
+                reminderMonthDaysGroup.classList.remove('hidden');
             }
         });
 
@@ -2433,9 +2489,11 @@
             
             let date = null;
             let day = null;
+            let monthDays = null;
 
             if (type === 'once') date = reminderDate.value;
             if (type === 'weekly') day = document.getElementById('reminder-day').value;
+            if (type === 'monthly') monthDays = reminderMonthDays.value.trim();
 
             const submitBtn = e.target.querySelector('button[type="submit"]');
             submitBtn.disabled = true;
@@ -2449,11 +2507,19 @@
                     time,
                     date,
                     day,
+                    monthDays,
                     createdBy: userEmail,
                     timestamp: serverTimestamp()
                 });
                 
                 e.target.reset();
+                reminderDateGroup.classList.remove('hidden');
+                reminderDayGroup.classList.add('hidden');
+                reminderMonthDaysGroup.classList.add('hidden');
+                
+                // Ocultar el modal de recordatorio inmediatamente al tener éxito
+                reminderModal.classList.add('hidden');
+                
                 showMessageModal("Éxito", "Alarma programada correctamente.");
             } catch (err) {
                 console.error("Error guardando alarma:", err);
