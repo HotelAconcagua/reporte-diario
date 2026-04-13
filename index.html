@@ -112,6 +112,42 @@
             background-color: rgba(128, 128, 128, 0.15);
         }
 
+        /* --- Estilos para Paginación --- */
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.75rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(128, 128, 128, 0.2);
+            flex-wrap: wrap;
+        }
+        .page-btn {
+            padding: 0.4rem 0.8rem;
+            border: 1px solid rgba(128, 128, 128, 0.3);
+            background-color: transparent;
+            color: inherit;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .page-btn:hover:not(:disabled) {
+            background-color: rgba(128, 128, 128, 0.1);
+        }
+        .page-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .page-info {
+            font-size: 0.9rem;
+            color: var(--color-texto-secundario);
+            margin: 0 0.5rem;
+            font-weight: 500;
+        }
+
         @media (max-width: 480px) {
             #company-logo { width: 36px; }
             .main-title { font-size: 1.125rem; }
@@ -374,6 +410,11 @@
                     </tbody>
                 </table>
             </div>
+            
+            <!-- Controles de Paginación -->
+            <div id="pagination-controls" class="pagination-container">
+                <!-- Se generan dinámicamente con JS -->
+            </div>
         </div>
 
     </div>
@@ -586,6 +627,12 @@
             }
         }
 
+        // --- Variables de Paginación (NUEVO) ---
+        let currentPage = 1;
+        const itemsPerPage = 20;
+        let filteredNovedades = []; // Guardará el resultado actual de los filtros
+        const paginationControls = document.getElementById('pagination-controls');
+
         // --- Referencias del DOM y Estado Global ---
         // Nuevo Formulario
         const form = document.getElementById('novedad-form');
@@ -604,7 +651,7 @@
         const editCurrentShift = document.getElementById('editCurrentShift');
         const editMetadata = document.getElementById('edit-metadata');
 
-        // Formulario y Modal de Comentarios (NUEVO)
+        // Formulario y Modal de Comentarios
         const commentsModal = document.getElementById('comments-modal');
         const closeCommentsBtn = document.getElementById('close-comments-btn');
         const addCommentForm = document.getElementById('add-comment-form');
@@ -896,6 +943,7 @@
             });
         }
         
+        // --- NUEVO: Lógica de Paginación Integrada a los Filtros ---
         function applyFiltersAndRender() {
             const valTurno = filterTurno.value;
             const valFecha = filterFecha.value;
@@ -903,7 +951,7 @@
             const valEstado = filterEstado.value;
             const valText = filterText.value.toLowerCase().trim();
 
-            const filteredData = currentNovedades.filter(novedad => {
+            filteredNovedades = currentNovedades.filter(novedad => {
                 if (valTurno && novedad.turno !== valTurno) return false;
                 if (valPrioridad && novedad.prioridad !== valPrioridad) return false;
                 if (valEstado && novedad.estado !== valEstado) return false;
@@ -934,7 +982,62 @@
                 return true;
             });
 
-            renderNovedadesLog(filteredData);
+            // Volver a la primera página si cambiamos los filtros y renderizar la página actual
+            currentPage = 1; 
+            renderCurrentPage();
+        }
+
+        function renderCurrentPage() {
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            // Cortar solo el trozo de array correspondiente a la página actual
+            const pageData = filteredNovedades.slice(startIndex, endIndex);
+            
+            // Dibujar la tabla solo con ese trozo
+            renderNovedadesLog(pageData);
+            
+            // Dibujar los botones debajo de la tabla
+            renderPaginationControls();
+        }
+
+        function renderPaginationControls() {
+            paginationControls.innerHTML = '';
+            
+            if (filteredNovedades.length === 0) return;
+
+            const totalPages = Math.ceil(filteredNovedades.length / itemsPerPage);
+
+            // Botón Anterior
+            const prevBtn = document.createElement('button');
+            prevBtn.className = 'page-btn';
+            prevBtn.innerHTML = '&laquo; Anterior';
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderCurrentPage();
+                }
+            });
+            paginationControls.appendChild(prevBtn);
+
+            // Info central
+            const infoSpan = document.createElement('span');
+            infoSpan.className = 'page-info';
+            infoSpan.textContent = `Página ${currentPage} de ${totalPages}`;
+            paginationControls.appendChild(infoSpan);
+
+            // Botón Siguiente
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'page-btn';
+            nextBtn.innerHTML = 'Siguiente &raquo;';
+            nextBtn.disabled = currentPage === totalPages;
+            nextBtn.addEventListener('click', () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderCurrentPage();
+                }
+            });
+            paginationControls.appendChild(nextBtn);
         }
 
         filterTurno.addEventListener('change', applyFiltersAndRender);
